@@ -3,6 +3,8 @@ name: Build & Deploy to Namecheap (cPanel Git)
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'out/**'   # don't re-trigger when we commit the build output
 
 permissions:
   contents: write
@@ -31,15 +33,11 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_ADMIN_PASSWORD: ${{ secrets.NEXT_PUBLIC_ADMIN_PASSWORD }}
 
-      - name: Copy .cpanel.yml into the build output
-        run: cp .cpanel.yml out/.cpanel.yml
-
-      - name: Push built files to deploy branch
+      - name: Commit built output to main
         run: |
-          cd out
-          git init
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Deploy: $(date '+%Y-%m-%d %H:%M:%S')"
-          git push --force https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:deploy
+          git add -f out/
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: update build output [skip ci]"
+          git push
