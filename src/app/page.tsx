@@ -133,7 +133,7 @@ export default function HomePage() {
           {["Zurich", "Geneva", "Basel", "Bern", "Lausanne", "Lucerne", "Winterthur", "St. Gallen", "Lugano", "Biel"].map((city) => (
             <Link
               key={city}
-              href={`/businesses?city=${city}`}
+              href={`/businesses?canton=${city}`}
               className="card-hover flex items-center justify-center gap-2 py-4 px-3 bg-white rounded-2xl border border-gray-100 text-center group"
             >
               <span className="text-lg">📍</span>

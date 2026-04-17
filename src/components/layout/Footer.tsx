@@ -41,7 +41,7 @@ export default function Footer() {
               {["Zurich", "Geneva", "Basel", "Bern", "Lausanne"].map((city) => (
                 <li key={city}>
                   <Link
-                    href={`/businesses?city=${city}`}
+                    href={`/businesses?canton=${city}`}
                     className="hover:text-amber-400 transition-colors"
                   >
                     {city}

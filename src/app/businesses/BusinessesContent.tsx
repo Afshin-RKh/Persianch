@@ -144,7 +144,7 @@ export default function BusinessesContent() {
                 {selected.name_fa && (
                   <p className="text-xs text-gray-500 mt-0.5" dir="rtl">{selected.name_fa}</p>
                 )}
-                <p className="text-xs text-gray-400 mt-1">{selected.address || selected.city}</p>
+                <p className="text-xs text-gray-400 mt-1">{selected.address || selected.canton || selected.city}</p>
                 <Link
                   href={`/businesses/detail?id=${selected.id}`}
                   className="mt-3 block text-center text-white text-xs font-semibold py-2 rounded-xl"

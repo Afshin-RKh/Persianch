@@ -73,8 +73,9 @@ export default function MapView({ businesses, onSelect, selected }: Props) {
       businesses.forEach((business) => {
         const category = CATEGORIES.find((c) => c.slug === business.category);
         const icon = category?.icon ?? "🏪";
-        const lat = business.lat ?? CITY_COORDS[business.city]?.[0];
-        const lng = business.lng ?? CITY_COORDS[business.city]?.[1];
+        const cityKey = business.canton ?? business.city ?? "";
+        const lat = business.lat ?? CITY_COORDS[cityKey]?.[0];
+        const lng = business.lng ?? CITY_COORDS[cityKey]?.[1];
         if (!lat || !lng) return;
 
         const divIcon = L.divIcon({
@@ -104,7 +105,7 @@ export default function MapView({ businesses, onSelect, selected }: Props) {
           <div style="font-family:Arial,sans-serif;min-width:140px;max-width:200px;">
             <div style="font-weight:700;font-size:13px;color:#1a0a0a;margin-bottom:2px;">${business.name}</div>
             <div style="font-size:11px;color:#8B1A1A;font-weight:600;">${icon} ${category?.label_en ?? ""}</div>
-            <div style="font-size:11px;color:#888;margin-top:2px;">📍 ${business.city}</div>
+            <div style="font-size:11px;color:#888;margin-top:2px;">📍 ${business.canton ?? business.city ?? ""}</div>
             <div style="font-size:11px;color:#C9A84C;margin-top:4px;font-weight:600;">Click to view →</div>
           </div>`;
 
@@ -128,8 +129,9 @@ export default function MapView({ businesses, onSelect, selected }: Props) {
 
   useEffect(() => {
     if (!mapInstanceRef.current || !selected) return;
-    const lat = selected.lat ?? CITY_COORDS[selected.city]?.[0];
-    const lng = selected.lng ?? CITY_COORDS[selected.city]?.[1];
+    const cityKey = selected.canton ?? selected.city ?? "";
+    const lat = selected.lat ?? CITY_COORDS[cityKey]?.[0];
+    const lng = selected.lng ?? CITY_COORDS[cityKey]?.[1];
     if (lat && lng) {
       mapInstanceRef.current.flyTo([lat, lng], 15, { duration: 0.8 });
     }

@@ -13,7 +13,7 @@ export default function AdminPage() {
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
-    name: "", name_fa: "", category: "restaurant", city: "Zurich",
+    name: "", name_fa: "", category: "restaurant", canton: "Zurich",
     address: "", phone: "", website: "", email: "", instagram: "",
     description: "", description_fa: "", google_maps_url: "",
     is_featured: false, is_verified: false, is_approved: true,
@@ -28,7 +28,7 @@ export default function AdminPage() {
       if (!result.success) throw new Error("Failed to add business");
       setSuccess(true);
       setForm({
-        name: "", name_fa: "", category: "restaurant", city: "Zurich",
+        name: "", name_fa: "", category: "restaurant", canton: "Zurich",
         address: "", phone: "", website: "", email: "", instagram: "",
         description: "", description_fa: "", google_maps_url: "",
         is_featured: false, is_verified: false, is_approved: true,
@@ -112,10 +112,10 @@ export default function AdminPage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">City *</label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Canton *</label>
             <select
-              value={form.city}
-              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              value={form.canton}
+              onChange={(e) => setForm({ ...form, canton: e.target.value })}
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               {SWISS_CITIES.map((c) => (
