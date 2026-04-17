@@ -15,7 +15,7 @@ if (file_exists($envFile)) {
     require_once $envFile;
 }
 
-$hostRaw = defined('DB_HOST') ? DB_HOST : 'localhost';
+$hostRaw = trim(defined('DB_HOST') ? DB_HOST : 'localhost');
 $db      = defined('DB_NAME') ? DB_NAME : 'afshxhoj_persianhub';
 $user    = defined('DB_USER') ? DB_USER : 'afshxhoj_afshin';
 $pass    = defined('DB_PASS') ? DB_PASS : '';
