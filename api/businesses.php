@@ -12,6 +12,11 @@ if ($method === 'GET') {
         $params[':category'] = $_GET['category'];
     }
 
+    if (!empty($_GET['canton'])) {
+        $where[] = 'b.canton = :canton';
+        $params[':canton'] = $_GET['canton'];
+    }
+
     if (!empty($_GET['city'])) {
         $where[] = 'b.city = :city';
         $params[':city'] = $_GET['city'];
@@ -38,7 +43,6 @@ if ($method === 'GET') {
     $stmt->execute($params);
     $businesses = $stmt->fetchAll();
 
-    // Cast boolean fields
     foreach ($businesses as &$b) {
         $b['is_featured'] = (bool)$b['is_featured'];
         $b['is_verified'] = (bool)$b['is_verified'];
@@ -57,8 +61,8 @@ if ($method === 'GET') {
 if ($method === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
 
-    $sql = "INSERT INTO businesses (name, name_fa, category, city, address, phone, website, email, instagram, description, description_fa, google_maps_url, lat, lng, is_featured, is_verified, is_approved)
-            VALUES (:name, :name_fa, :category, :city, :address, :phone, :website, :email, :instagram, :description, :description_fa, :google_maps_url, :lat, :lng, :is_featured, :is_verified, :is_approved)";
+    $sql = "INSERT INTO businesses (name, name_fa, category, city, canton, address, phone, website, email, instagram, description, description_fa, google_maps_url, lat, lng, is_featured, is_verified, is_approved)
+            VALUES (:name, :name_fa, :category, :city, :canton, :address, :phone, :website, :email, :instagram, :description, :description_fa, :google_maps_url, :lat, :lng, :is_featured, :is_verified, :is_approved)";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
@@ -66,6 +70,7 @@ if ($method === 'POST') {
         ':name_fa'        => $data['name_fa'] ?? null,
         ':category'       => $data['category'] ?? 'other',
         ':city'           => $data['city'] ?? '',
+        ':canton'         => $data['canton'] ?? null,
         ':address'        => $data['address'] ?? null,
         ':phone'          => $data['phone'] ?? null,
         ':website'        => $data['website'] ?? null,
@@ -91,7 +96,7 @@ if ($method === 'PATCH') {
 
     $fields = [];
     $params = [':id' => $id];
-    $allowed = ['lat','lng','image_url','address','phone','website','email','instagram','description','google_maps_url','is_featured','is_verified'];
+    $allowed = ['lat','lng','image_url','canton','city','address','phone','website','email','instagram','description','google_maps_url','is_featured','is_verified'];
     foreach ($allowed as $f) {
         if (array_key_exists($f, $data)) {
             $fields[] = "$f = :$f";

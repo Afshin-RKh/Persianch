@@ -20,7 +20,30 @@
       "Bash(git reset:*)",
       "Bash(curl -s -o /tmp/resp1.txt -w \"%{http_code}\" \"https://phub.ch/api/businesses.php\")",
       "Read(//tmp/**)",
-      "Bash(curl -s -o /tmp/resp2.txt -w \"%{http_code}\" \"https://phub.ch/api/businesses.php?category=restaurant\")"
+      "Bash(curl -s -o /tmp/resp2.txt -w \"%{http_code}\" \"https://phub.ch/api/businesses.php?category=restaurant\")",
+      "WebSearch",
+      "WebFetch(domain:www.kookoofood.ch)",
+      "WebFetch(domain:www.damavand.ch)",
+      "WebFetch(domain:www.restaurantpasargades.com)",
+      "WebFetch(domain:zurich10.com)",
+      "WebFetch(domain:www.iranianattornys.com)",
+      "WebFetch(domain:www.iranianattorneys.com)",
+      "WebFetch(domain:www.restauranthafez.ch)",
+      "WebFetch(domain:www.little-persia.ch)",
+      "WebFetch(domain:tinatehran.ch)",
+      "WebFetch(domain:lidafara.com)",
+      "WebFetch(domain:www.persiapage.com)",
+      "WebFetch(domain:www.shahrzad-bigalex.ch)",
+      "WebFetch(domain:www.ardineh.ch)",
+      "WebFetch(domain:bigalex.ch)",
+      "WebFetch(domain:restaurant-tehran.ch)",
+      "Bash(curl:*)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(f'Total businesses: {len\\(data\\)}'\\); [print\\(f'  {b[\\\\\"id\\\\\"]}. [{b[\\\\\"category\\\\\"]}] {b[\\\\\"name\\\\\"]} — {b[\\\\\"city\\\\\"]}'\\) for b in data]\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const b=JSON.parse\\(d\\); console.log\\('Total:',b.length\\); b.forEach\\(x=>console.log\\(x.id,x.category,x.name,'-',x.city\\)\\)\")",
+      "WebFetch(domain:www.xn--hnggeroriental-vpb.ch)",
+      "WebFetch(domain:restaurant-karun.ch)",
+      "WebFetch(domain:www.mamapersia.ch)",
+      "Bash(node:*)"
     ]
   }
 }

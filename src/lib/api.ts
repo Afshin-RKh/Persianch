@@ -4,13 +4,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/
 
 export async function getBusinesses(filters?: {
   category?: Category;
-  city?: string;
+  canton?: string;
   search?: string;
   featured?: boolean;
 }): Promise<Business[]> {
   const params = new URLSearchParams();
   if (filters?.category) params.set("category", filters.category);
-  if (filters?.city) params.set("city", filters.city);
+  if (filters?.canton) params.set("canton", filters.canton);
   if (filters?.search) params.set("search", filters.search);
   if (filters?.featured) params.set("featured", "1");
 

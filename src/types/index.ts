@@ -27,6 +27,7 @@ export interface Business {
   image_url?: string;
   google_maps_url?: string;
   instagram?: string;
+  canton?: string;
   is_featured: boolean;
   is_verified: boolean;
   created_at: string;
@@ -55,24 +56,34 @@ export const CATEGORIES: CategoryMeta[] = [
   { slug: "other", label_en: "Other", label_fa: "سایر", icon: "🔍" },
 ];
 
-export const SWISS_CITIES = [
-  // Major cities
-  "Zurich", "Geneva", "Basel", "Bern", "Lausanne",
-  "Winterthur", "Lucerne", "St. Gallen", "Lugano", "Biel",
-  // Other cantons & cities
-  "Aarau", "Appenzell", "Arlesheim", "Arbon",
-  "Baden", "Bellinzona", "Bulle",
-  "Chur", "Delémont", "Frauenfeld",
-  "Fribourg", "Glarus", "Herisau",
-  "Kreuzlingen", "Küsnacht", "Küssnacht",
-  "Liestal", "Martigny", "Monthey",
-  "Münchenbuchsee", "Münchenbuchsee",
-  "Nyon", "Oberwil", "Olten",
-  "Rapperswil", "Rheinfelden", "Romanshorn",
-  "Schaffhausen", "Schwyz", "Sion",
-  "Solothurn", "Spiez", "Stans",
-  "Thun", "Uster", "Vernier",
-  "Visp", "Wettingen", "Wil",
-  "Wohlen", "Wollerau", "Zug",
-  "Zuchwil"
+export const SWISS_CANTONS = [
+  "Aargau",
+  "Appenzell Ausserrhoden",
+  "Appenzell Innerrhoden",
+  "Basel-Landschaft",
+  "Basel-Stadt",
+  "Bern",
+  "Fribourg",
+  "Geneva",
+  "Glarus",
+  "Graubünden",
+  "Jura",
+  "Lucerne",
+  "Neuchâtel",
+  "Nidwalden",
+  "Obwalden",
+  "Schaffhausen",
+  "Schwyz",
+  "Solothurn",
+  "St. Gallen",
+  "Thurgau",
+  "Ticino",
+  "Uri",
+  "Valais",
+  "Vaud",
+  "Zug",
+  "Zurich",
 ];
+
+// Keep for backward compatibility
+export const SWISS_CITIES = SWISS_CANTONS;

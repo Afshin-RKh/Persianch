@@ -12,7 +12,7 @@ const MapView = lazy(() => import("@/components/business/MapView"));
 export default function BusinessesContent() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category") ?? undefined;
-  const city = searchParams.get("city") ?? undefined;
+  const canton = searchParams.get("canton") ?? undefined;
   const search = searchParams.get("search") ?? undefined;
 
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -24,11 +24,11 @@ export default function BusinessesContent() {
   useEffect(() => {
     setLoading(true);
     setError(false);
-    getBusinesses({ category: category as Category, city, search })
+    getBusinesses({ category: category as Category, canton, search })
       .then(setBusinesses)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [category, city, search]);
+  }, [category, canton, search]);
 
   const handleSelect = useCallback((b: Business) => setSelected(b), []);
 
@@ -54,7 +54,7 @@ export default function BusinessesContent() {
               All
             </Link>
             {CATEGORIES.map((cat) => (
-              <Link key={cat.slug} href={`/businesses?category=${cat.slug}${city ? `&city=${city}` : ""}`}
+              <Link key={cat.slug} href={`/businesses?category=${cat.slug}${canton ? `&canton=${canton}` : ""}`}
                 className={category === cat.slug ? activePill : inactivePill}
                 style={category === cat.slug ? { backgroundColor: "#8B1A1A" } : {}}>
                 {cat.icon} {cat.label_en}
