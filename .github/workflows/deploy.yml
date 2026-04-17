@@ -28,7 +28,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ""
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
           NEXT_PUBLIC_ADMIN_PASSWORD: ${{ secrets.NEXT_PUBLIC_ADMIN_PASSWORD }}
-          NEXT_PUBLIC_API_URL: "https://phub.ch/api"
+          NEXT_PUBLIC_API_URL: "https://afshin.ch/persianch/api"
 
       - name: Generate PHP env file with DB credentials
         run: |
@@ -40,7 +40,7 @@ jobs:
           define('DB_PASS', '${{ secrets.DB_PASSWORD }}');
           EOF
 
-      - name: Deploy Next.js build via FTP
+      - name: Deploy static site to phub.ch via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -50,12 +50,12 @@ jobs:
           server-dir: /public_html/phub/
           dangerous-clean-slate: false
 
-      - name: Deploy PHP API via FTP
+      - name: Deploy PHP API via FTP (kept on afshin.ch/persianch)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
-          server-dir: /public_html/phub/api/
+          server-dir: /public_html/persianch/api/
           dangerous-clean-slate: false
