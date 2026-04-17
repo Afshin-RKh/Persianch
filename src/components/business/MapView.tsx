@@ -41,7 +41,20 @@ export default function MapView({ businesses, onSelect, selected }: Props) {
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-      const map = L.map(mapRef.current!, { center: DEFAULT_CENTER, zoom: 8 });
+      // Switzerland bounding box — prevents panning outside the country
+      const switzerlandBounds = L.latLngBounds(
+        L.latLng(45.8, 5.9),  // SW corner
+        L.latLng(47.9, 10.6)  // NE corner
+      );
+
+      const map = L.map(mapRef.current!, {
+        center: DEFAULT_CENTER,
+        zoom: 8,
+        minZoom: 7,
+        maxZoom: 19,
+        maxBounds: switzerlandBounds,
+        maxBoundsViscosity: 1.0,  // hard stop at border
+      });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap contributors",
         maxZoom: 19,
