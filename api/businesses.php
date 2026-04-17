@@ -83,3 +83,24 @@ if ($method === 'POST') {
 
     echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
 }
+
+if ($method === 'PATCH') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id = $data['id'] ?? null;
+    if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
+
+    $fields = [];
+    $params = [':id' => $id];
+    $allowed = ['lat','lng','image_url','address','phone','website','email','instagram','description','google_maps_url','is_featured','is_verified'];
+    foreach ($allowed as $f) {
+        if (array_key_exists($f, $data)) {
+            $fields[] = "$f = :$f";
+            $params[":$f"] = $data[$f];
+        }
+    }
+    if (empty($fields)) { echo json_encode(['success' => false]); exit(); }
+
+    $stmt = $pdo->prepare("UPDATE businesses SET " . implode(', ', $fields) . " WHERE id = :id");
+    $stmt->execute($params);
+    echo json_encode(['success' => true]);
+}
