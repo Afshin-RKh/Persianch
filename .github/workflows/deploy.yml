@@ -48,7 +48,6 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./out/
           server-dir: /public_html/phub/
-          dangerous-clean-slate: true
 
       - name: Deploy PHP API to secure location (outside web root)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -58,7 +57,8 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
           server-dir: /repositories/Persianch1/
-          dangerous-clean-slate: true
+          # .env.php is git-ignored but generated above — force-include it
+          include: "**"
 
       - name: Deploy public API proxy to phub.ch/api
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -68,4 +68,3 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./public-api/
           server-dir: /public_html/phub/api/
-          dangerous-clean-slate: true
