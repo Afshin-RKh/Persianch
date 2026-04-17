@@ -15,13 +15,22 @@ if (file_exists($envFile)) {
     require_once $envFile;
 }
 
-$host = defined('DB_HOST') ? DB_HOST : 'localhost';
-$db   = defined('DB_NAME') ? DB_NAME : 'afshxhoj_persianhub';
-$user = defined('DB_USER') ? DB_USER : 'afshxhoj_afshin';
-$pass = defined('DB_PASS') ? DB_PASS : '';
+$hostRaw = defined('DB_HOST') ? DB_HOST : 'localhost';
+$db      = defined('DB_NAME') ? DB_NAME : 'afshxhoj_persianhub';
+$user    = defined('DB_USER') ? DB_USER : 'afshxhoj_afshin';
+$pass    = defined('DB_PASS') ? DB_PASS : '';
+
+// Split host and port if given as "host:port"
+if (strpos($hostRaw, ':') !== false) {
+    [$host, $port] = explode(':', $hostRaw, 2);
+} else {
+    $host = $hostRaw;
+    $port = '3306';
+}
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [
+    $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
+    $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_TIMEOUT            => 5,
