@@ -31,14 +31,16 @@ jobs:
           NEXT_PUBLIC_API_URL: "https://afshin.ch/persianch/api"
 
       - name: Generate PHP env file with DB credentials
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASSWORD }}
         run: |
-          cat > api/.env.php << EOF
-          <?php
-          define('DB_HOST', '${{ secrets.DB_HOST }}');
-          define('DB_NAME', '${{ secrets.DB_NAME }}');
-          define('DB_USER', '${{ secrets.DB_USER }}');
-          define('DB_PASS', '${{ secrets.DB_PASSWORD }}');
-          EOF
+          printf '<?php\ndefine("DB_HOST", "%s");\ndefine("DB_NAME", "%s");\ndefine("DB_USER", "%s");\ndefine("DB_PASS", "%s");\n' \
+            "$DB_HOST" "$DB_NAME" "$DB_USER" "$DB_PASS" > api/.env.php
+          echo "Generated .env.php:"
+          cat api/.env.php
 
       - name: Deploy static site to phub.ch via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
