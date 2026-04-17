@@ -41,6 +41,8 @@ jobs:
             "$DB_HOST" "$DB_NAME" "$DB_USER" "$DB_PASS" > api/.env.php
           echo "Generated .env.php:"
           cat api/.env.php
+          # Stage the generated file so FTP action includes it
+          git add -f api/.env.php
 
       - name: Deploy static site to phub.ch via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
