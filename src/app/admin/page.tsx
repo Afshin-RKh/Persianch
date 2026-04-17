@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { CATEGORIES, SWISS_CITIES } from "@/types";
-import { supabase as getSupabase } from "@/lib/supabase";
+import { addBusiness } from "@/lib/api";
 
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "persianch2024";
 
@@ -24,8 +24,8 @@ export default function AdminPage() {
     setLoading(true);
     setError("");
     try {
-      const { error: err } = await getSupabase().from("businesses").insert([form]);
-      if (err) throw err;
+      const result = await addBusiness(form as any);
+      if (!result.success) throw new Error("Failed to add business");
       setSuccess(true);
       setForm({
         name: "", name_fa: "", category: "restaurant", city: "Zurich",

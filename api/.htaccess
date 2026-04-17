@@ -1,0 +1,10 @@
+# Protect config file from direct access
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "*.php">
+    Order allow,deny
+    Allow from all
+</Files>

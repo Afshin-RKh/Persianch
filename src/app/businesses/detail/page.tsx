@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { getBusinessById } from "@/lib/supabase";
+import { getBusinessById } from "@/lib/api";
 import { Business, CATEGORIES } from "@/types";
 import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";

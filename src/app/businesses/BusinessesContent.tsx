@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import BusinessCard from "@/components/business/BusinessCard";
 import SearchBar from "@/components/business/SearchBar";
-import { getBusinesses } from "@/lib/supabase";
+import { getBusinesses } from "@/lib/api";
 import { CATEGORIES, SWISS_CITIES, Category, Business } from "@/types";
 import Link from "next/link";
 
