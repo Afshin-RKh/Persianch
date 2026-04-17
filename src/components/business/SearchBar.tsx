@@ -25,7 +25,8 @@ export default function SearchBar() {
     // preserve category if present
     const cat = searchParams.get("category");
     if (cat) params.set("category", cat);
-    router.push(`/businesses?${params.toString()}`);
+    // Use full navigation so useSearchParams re-reads correctly in static export
+    window.location.href = `/businesses?${params.toString()}`;
   };
 
   return (
