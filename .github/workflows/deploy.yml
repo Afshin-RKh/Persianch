@@ -48,7 +48,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./out/
           server-dir: /public_html/phub/
-          dangerous-clean-slate: false
+          dangerous-clean-slate: true
 
       - name: Deploy PHP API to secure location (outside web root)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
