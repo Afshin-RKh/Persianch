@@ -28,7 +28,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ""
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
           NEXT_PUBLIC_ADMIN_PASSWORD: ${{ secrets.NEXT_PUBLIC_ADMIN_PASSWORD }}
-          NEXT_PUBLIC_API_URL: "https://afshin.ch/persianch/api"
+          NEXT_PUBLIC_API_URL: "https://phub.ch/api"
 
       - name: Generate PHP env file with DB credentials
         run: |
@@ -47,7 +47,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./out/
-          server-dir: /public_html/persianch/
+          server-dir: /public_html/phub/
           dangerous-clean-slate: false
 
       - name: Deploy PHP API via FTP
@@ -57,5 +57,5 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
-          server-dir: /public_html/persianch/api/
+          server-dir: /public_html/phub/api/
           dangerous-clean-slate: false
