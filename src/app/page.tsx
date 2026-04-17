@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import SearchBar from "@/components/business/SearchBar";
 import BusinessCard from "@/components/business/BusinessCard";
 import { CATEGORIES } from "@/types";
@@ -58,7 +58,9 @@ export default function HomePage() {
           </p>
 
           <div className="max-w-2xl mx-auto">
-            <SearchBar />
+            <Suspense fallback={<div className="h-12" />}>
+              <SearchBar />
+            </Suspense>
           </div>
 
           {/* Quick stats */}
