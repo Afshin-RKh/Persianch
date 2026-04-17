@@ -56,6 +56,23 @@ export const CATEGORIES: CategoryMeta[] = [
 ];
 
 export const SWISS_CITIES = [
+  // Major cities
   "Zurich", "Geneva", "Basel", "Bern", "Lausanne",
-  "Winterthur", "Lucerne", "St. Gallen", "Lugano", "Biel"
+  "Winterthur", "Lucerne", "St. Gallen", "Lugano", "Biel",
+  // Other cantons & cities
+  "Aarau", "Appenzell", "Arlesheim", "Arbon",
+  "Baden", "Bellinzona", "Bulle",
+  "Chur", "Delémont", "Frauenfeld",
+  "Fribourg", "Glarus", "Herisau",
+  "Kreuzlingen", "Küsnacht", "Küssnacht",
+  "Liestal", "Martigny", "Monthey",
+  "Münchenbuchsee", "Münchenbuchsee",
+  "Nyon", "Oberwil", "Olten",
+  "Rapperswil", "Rheinfelden", "Romanshorn",
+  "Schaffhausen", "Schwyz", "Sion",
+  "Solothurn", "Spiez", "Stans",
+  "Thun", "Uster", "Vernier",
+  "Visp", "Wettingen", "Wil",
+  "Wohlen", "Wollerau", "Zug",
+  "Zuchwil"
 ];

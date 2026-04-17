@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import BusinessCard from "@/components/business/BusinessCard";
 import SearchBar from "@/components/business/SearchBar";
 import { getBusinesses } from "@/lib/api";
-import { CATEGORIES, SWISS_CITIES, Category, Business } from "@/types";
+import { CATEGORIES, Category, Business } from "@/types";
 import Link from "next/link";
 
 const MapView = lazy(() => import("@/components/business/MapView"));
@@ -62,23 +62,8 @@ export default function BusinessesContent() {
             ))}
           </div>
 
-          {/* City + map toggle row */}
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex gap-2 flex-wrap">
-              <Link href={`/businesses${category ? `?category=${category}` : ""}`}
-                className={!city ? activePill : inactivePill}
-                style={!city ? { backgroundColor: "#8B1A1A" } : {}}>
-                All Cities
-              </Link>
-              {SWISS_CITIES.map((c) => (
-                <Link key={c} href={`/businesses?city=${c}${category ? `&category=${category}` : ""}`}
-                  className={city === c ? activePill : inactivePill}
-                  style={city === c ? { backgroundColor: "#8B1A1A" } : {}}>
-                  {c}
-                </Link>
-              ))}
-            </div>
-
+          {/* Map toggle */}
+          <div className="flex items-center justify-end">
             <button
               onClick={() => setShowMap((v) => !v)}
               className="text-xs font-semibold px-4 py-1.5 rounded-full border transition-colors flex-shrink-0"
