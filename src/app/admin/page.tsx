@@ -16,7 +16,7 @@ export default function AdminPage() {
     name: "", name_fa: "", category: "restaurant", city: "Zurich",
     address: "", phone: "", website: "", email: "", instagram: "",
     description: "", description_fa: "", google_maps_url: "",
-    is_featured: false, is_verified: false,
+    is_featured: false, is_verified: false, is_approved: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +31,7 @@ export default function AdminPage() {
         name: "", name_fa: "", category: "restaurant", city: "Zurich",
         address: "", phone: "", website: "", email: "", instagram: "",
         description: "", description_fa: "", google_maps_url: "",
-        is_featured: false, is_verified: false,
+        is_featured: false, is_verified: false, is_approved: true,
       });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to add business");
@@ -79,8 +79,7 @@ export default function AdminPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Add a Business</h1>
-      <p className="text-gray-500 text-sm mb-8">افزودن کسب‌وکار جدید</p>
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">Add a Business</h1>
 
       {success && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm font-medium">
@@ -152,7 +151,7 @@ export default function AdminPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5" dir="rtl">توضیحات (فارسی)</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1.5">Description (Persian / فارسی)</label>
           <textarea
             placeholder="توضیح کسب‌وکار..."
             value={form.description_fa}

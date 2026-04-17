@@ -38,7 +38,7 @@ export default function BusinessesContent() {
   const inactivePill = "bg-white border border-gray-200 text-gray-600 hover:border-amber-300 font-medium text-xs px-3 py-1.5 rounded-full transition-colors";
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)]">
+    <div className="flex flex-col" style={{ minHeight: "calc(100vh - 64px)" }}>
       {/* Top bar: filters + toggle */}
       <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3 flex-shrink-0">
         <div className="max-w-7xl mx-auto">
@@ -94,7 +94,7 @@ export default function BusinessesContent() {
       </div>
 
       {/* Main content: list + map */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1" style={{ minHeight: "600px" }}>
         {/* Business list (scrollable) */}
         <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "w-full md:w-[420px] lg:w-[480px]" : "w-full"} bg-[#FDF8F3]`}>
           <div className="p-4">

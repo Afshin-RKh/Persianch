@@ -7,14 +7,14 @@ import Footer from "@/components/layout/Footer";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PersianCH — Persian Businesses in Switzerland",
+  title: "PersianHub — Persian Businesses in Switzerland",
   description:
     "Find Persian restaurants, doctors, lawyers, hairdressers and more in Switzerland. The largest directory of Iranian businesses in Switzerland.",
-  keywords: ["Persian businesses Switzerland", "Iranian restaurants Zurich", "ایرانی سوئیس"],
+  keywords: ["Persian businesses Switzerland", "Iranian restaurants Zurich", "Persian community Switzerland"],
   openGraph: {
-    title: "PersianCH — Persian Businesses in Switzerland",
+    title: "PersianHub — Persian Businesses in Switzerland",
     description: "The largest directory of Iranian businesses in Switzerland.",
-    siteName: "PersianCH",
+    siteName: "PersianHub",
     locale: "en_CH",
     type: "website",
   },
