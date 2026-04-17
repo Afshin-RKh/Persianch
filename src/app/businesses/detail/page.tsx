@@ -6,6 +6,35 @@ import { Business, CATEGORIES } from "@/types";
 import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+const CATEGORY_GRADIENTS: Record<string, string> = {
+  restaurant:   "from-orange-200 to-red-200",
+  cafe:         "from-amber-200 to-yellow-200",
+  hairdresser:  "from-pink-200 to-rose-200",
+  doctor:       "from-blue-200 to-cyan-200",
+  dentist:      "from-sky-200 to-blue-200",
+  lawyer:       "from-slate-200 to-gray-200",
+  accountant:   "from-green-200 to-emerald-200",
+  grocery:      "from-lime-200 to-green-200",
+  beauty:       "from-purple-200 to-pink-200",
+  "real-estate":"from-indigo-200 to-blue-200",
+  other:        "from-gray-200 to-slate-200",
+};
+
+function ContactRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+        style={{ backgroundColor: "#FDF0E8" }}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">{label}</p>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function BusinessDetailContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
@@ -14,19 +43,18 @@ function BusinessDetailContent() {
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
-    getBusinessById(id).then((b) => {
-      setBusiness(b);
-      setLoading(false);
-    });
+    getBusinessById(id).then(setBusiness).finally(() => setLoading(false));
   }, [id]);
 
   const category = business ? CATEGORIES.find((c) => c.slug === business.category) : null;
 
   if (loading) {
     return (
-      <main className="max-w-4xl mx-auto px-4 py-20 text-center text-gray-400">
-        <div className="text-4xl mb-4">⏳</div>
-        <p>Loading...</p>
+      <main className="max-w-4xl mx-auto px-4 py-10">
+        <div className="skeleton h-72 w-full mb-6" />
+        <div className="skeleton h-8 w-64 mb-3" />
+        <div className="skeleton h-4 w-full mb-2" />
+        <div className="skeleton h-4 w-3/4" />
       </main>
     );
   }
@@ -34,134 +62,158 @@ function BusinessDetailContent() {
   if (!business) {
     return (
       <main className="max-w-4xl mx-auto px-4 py-20 text-center text-gray-500">
-        <p className="text-4xl mb-4">🔍</p>
-        <p className="font-medium">Business not found.</p>
-        <Link href="/businesses" className="hover:underline mt-4 inline-block" style={{ color: "#8B1A1A" }}>
+        <p className="text-5xl mb-4">🔍</p>
+        <p className="font-bold text-lg">Business not found.</p>
+        <Link href="/businesses" className="hover:underline mt-4 inline-block text-sm" style={{ color: "#8B1A1A" }}>
           ← Back to listings
         </Link>
       </main>
     );
   }
 
+  const gradient = CATEGORY_GRADIENTS[business.category] ?? "from-gray-200 to-slate-200";
+
   return (
-    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-up">
       <Link
         href="/businesses"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#8B1A1A] mb-6 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#8B1A1A] mb-6 transition-colors font-medium"
       >
-        <ArrowLeft size={16} /> Back to listings
+        <ArrowLeft size={15} /> Back to listings
       </Link>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="h-56 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #fdf0e8 0%, #fce8d5 100%)" }}>
-          {business.image_url ? (
-            <img src={business.image_url} alt={business.name} className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-7xl">{category?.icon ?? "🏪"}</span>
+      {/* Hero banner */}
+      <div className={`relative h-64 sm:h-80 bg-gradient-to-br ${gradient} rounded-3xl overflow-hidden mb-6 flex items-center justify-center`}>
+        {business.image_url ? (
+          <img src={business.image_url} alt={business.name} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-9xl opacity-60">{category?.icon ?? "🏪"}</span>
+        )}
+        {/* Dark overlay at bottom for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+        {/* Badges */}
+        <div className="absolute top-4 right-4 flex gap-2">
+          {business.is_featured && (
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full shadow"
+              style={{ backgroundColor: "#C9A84C", color: "#3a0a0a" }}>
+              ⭐ Featured
+            </span>
+          )}
+          {business.is_verified && (
+            <span className="bg-white text-xs font-bold px-3 py-1.5 rounded-full shadow flex items-center gap-1"
+              style={{ color: "#8B1A1A" }}>
+              <CheckCircle size={12} /> Verified
+            </span>
           )}
         </div>
+      </div>
 
-        <div className="p-6 sm:p-8">
-          <div className="flex items-start gap-3 mb-4">
-            {business.logo_url && (
-              <img src={business.logo_url} alt="logo" className="w-14 h-14 rounded-xl object-cover border" />
-            )}
-            <div className="flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-bold text-gray-900">{business.name}</h1>
-                {business.is_verified && (
-                  <span className="flex items-center gap-1 text-xs font-medium" style={{ color: "#C9A84C" }}>
-                    <CheckCircle size={14} /> Verified
-                  </span>
-                )}
-                {business.is_featured && (
-                  <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">
-                    Featured
-                  </span>
-                )}
-              </div>
-              {business.name_fa && (
-                <p className="text-gray-500 text-lg mt-0.5" dir="rtl">{business.name_fa}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main info */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Title card */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="flex items-start gap-4">
+              {business.logo_url && (
+                <img src={business.logo_url} alt="logo" className="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm flex-shrink-0" />
               )}
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: "#FDF0E8", color: "#8B1A1A" }}>
-                  {category?.label_en}
-                </span>
-                <span className="text-xs text-gray-400">·</span>
-                <span className="text-xs text-gray-500 font-medium">{business.city}</span>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{business.name}</h1>
+                {business.name_fa && (
+                  <p className="text-gray-400 text-base mt-0.5" dir="rtl">{business.name_fa}</p>
+                )}
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full"
+                    style={{ backgroundColor: "#FDF0E8", color: "#8B1A1A" }}>
+                    {category?.icon} {category?.label_en}
+                  </span>
+                  <span className="flex items-center gap-1 text-xs text-gray-500">
+                    <MapPin size={12} style={{ color: "#8B1A1A" }} /> {business.city}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          {business.description && (
-            <p className="text-gray-600 mb-3 leading-relaxed">{business.description}</p>
+          {/* Description */}
+          {(business.description || business.description_fa) && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <h2 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">About</h2>
+              {business.description && (
+                <p className="text-gray-600 leading-relaxed">{business.description}</p>
+              )}
+              {business.description_fa && (
+                <p className="text-gray-500 leading-relaxed mt-3 pt-3 border-t border-gray-50" dir="rtl">
+                  {business.description_fa}
+                </p>
+              )}
+            </div>
           )}
-          {business.description_fa && (
-            <p className="text-gray-600 mb-6 leading-relaxed" dir="rtl">{business.description_fa}</p>
+        </div>
+
+        {/* Contact sidebar */}
+        <div className="space-y-3">
+          <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide px-1">Contact</h2>
+
+          {business.phone && (
+            <ContactRow icon={<Phone size={16} style={{ color: "#8B1A1A" }} />} label="Phone">
+              <a href={`tel:${business.phone}`} className="text-sm font-medium text-gray-800 hover:text-[#8B1A1A] transition-colors">
+                {business.phone}
+              </a>
+            </ContactRow>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-100">
-            {business.address && (
-              <div className="flex items-start gap-2.5">
-                <MapPin size={18} className="mt-0.5 shrink-0" style={{ color: "#8B1A1A" }} />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Address</p>
-                  <p className="text-sm text-gray-700">{business.address}, {business.city}</p>
-                  {business.google_maps_url && (
-                    <a href={business.google_maps_url} target="_blank" rel="noopener noreferrer"
-                      className="text-xs hover:underline mt-0.5 block" style={{ color: "#8B1A1A" }}>
-                      View on Google Maps →
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-            {business.phone && (
-              <div className="flex items-start gap-2.5">
-                <Phone size={18} className="mt-0.5 shrink-0" style={{ color: "#8B1A1A" }} />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Phone</p>
-                  <a href={`tel:${business.phone}`} className="text-sm text-gray-700 hover:text-red-700">
-                    {business.phone}
-                  </a>
-                </div>
-              </div>
-            )}
-            {business.website && (
-              <div className="flex items-start gap-2.5">
-                <Globe size={18} className="mt-0.5 shrink-0" style={{ color: "#8B1A1A" }} />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Website</p>
-                  <a href={business.website} target="_blank" rel="noopener noreferrer"
-                    className="text-sm hover:underline break-all" style={{ color: "#8B1A1A" }}>
-                    {business.website.replace(/^https?:\/\//, "")}
-                  </a>
-                </div>
-              </div>
-            )}
-            {business.email && (
-              <div className="flex items-start gap-2.5">
-                <Mail size={18} className="mt-0.5 shrink-0" style={{ color: "#8B1A1A" }} />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Email</p>
-                  <a href={`mailto:${business.email}`} className="text-sm text-gray-700 hover:text-red-700">
-                    {business.email}
-                  </a>
-                </div>
-              </div>
-            )}
-            {business.instagram && (
-              <div className="flex items-start gap-2.5">
-                <span className="text-base mt-0.5">📸</span>
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Instagram</p>
-                  <a href={`https://instagram.com/${business.instagram.replace("@", "")}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="text-sm hover:underline" style={{ color: "#8B1A1A" }}>
-                    @{business.instagram.replace("@", "")}
-                  </a>
-                </div>
-              </div>
+          {business.address && (
+            <ContactRow icon={<MapPin size={16} style={{ color: "#8B1A1A" }} />} label="Address">
+              <p className="text-sm text-gray-700">{business.address}, {business.city}</p>
+              {business.google_maps_url && (
+                <a href={business.google_maps_url} target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-semibold mt-1 block hover:underline" style={{ color: "#8B1A1A" }}>
+                  Open in Google Maps →
+                </a>
+              )}
+            </ContactRow>
+          )}
+
+          {business.website && (
+            <ContactRow icon={<Globe size={16} style={{ color: "#8B1A1A" }} />} label="Website">
+              <a href={business.website} target="_blank" rel="noopener noreferrer"
+                className="text-sm font-medium hover:underline break-all" style={{ color: "#8B1A1A" }}>
+                {business.website.replace(/^https?:\/\//, "")}
+              </a>
+            </ContactRow>
+          )}
+
+          {business.email && (
+            <ContactRow icon={<Mail size={16} style={{ color: "#8B1A1A" }} />} label="Email">
+              <a href={`mailto:${business.email}`} className="text-sm font-medium text-gray-800 hover:text-[#8B1A1A] transition-colors break-all">
+                {business.email}
+              </a>
+            </ContactRow>
+          )}
+
+          {business.instagram && (
+            <ContactRow icon={<span style={{ color: "#8B1A1A", fontSize: 16 }}>📸</span>} label="Instagram">
+              <a href={`https://instagram.com/${business.instagram.replace("@", "")}`}
+                target="_blank" rel="noopener noreferrer"
+                className="text-sm font-medium hover:underline" style={{ color: "#8B1A1A" }}>
+                @{business.instagram.replace("@", "")}
+              </a>
+            </ContactRow>
+          )}
+
+          {/* Reviews nudge */}
+          <div className="mt-4 p-4 rounded-2xl text-center border border-dashed border-gray-200">
+            <p className="text-xs text-gray-400 mb-2">Have you been here?</p>
+            {business.google_maps_url ? (
+              <a href={business.google_maps_url} target="_blank" rel="noopener noreferrer"
+                className="inline-block text-xs font-bold px-4 py-2 rounded-xl text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: "#8B1A1A" }}>
+                Leave a Google Review ↗
+              </a>
+            ) : (
+              <p className="text-xs text-gray-400">Search on Google Maps to leave a review.</p>
             )}
           </div>
         </div>
@@ -173,9 +225,11 @@ function BusinessDetailContent() {
 export default function BusinessDetailPage() {
   return (
     <Suspense fallback={
-      <main className="max-w-4xl mx-auto px-4 py-20 text-center text-gray-400">
-        <div className="text-4xl mb-4">⏳</div>
-        <p>Loading...</p>
+      <main className="max-w-4xl mx-auto px-4 py-10">
+        <div className="skeleton h-72 w-full mb-6" />
+        <div className="skeleton h-8 w-64 mb-3" />
+        <div className="skeleton h-4 w-full mb-2" />
+        <div className="skeleton h-4 w-3/4" />
       </main>
     }>
       <BusinessDetailContent />

@@ -9,7 +9,18 @@
       "Bash(git remote:*)",
       "Bash(git branch:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(gh run:*)",
+      "Bash(git commit:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git rebase:*)",
+      "Bash(git fetch:*)",
+      "Bash(git reset:*)",
+      "Bash(curl -s -o /tmp/resp1.txt -w \"%{http_code}\" \"https://phub.ch/api/businesses.php\")",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /tmp/resp2.txt -w \"%{http_code}\" \"https://phub.ch/api/businesses.php?category=restaurant\")"
     ]
   }
 }

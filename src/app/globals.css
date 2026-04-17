@@ -5,7 +5,6 @@
   --foreground: #1a0a0a;
   --primary: #8B1A1A;
   --primary-dark: #6B1212;
-  --primary-light: #B02020;
   --gold: #C9A84C;
   --gold-light: #E8C96A;
   --cream: #FDF8F3;
@@ -25,13 +24,41 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Persian text */
 [dir="rtl"] {
   font-family: Tahoma, Arial, sans-serif;
 }
 
-/* Gold accent underline for headings */
 .gold-underline {
   border-bottom: 3px solid var(--gold);
   padding-bottom: 4px;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #ede4da 25%, #f7ede3 50%, #ede4da 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 10px;
+}
+
+/* Fade-in on page load */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp 0.35s ease both;
+}
+
+/* Burgundy card hover glow */
+.card-hover {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-hover:hover {
+  box-shadow: 0 10px 36px rgba(139, 26, 26, 0.13);
+  transform: translateY(-3px);
 }
