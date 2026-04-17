@@ -28,6 +28,9 @@ export default function BusinessesContent() {
 
   const activeCategory = CATEGORIES.find((c) => c.slug === category);
 
+  const activePill = "text-white font-medium text-xs px-3 py-1.5 rounded-full";
+  const inactivePill = "bg-white border border-gray-200 text-gray-600 hover:border-amber-300 font-medium text-xs px-3 py-1.5 rounded-full transition-colors";
+
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="mb-8">
@@ -49,12 +52,14 @@ export default function BusinessesContent() {
       {/* Category pills */}
       <div className="flex gap-2 flex-wrap mb-4">
         <Link href="/businesses"
-          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!category ? "bg-red-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-red-300"}`}>
+          className={!category ? activePill : inactivePill}
+          style={!category ? { backgroundColor: "#8B1A1A" } : {}}>
           All
         </Link>
         {CATEGORIES.map((cat) => (
           <Link key={cat.slug} href={`/businesses?category=${cat.slug}${city ? `&city=${city}` : ""}`}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${category === cat.slug ? "bg-red-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-red-300"}`}>
+            className={category === cat.slug ? activePill : inactivePill}
+            style={category === cat.slug ? { backgroundColor: "#8B1A1A" } : {}}>
             {cat.icon} {cat.label_en}
           </Link>
         ))}
@@ -63,12 +68,14 @@ export default function BusinessesContent() {
       {/* City filter */}
       <div className="flex gap-2 flex-wrap mb-8">
         <Link href={`/businesses${category ? `?category=${category}` : ""}`}
-          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!city ? "bg-rose-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-rose-300"}`}>
+          className={!city ? activePill : inactivePill}
+          style={!city ? { backgroundColor: "#8B1A1A" } : {}}>
           All Cities
         </Link>
         {SWISS_CITIES.map((c) => (
           <Link key={c} href={`/businesses?city=${c}${category ? `&category=${category}` : ""}`}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${city === c ? "bg-rose-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-rose-300"}`}>
+            className={city === c ? activePill : inactivePill}
+            style={city === c ? { backgroundColor: "#8B1A1A" } : {}}>
             {c}
           </Link>
         ))}
@@ -82,7 +89,7 @@ export default function BusinessesContent() {
       ) : error ? (
         <div className="text-center py-16 text-gray-500">
           <p className="text-4xl mb-4">⚠️</p>
-          <p>Database not connected yet. Set up Supabase to see listings.</p>
+          <p>Could not load businesses. Please try again later.</p>
         </div>
       ) : businesses.length === 0 ? (
         <div className="text-center py-16 text-gray-500">

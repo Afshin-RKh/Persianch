@@ -54,7 +54,7 @@ export default function AdminPage() {
           />
           <button
             onClick={() => pw === ADMIN_PASSWORD ? setAuth(true) : setError("Wrong password")}
-            className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+            className="w-full text-white font-semibold py-3 rounded-xl transition-colors text-sm" style={{ backgroundColor: "#8B1A1A" }}
           >
             Login
           </button>

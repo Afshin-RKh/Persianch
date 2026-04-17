@@ -13,7 +13,7 @@ export default function BusinessCard({ business }: Props) {
     <Link href={`/businesses/detail?id=${business.id}`}>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group">
         {/* Image / placeholder */}
-        <div className="h-40 bg-gradient-to-br from-red-50 to-rose-100 flex items-center justify-center relative">
+        <div className="h-40 flex items-center justify-center relative" style={{ background: "linear-gradient(135deg, #fdf0e8 0%, #fce8d5 100%)" }}>
           {business.image_url ? (
             <img
               src={business.image_url}
@@ -33,7 +33,7 @@ export default function BusinessCard({ business }: Props) {
         <div className="p-4">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 className="font-semibold text-gray-900 group-hover:text-red-700 transition-colors">
+              <h3 className="font-semibold text-gray-900 group-hover:text-[#8B1A1A] transition-colors">
                 {business.name}
               </h3>
               {business.name_fa && (
@@ -41,12 +41,12 @@ export default function BusinessCard({ business }: Props) {
               )}
             </div>
             {business.is_verified && (
-              <CheckCircle size={16} className="text-red-500 shrink-0 mt-1" />
+              <CheckCircle size={16} className="shrink-0 mt-1" style={{ color: "#C9A84C" }} />
             )}
           </div>
 
           <div className="mt-2 flex items-center gap-1.5">
-            <span className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full font-medium">
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: "#FDF0E8", color: "#8B1A1A" }}>
               {category?.label_en}
             </span>
             <span className="text-xs text-gray-400">·</span>

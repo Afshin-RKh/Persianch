@@ -49,7 +49,8 @@ export default function SearchBar() {
 
       <button
         type="submit"
-        className="bg-red-700 hover:bg-red-800 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
+        className="text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
+        style={{ backgroundColor: "#8B1A1A" }}
       >
         Search
       </button>
