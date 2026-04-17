@@ -28,7 +28,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ""
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
           NEXT_PUBLIC_ADMIN_PASSWORD: ${{ secrets.NEXT_PUBLIC_ADMIN_PASSWORD }}
-          NEXT_PUBLIC_API_URL: "https://afshin.ch/persianch/api"
+          NEXT_PUBLIC_API_URL: "https://phub.ch/api"
 
       - name: Generate PHP env file with DB credentials
         env:
@@ -39,12 +39,8 @@ jobs:
         run: |
           printf '<?php\ndefine("DB_HOST", "%s");\ndefine("DB_NAME", "%s");\ndefine("DB_USER", "%s");\ndefine("DB_PASS", "%s");\n' \
             "$DB_HOST" "$DB_NAME" "$DB_USER" "$DB_PASS" > api/.env.php
-          echo "Generated .env.php:"
-          cat api/.env.php
-          # Stage the generated file so FTP action includes it
-          git add -f api/.env.php
 
-      - name: Deploy static site to phub.ch via FTP
+      - name: Deploy static site to phub.ch
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -54,12 +50,22 @@ jobs:
           server-dir: /public_html/phub/
           dangerous-clean-slate: false
 
-      - name: Deploy PHP API via FTP (kept on afshin.ch/persianch)
+      - name: Deploy PHP API to secure location (outside web root)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
-          server-dir: /public_html/persianch/api/
+          server-dir: /repositories/Persianch1/
+          dangerous-clean-slate: true
+
+      - name: Deploy public API proxy to phub.ch/api
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./public-api/
+          server-dir: /public_html/phub/api/
           dangerous-clean-slate: true
