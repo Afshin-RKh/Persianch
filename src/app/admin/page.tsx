@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { CATEGORIES, SWISS_CITIES } from "@/types";
-import { supabase } from "@/lib/supabase";
+import { supabase as getSupabase } from "@/lib/supabase";
 
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "persianch2024";
 
@@ -24,7 +24,7 @@ export default function AdminPage() {
     setLoading(true);
     setError("");
     try {
-      const { error: err } = await supabase.from("businesses").insert([form]);
+      const { error: err } = await getSupabase().from("businesses").insert([form]);
       if (err) throw err;
       setSuccess(true);
       setForm({
