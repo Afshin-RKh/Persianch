@@ -30,6 +30,8 @@ export interface Business {
   is_featured: boolean;
   is_verified: boolean;
   created_at: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface CategoryMeta {
