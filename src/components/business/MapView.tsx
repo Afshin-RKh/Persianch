@@ -48,13 +48,12 @@ export default function MapView({ businesses, onSelect, selected }: Props) {
       );
 
       const map = L.map(mapRef.current!, {
-        center: DEFAULT_CENTER,
-        zoom: 8,
         minZoom: 7,
         maxZoom: 19,
         maxBounds: switzerlandBounds,
-        maxBoundsViscosity: 1.0,  // hard stop at border
+        maxBoundsViscosity: 0.9,
       });
+      map.fitBounds(switzerlandBounds);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap contributors",
         maxZoom: 19,
