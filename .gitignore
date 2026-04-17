@@ -15,7 +15,7 @@
 
 # next.js
 /.next/
-# /out/ is committed to main so cPanel Git can deploy it
+/out/
 
 # production
 /build

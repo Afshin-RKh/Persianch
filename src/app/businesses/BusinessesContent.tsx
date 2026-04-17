@@ -49,12 +49,12 @@ export default function BusinessesContent() {
       {/* Category pills */}
       <div className="flex gap-2 flex-wrap mb-4">
         <Link href="/businesses"
-          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!category ? "bg-emerald-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-emerald-300"}`}>
+          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!category ? "bg-red-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-red-300"}`}>
           All
         </Link>
         {CATEGORIES.map((cat) => (
           <Link key={cat.slug} href={`/businesses?category=${cat.slug}${city ? `&city=${city}` : ""}`}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${category === cat.slug ? "bg-emerald-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-emerald-300"}`}>
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${category === cat.slug ? "bg-red-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-red-300"}`}>
             {cat.icon} {cat.label_en}
           </Link>
         ))}
@@ -63,12 +63,12 @@ export default function BusinessesContent() {
       {/* City filter */}
       <div className="flex gap-2 flex-wrap mb-8">
         <Link href={`/businesses${category ? `?category=${category}` : ""}`}
-          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!city ? "bg-teal-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-teal-300"}`}>
+          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!city ? "bg-rose-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-rose-300"}`}>
           All Cities
         </Link>
         {SWISS_CITIES.map((c) => (
           <Link key={c} href={`/businesses?city=${c}${category ? `&category=${category}` : ""}`}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${city === c ? "bg-teal-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-teal-300"}`}>
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${city === c ? "bg-rose-700 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-rose-300"}`}>
             {c}
           </Link>
         ))}

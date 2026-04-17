@@ -27,7 +27,7 @@ export default function Footer() {
                 <li key={cat.slug}>
                   <Link
                     href={`/businesses?category=${cat.slug}`}
-                    className="hover:text-emerald-400 transition-colors"
+                    className="hover:text-red-400 transition-colors"
                   >
                     {cat.icon} {cat.label_en} · {cat.label_fa}
                   </Link>
@@ -43,7 +43,7 @@ export default function Footer() {
                 <li key={city}>
                   <Link
                     href={`/businesses?city=${city}`}
-                    className="hover:text-emerald-400 transition-colors"
+                    className="hover:text-red-400 transition-colors"
                   >
                     {city}
                   </Link>

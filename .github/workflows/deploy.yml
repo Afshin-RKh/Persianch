@@ -3,12 +3,7 @@ name: Build & Deploy to Namecheap (FTP)
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - 'out/**'
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   deploy:
@@ -43,12 +38,3 @@ jobs:
           local-dir: ./out/
           server-dir: /public_html/persianch/
           dangerous-clean-slate: false
-
-      - name: Commit built output to main
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f out/
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "chore: update build output [skip ci]"
-          git push

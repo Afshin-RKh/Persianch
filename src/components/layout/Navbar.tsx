@@ -13,7 +13,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl">🦁</span>
-            <span className="font-bold text-xl text-emerald-700">PersianCH</span>
+            <span className="font-bold text-xl text-red-700">PersianCH</span>
             <span className="hidden sm:inline text-sm text-gray-400 font-medium">
               Persian Businesses in Switzerland
             </span>
@@ -21,13 +21,13 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-            <Link href="/" className="hover:text-emerald-700 transition-colors">Home</Link>
-            <Link href="/businesses" className="hover:text-emerald-700 transition-colors">All Businesses</Link>
-            <Link href="/businesses?category=restaurant" className="hover:text-emerald-700 transition-colors">Restaurants</Link>
-            <Link href="/businesses?category=doctor" className="hover:text-emerald-700 transition-colors">Doctors</Link>
+            <Link href="/" className="hover:text-red-700 transition-colors">Home</Link>
+            <Link href="/businesses" className="hover:text-red-700 transition-colors">All Businesses</Link>
+            <Link href="/businesses?category=restaurant" className="hover:text-red-700 transition-colors">Restaurants</Link>
+            <Link href="/businesses?category=doctor" className="hover:text-red-700 transition-colors">Doctors</Link>
             <Link
               href="/admin"
-              className="bg-emerald-700 text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition-colors"
+              className="bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors"
             >
               Add Business
             </Link>
@@ -35,7 +35,7 @@ export default function Navbar() {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 rounded-md text-gray-500 hover:text-emerald-700"
+            className="md:hidden p-2 rounded-md text-gray-500 hover:text-red-700"
             onClick={() => setOpen(!open)}
           >
             {open ? <X size={22} /> : <Menu size={22} />}
@@ -50,7 +50,7 @@ export default function Navbar() {
           <Link href="/businesses" className="block py-2" onClick={() => setOpen(false)}>All Businesses</Link>
           <Link href="/businesses?category=restaurant" className="block py-2" onClick={() => setOpen(false)}>Restaurants</Link>
           <Link href="/businesses?category=doctor" className="block py-2" onClick={() => setOpen(false)}>Doctors</Link>
-          <Link href="/admin" className="block py-2 text-emerald-700 font-semibold" onClick={() => setOpen(false)}>+ Add Business</Link>
+          <Link href="/admin" className="block py-2 text-red-700 font-semibold" onClick={() => setOpen(false)}>+ Add Business</Link>
         </div>
       )}
     </nav>

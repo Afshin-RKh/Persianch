@@ -29,7 +29,7 @@ export default function SearchBar() {
           placeholder="Search businesses, doctors, restaurants..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+          className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
         />
       </div>
 
@@ -38,7 +38,7 @@ export default function SearchBar() {
         <select
           value={city}
           onChange={(e) => setCity(e.target.value)}
-          className="pl-10 pr-8 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm appearance-none min-w-[150px]"
+          className="pl-10 pr-8 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-sm appearance-none min-w-[150px]"
         >
           <option value="">All Cities</option>
           {SWISS_CITIES.map((c) => (
@@ -49,7 +49,7 @@ export default function SearchBar() {
 
       <button
         type="submit"
-        className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
+        className="bg-red-700 hover:bg-red-800 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
       >
         Search
       </button>

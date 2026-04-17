@@ -50,11 +50,11 @@ export default function AdminPage() {
             placeholder="Password"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-red-500"
           />
           <button
             onClick={() => pw === ADMIN_PASSWORD ? setAuth(true) : setError("Wrong password")}
-            className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+            className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
           >
             Login
           </button>
@@ -72,7 +72,7 @@ export default function AdminPage() {
         placeholder={placeholder}
         value={form[key] as string}
         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
       />
     </div>
   );
@@ -83,7 +83,7 @@ export default function AdminPage() {
       <p className="text-gray-500 text-sm mb-8">افزودن کسب‌وکار جدید</p>
 
       {success && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 mb-6 text-sm font-medium">
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm font-medium">
           ✅ Business added successfully!
         </div>
       )}
@@ -105,7 +105,7 @@ export default function AdminPage() {
             <select
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               {CATEGORIES.map((c) => (
                 <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>
@@ -117,7 +117,7 @@ export default function AdminPage() {
             <select
               value={form.city}
               onChange={(e) => setForm({ ...form, city: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               {SWISS_CITIES.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -147,7 +147,7 @@ export default function AdminPage() {
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             rows={3}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
           />
         </div>
 
@@ -159,7 +159,7 @@ export default function AdminPage() {
             onChange={(e) => setForm({ ...form, description_fa: e.target.value })}
             rows={3}
             dir="rtl"
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
           />
         </div>
 
@@ -169,7 +169,7 @@ export default function AdminPage() {
               type="checkbox"
               checked={form.is_featured}
               onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
-              className="rounded accent-emerald-600"
+              className="rounded accent-red-600"
             />
             Featured
           </label>
@@ -178,7 +178,7 @@ export default function AdminPage() {
               type="checkbox"
               checked={form.is_verified}
               onChange={(e) => setForm({ ...form, is_verified: e.target.checked })}
-              className="rounded accent-emerald-600"
+              className="rounded accent-red-600"
             />
             Verified
           </label>
@@ -187,7 +187,7 @@ export default function AdminPage() {
         <button
           type="submit"
           disabled={loading || !form.name}
-          className="w-full bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+          className="w-full bg-red-700 hover:bg-red-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
         >
           {loading ? "Saving..." : "Add Business"}
         </button>
