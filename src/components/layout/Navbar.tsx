@@ -56,6 +56,7 @@ export default function Navbar() {
             {navLink("/", "Home")}
             {navLink("/businesses", "Businesses")}
             {navLink("/blog", "Blog")}
+            {navLink("/about", "About Us")}
           </div>
 
           {/* CTA */}
@@ -87,6 +88,7 @@ export default function Navbar() {
             ["/", "🏠 Home"],
             ["/businesses", "🏪 Businesses"],
             ["/blog", "📝 Blog"],
+            ["/about", "🦁 About Us"],
           ].map(([href, label]) => (
             <Link
               key={href}
