@@ -81,7 +81,7 @@ export default function BusinessCard({ business }: Props) {
           <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
             <span className="flex items-center gap-1 text-xs text-gray-400">
               <MapPin size={11} style={{ color: "#8B1A1A" }} />
-              {business.canton ?? business.city}
+              {business.canton}
             </span>
             <span className="text-xs font-semibold transition-colors" style={{ color: "#8B1A1A" }}>
               View →
