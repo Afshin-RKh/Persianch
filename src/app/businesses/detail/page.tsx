@@ -5,6 +5,9 @@ import { getBusinessById } from "@/lib/api";
 import { Business, CATEGORIES } from "@/types";
 import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const BusinessMap = dynamic(() => import("@/components/business/BusinessMap"), { ssr: false });
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
   restaurant:   "from-orange-200 to-red-200",
@@ -129,7 +132,7 @@ function BusinessDetailContent() {
                     {category?.icon} {category?.label_en}
                   </span>
                   <span className="flex items-center gap-1 text-xs text-gray-500">
-                    <MapPin size={12} style={{ color: "#8B1A1A" }} /> {business.canton ?? business.city}
+                    <MapPin size={12} style={{ color: "#8B1A1A" }} /> {business.canton}
                   </span>
                 </div>
               </div>
@@ -150,6 +153,9 @@ function BusinessDetailContent() {
               )}
             </div>
           )}
+
+          {/* Map */}
+          <BusinessMap business={business} />
         </div>
 
         {/* Contact sidebar */}
@@ -166,7 +172,7 @@ function BusinessDetailContent() {
 
           {business.address && (
             <ContactRow icon={<MapPin size={16} style={{ color: "#8B1A1A" }} />} label="Address">
-              <p className="text-sm text-gray-700">{business.address}, {business.canton ?? business.city}</p>
+              <p className="text-sm text-gray-700">{business.address}, {business.canton}</p>
               {business.google_maps_url && (
                 <a href={business.google_maps_url} target="_blank" rel="noopener noreferrer"
                   className="text-xs font-semibold mt-1 block hover:underline" style={{ color: "#8B1A1A" }}>
