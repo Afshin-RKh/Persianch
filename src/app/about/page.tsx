@@ -11,7 +11,7 @@ export default function AboutPage() {
           About <span style={{ color: "#8B1A1A" }}>Persian</span><span style={{ color: "#C9A84C" }}>Hub</span>
         </h1>
         <p className="text-gray-500 text-lg leading-relaxed max-w-xl mx-auto">
-          A community-driven directory connecting Persian-speaking businesses with their customers across Switzerland.
+          A community-driven directory connecting Persian-speaking businesses with their customers — starting in Switzerland, growing across Europe.
         </p>
       </div>
 
@@ -47,7 +47,7 @@ export default function AboutPage() {
         {[
           { icon: "🇮🇷", title: "Persian Community", text: "Built by Persians, for Persians and the wider Farsi-speaking diaspora in Switzerland." },
           { icon: "🤝", title: "Free to List", text: "Standard listings are completely free. No fees, no commissions, no catch." },
-          { icon: "🌍", title: "Across Switzerland", text: "From Geneva to St. Gallen, we cover businesses in every corner of the country." },
+          { icon: "🌍", title: "Starting in Switzerland", text: "We launched in Switzerland and are expanding across Europe — one country at a time." },
         ].map(({ icon, title, text }) => (
           <div key={title} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
             <span className="text-4xl block mb-3">{icon}</span>
@@ -61,11 +61,11 @@ export default function AboutPage() {
       <section className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center">
         <h2 className="text-xl font-bold text-gray-900 mb-3">Own a Persian Business in Switzerland?</h2>
         <p className="text-gray-500 leading-relaxed mb-2 max-w-lg mx-auto">
-          Standard listings on PersianHub are completely free. Fill in the form below and your business
+          Standard listings on PersianHub are completely free. Fill in the form and your business
           will be on the map within a few days.
         </p>
         <p className="text-gray-400 text-sm mb-7">
-          No fees. No contracts. Just visibility for your business.
+          No fees. No contracts. Just visibility — in Switzerland today, across Europe tomorrow.
         </p>
         <Link
           href="/admin"
