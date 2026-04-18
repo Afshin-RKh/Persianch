@@ -3,25 +3,33 @@ require_once 'config.php';
 
 $results = [];
 
-// 1. Check if city column exists — if so, rename to canton
+// 1. Drop legacy city column if it still exists (canton is the correct column)
 try {
     $cols = $pdo->query("SHOW COLUMNS FROM businesses LIKE 'city'")->fetchAll();
     if (count($cols) > 0) {
-        $pdo->exec("ALTER TABLE businesses CHANGE COLUMN city canton VARCHAR(100) DEFAULT NULL");
-        $results[] = "Renamed city column to canton";
+        $pdo->exec("ALTER TABLE businesses DROP COLUMN city");
+        $results[] = "Dropped legacy city column";
     } else {
-        $results[] = "city column: already renamed or never existed";
+        $results[] = "city column: already removed";
     }
 } catch (PDOException $e) {
-    $results[] = "city rename error: " . $e->getMessage();
+    $results[] = "city column error: " . $e->getMessage();
 }
 
-// 2. Convert entire table to utf8mb4 so Persian/Arabic text stores correctly
+// 2. Convert businesses table to utf8mb4
 try {
     $pdo->exec("ALTER TABLE businesses CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-    $results[] = "Converted table to utf8mb4";
+    $results[] = "Converted businesses table to utf8mb4";
 } catch (PDOException $e) {
-    $results[] = "utf8mb4 conversion error: " . $e->getMessage();
+    $results[] = "businesses utf8mb4 error: " . $e->getMessage();
+}
+
+// 3. Convert blog_posts table to utf8mb4
+try {
+    $pdo->exec("ALTER TABLE blog_posts CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    $results[] = "Converted blog_posts table to utf8mb4";
+} catch (PDOException $e) {
+    $results[] = "blog_posts utf8mb4 error: " . $e->getMessage();
 }
 
 echo json_encode(['done' => true, 'results' => $results]);

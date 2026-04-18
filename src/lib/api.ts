@@ -34,6 +34,24 @@ export async function addBusiness(data: Partial<Business>): Promise<{ success: b
   return res.json();
 }
 
+export async function updateBusiness(id: string | number, data: Partial<Business>): Promise<{ success: boolean }> {
+  const res = await fetch(`${API_URL}/businesses.php`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, ...data }),
+  });
+  return res.json();
+}
+
+export async function deleteBusiness(id: string | number): Promise<{ success: boolean }> {
+  const res = await fetch(`${API_URL}/businesses.php`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+  return res.json();
+}
+
 export async function getBlogPosts(): Promise<BlogPost[]> {
   const res = await fetch(`${API_URL}/blog.php`);
   if (!res.ok) throw new Error("Failed to fetch blog posts");

@@ -16,7 +16,6 @@ export interface Business {
   name: string;
   name_fa?: string; // Persian name
   category: Category;
-  city?: string; // legacy — DB column renamed to canton
   address: string;
   phone?: string;
   website?: string;
