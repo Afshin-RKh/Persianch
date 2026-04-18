@@ -24,6 +24,11 @@ foreach (['127.0.0.1', 'localhost'] as $host) {
         $pdo = new PDO("mysql:host=$host;port=3306;dbname=$db;charset=utf8mb4", $user, $pass, [PDO::ATTR_TIMEOUT => 3]);
         echo "CONNECTED via $host\n";
         echo "Businesses in DB: " . $pdo->query("SELECT COUNT(*) FROM businesses")->fetchColumn() . "\n";
+        // Check charset
+        $vars = $pdo->query("SHOW VARIABLES LIKE 'character_set%'")->fetchAll(PDO::FETCH_KEY_PAIR);
+        foreach ($vars as $k => $v) echo "$k = $v\n";
+        $col = $pdo->query("SELECT CHARACTER_MAXIMUM_LENGTH, CHARACTER_SET_NAME, COLLATION_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME='businesses' AND COLUMN_NAME='name_fa' AND TABLE_SCHEMA=DATABASE()")->fetch();
+        echo "name_fa column charset: " . ($col['CHARACTER_SET_NAME'] ?? 'unknown') . " / " . ($col['COLLATION_NAME'] ?? 'unknown') . "\n";
         break;
     } catch (PDOException $e) {
         echo "FAILED via $host: " . $e->getMessage() . "\n";
