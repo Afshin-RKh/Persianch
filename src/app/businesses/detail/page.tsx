@@ -209,19 +209,6 @@ function BusinessDetailContent() {
             </ContactRow>
           )}
 
-          {/* Reviews nudge */}
-          <div className="mt-4 p-4 rounded-2xl text-center border border-dashed border-gray-200">
-            <p className="text-xs text-gray-400 mb-2">Have you been here?</p>
-            {business.google_maps_url ? (
-              <a href={business.google_maps_url} target="_blank" rel="noopener noreferrer"
-                className="inline-block text-xs font-bold px-4 py-2 rounded-xl text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: "#8B1A1A" }}>
-                Leave a Google Review ↗
-              </a>
-            ) : (
-              <p className="text-xs text-gray-400">Search on Google Maps to leave a review.</p>
-            )}
-          </div>
         </div>
       </div>
     </main>

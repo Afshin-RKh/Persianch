@@ -38,7 +38,7 @@ export default function SearchBar() {
           placeholder="Search restaurants, doctors, lawyers..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:border-transparent text-sm"
+          className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:border-transparent text-sm text-gray-900 placeholder-gray-400"
         />
       </div>
 
@@ -47,7 +47,7 @@ export default function SearchBar() {
         <select
           value={canton}
           onChange={(e) => setCanton(e.target.value)}
-          className="pl-10 pr-8 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 text-sm appearance-none min-w-[170px]"
+          className="pl-10 pr-8 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 text-sm appearance-none min-w-[170px] text-gray-900"
         >
           <option value="">All Cantons</option>
           {SWISS_CANTONS.map((c) => (
