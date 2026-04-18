@@ -56,6 +56,13 @@ if ($method === 'GET') {
 if ($method === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
 
+    // Reject if name is missing or empty
+    if (empty(trim($data['name'] ?? ''))) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'name is required']);
+        exit();
+    }
+
     $sql = "INSERT INTO businesses (name, name_fa, category, canton, address, phone, website, email, instagram, description, description_fa, google_maps_url, lat, lng, is_featured, is_verified, is_approved)
             VALUES (:name, :name_fa, :category, :canton, :address, :phone, :website, :email, :instagram, :description, :description_fa, :google_maps_url, :lat, :lng, :is_featured, :is_verified, :is_approved)";
 
@@ -102,4 +109,14 @@ if ($method === 'PATCH') {
     $stmt = $pdo->prepare("UPDATE businesses SET " . implode(', ', $fields) . " WHERE id = :id");
     $stmt->execute($params);
     echo json_encode(['success' => true]);
+}
+
+if ($method === 'DELETE') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id = $data['id'] ?? null;
+    if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
+
+    $stmt = $pdo->prepare("DELETE FROM businesses WHERE id = :id");
+    $stmt->execute([':id' => $id]);
+    echo json_encode(['success' => true, 'deleted' => $id]);
 }
