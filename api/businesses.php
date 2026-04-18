@@ -90,7 +90,7 @@ if ($method === 'PATCH') {
 
     $fields = [];
     $params = [':id' => $id];
-    $allowed = ['lat','lng','image_url','canton','address','phone','website','email','instagram','description','google_maps_url','is_featured','is_verified'];
+    $allowed = ['lat','lng','image_url','canton','address','phone','website','email','instagram','description','google_maps_url','is_featured','is_verified','is_approved'];
     foreach ($allowed as $f) {
         if (array_key_exists($f, $data)) {
             $fields[] = "$f = :$f";
