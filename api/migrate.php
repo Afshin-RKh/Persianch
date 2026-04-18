@@ -3,6 +3,20 @@ require_once 'config.php';
 
 $results = [];
 
+// 0. Add country column if it doesn't exist
+try {
+    $cols = $pdo->query("SHOW COLUMNS FROM businesses LIKE 'country'")->fetchAll();
+    if (count($cols) === 0) {
+        $pdo->exec("ALTER TABLE businesses ADD COLUMN country VARCHAR(100) DEFAULT 'Switzerland' AFTER canton");
+        $pdo->exec("UPDATE businesses SET country = 'Switzerland' WHERE country IS NULL");
+        $results[] = "Added country column, set all existing to Switzerland";
+    } else {
+        $results[] = "country column: already exists";
+    }
+} catch (PDOException $e) {
+    $results[] = "country column error: " . $e->getMessage();
+}
+
 // 1. Drop legacy city column if it still exists (canton is the correct column)
 try {
     $cols = $pdo->query("SHOW COLUMNS FROM businesses LIKE 'city'")->fetchAll();

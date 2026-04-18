@@ -14,8 +14,9 @@ export type Category =
 export interface Business {
   id: string;
   name: string;
-  name_fa?: string; // Persian name
+  name_fa?: string;
   category: Category;
+  country?: string;
   address: string;
   phone?: string;
   website?: string;
@@ -86,3 +87,18 @@ export const SWISS_CANTONS = [
 
 // Keep for backward compatibility
 export const SWISS_CITIES = SWISS_CANTONS;
+
+export const COUNTRIES = [
+  "Switzerland",
+  "Germany",
+  "Austria",
+  "France",
+  "United Kingdom",
+  "Netherlands",
+  "Sweden",
+  "Norway",
+  "Denmark",
+  "Belgium",
+  "Italy",
+  "Spain",
+];

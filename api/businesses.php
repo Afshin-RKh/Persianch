@@ -12,6 +12,11 @@ if ($method === 'GET') {
         $params[':category'] = $_GET['category'];
     }
 
+    if (!empty($_GET['country'])) {
+        $where[] = 'b.country = :country';
+        $params[':country'] = $_GET['country'];
+    }
+
     if (!empty($_GET['canton'])) {
         $where[] = 'b.canton = :canton';
         $params[':canton'] = $_GET['canton'];
@@ -97,7 +102,7 @@ if ($method === 'PATCH') {
 
     $fields = [];
     $params = [':id' => $id];
-    $allowed = ['name','name_fa','lat','lng','image_url','canton','address','phone','website','email','instagram','description','description_fa','google_maps_url','is_featured','is_verified','is_approved'];
+    $allowed = ['name','name_fa','lat','lng','image_url','country','canton','address','phone','website','email','instagram','description','description_fa','google_maps_url','is_featured','is_verified','is_approved'];
     foreach ($allowed as $f) {
         if (array_key_exists($f, $data)) {
             $fields[] = "$f = :$f";

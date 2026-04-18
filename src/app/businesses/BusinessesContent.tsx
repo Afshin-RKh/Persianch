@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, Suspense, lazy } from "react";
+import { useEffect, useState, useCallback, useMemo, Suspense, lazy } from "react";
 import { useSearchParams } from "next/navigation";
 import BusinessCard from "@/components/business/BusinessCard";
 import SearchBar from "@/components/business/SearchBar";
@@ -11,54 +11,87 @@ const MapView = lazy(() => import("@/components/business/MapView"));
 
 export default function BusinessesContent() {
   const searchParams = useSearchParams();
-  const category = searchParams.get("category") ?? undefined;
-  const canton = searchParams.get("canton") ?? undefined;
-  const search = searchParams.get("search") ?? undefined;
 
-  const [businesses, setBusinesses] = useState<Business[]>([]);
+  // All businesses fetched once
+  const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<Business | null>(null);
   const [showMap, setShowMap] = useState(true);
 
+  // Filter state — initialised from URL params
+  const [search, setSearch] = useState(searchParams.get("search") ?? "");
+  const [country, setCountry] = useState(searchParams.get("country") ?? "");
+  const [canton, setCanton] = useState(searchParams.get("canton") ?? "");
+  const [category, setCategory] = useState(searchParams.get("category") ?? "");
+
+  // Fetch all approved businesses once
   useEffect(() => {
     setLoading(true);
-    setError(false);
-    getBusinesses({ category: category as Category, canton, search })
-      .then(setBusinesses)
+    getBusinesses()
+      .then(setAllBusinesses)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [category, canton, search]);
+  }, []);
+
+  // Client-side filtering — updates map live as filters change
+  const businesses = useMemo(() => {
+    return allBusinesses.filter((b) => {
+      if (category && b.category !== category) return false;
+      if (country && b.country !== country) return false;
+      if (canton && b.canton !== canton) return false;
+      if (search.trim()) {
+        const q = search.trim().toLowerCase();
+        return (
+          b.name.toLowerCase().includes(q) ||
+          (b.name_fa && b.name_fa.includes(search.trim())) ||
+          (b.description && b.description.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [allBusinesses, search, country, canton, category]);
 
   const handleSelect = useCallback((b: Business) => setSelected(b), []);
-
-  const activeCategory = CATEGORIES.find((c) => c.slug === category);
 
   const activePill = "text-white font-medium text-xs px-3 py-1.5 rounded-full";
   const inactivePill = "bg-white border border-gray-200 text-gray-600 hover:border-amber-300 font-medium text-xs px-3 py-1.5 rounded-full transition-colors";
 
   return (
     <div className="flex flex-col" style={{ minHeight: "calc(100vh - 64px)" }}>
-      {/* Top bar: filters + toggle */}
+      {/* Top bar */}
       <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3 flex-shrink-0">
         <div className="max-w-7xl mx-auto">
           <div className="mb-3">
-            <SearchBar />
+            <SearchBar
+              all={allBusinesses}
+              search={search}
+              country={country}
+              canton={canton}
+              onSearchChange={setSearch}
+              onCountryChange={setCountry}
+              onCantonChange={setCanton}
+            />
           </div>
 
           {/* Category pills */}
           <div className="flex gap-2 flex-wrap mb-2">
-            <Link href="/businesses"
+            <button
+              onClick={() => setCategory("")}
               className={!category ? activePill : inactivePill}
-              style={!category ? { backgroundColor: "#8B1A1A" } : {}}>
+              style={!category ? { backgroundColor: "#8B1A1A" } : {}}
+            >
               All
-            </Link>
+            </button>
             {CATEGORIES.map((cat) => (
-              <Link key={cat.slug} href={`/businesses?category=${cat.slug}${canton ? `&canton=${canton}` : ""}`}
+              <button
+                key={cat.slug}
+                onClick={() => setCategory(cat.slug === category ? "" : cat.slug)}
                 className={category === cat.slug ? activePill : inactivePill}
-                style={category === cat.slug ? { backgroundColor: "#8B1A1A" } : {}}>
+                style={category === cat.slug ? { backgroundColor: "#8B1A1A" } : {}}
+              >
                 {cat.icon} {cat.label_en}
-              </Link>
+              </button>
             ))}
           </div>
 
@@ -66,7 +99,7 @@ export default function BusinessesContent() {
           <div className="flex items-center justify-end">
             <button
               onClick={() => setShowMap((v) => !v)}
-              className="text-xs font-semibold px-4 py-1.5 rounded-full border transition-colors flex-shrink-0"
+              className="text-xs font-semibold px-4 py-1.5 rounded-full border transition-colors"
               style={showMap
                 ? { backgroundColor: "#8B1A1A", color: "white", borderColor: "#8B1A1A" }
                 : { backgroundColor: "white", color: "#8B1A1A", borderColor: "#8B1A1A" }
@@ -78,9 +111,9 @@ export default function BusinessesContent() {
         </div>
       </div>
 
-      {/* Main content: list + map */}
+      {/* Main content */}
       <div className="flex flex-1" style={{ minHeight: "600px" }}>
-        {/* Business list (scrollable) */}
+        {/* Business list */}
         <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "w-full md:w-[420px] lg:w-[480px]" : "w-full"} bg-[#FDF8F3]`}>
           <div className="p-4">
             {loading ? (
@@ -97,7 +130,7 @@ export default function BusinessesContent() {
               <div className="text-center py-16 text-gray-500">
                 <p className="text-4xl mb-4">🔍</p>
                 <p className="font-medium">No businesses found.</p>
-                <p className="text-sm mt-1">Try a different category or city.</p>
+                <p className="text-sm mt-1">Try adjusting your filters.</p>
               </div>
             ) : (
               <>
@@ -118,7 +151,7 @@ export default function BusinessesContent() {
           </div>
         </div>
 
-        {/* Map (sticky right panel) */}
+        {/* Map */}
         {showMap && (
           <div className="hidden md:block flex-1 relative">
             <Suspense fallback={
@@ -130,10 +163,11 @@ export default function BusinessesContent() {
                 businesses={businesses}
                 onSelect={handleSelect}
                 selected={selected}
+                focusCountry={country}
+                focusCanton={canton}
               />
             </Suspense>
 
-            {/* Selected business popup */}
             {selected && (
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-[1000]">
                 <button

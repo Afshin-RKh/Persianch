@@ -1,53 +1,132 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Search, MapPin } from "lucide-react";
-import { SWISS_CANTONS } from "@/types";
+import { useState, useRef, useEffect } from "react";
+import { Search, MapPin, Globe } from "lucide-react";
+import { SWISS_CANTONS, COUNTRIES, Business } from "@/types";
 
-export default function SearchBar() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+interface Props {
+  // All businesses for autocomplete suggestions
+  all?: Business[];
+  // Controlled values
+  search: string;
+  country: string;
+  canton: string;
+  onSearchChange: (v: string) => void;
+  onCountryChange: (v: string) => void;
+  onCantonChange: (v: string) => void;
+}
 
-  const [query, setQuery] = useState(searchParams.get("search") ?? "");
-  const [canton, setCanton] = useState(searchParams.get("canton") ?? "");
+export default function SearchBar({
+  all = [],
+  search,
+  country,
+  canton,
+  onSearchChange,
+  onCountryChange,
+  onCantonChange,
+}: Props) {
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // Keep in sync when URL changes (e.g. clicking a category pill)
+  // Build suggestions from all businesses matching current search text
+  const suggestions = search.trim().length > 0
+    ? all
+        .filter((b) => {
+          const q = search.toLowerCase();
+          return (
+            b.name.toLowerCase().includes(q) ||
+            (b.name_fa && b.name_fa.includes(search))
+          );
+        })
+        .slice(0, 8)
+    : [];
+
+  // Close suggestions on outside click
   useEffect(() => {
-    setQuery(searchParams.get("search") ?? "");
-    setCanton(searchParams.get("canton") ?? "");
-  }, [searchParams]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (query.trim()) params.set("search", query.trim());
-    if (canton) params.set("canton", canton);
-    // preserve category if present
-    const cat = searchParams.get("category");
-    if (cat) params.set("category", cat);
-    // Use full navigation so useSearchParams re-reads correctly in static export
-    window.location.href = `/businesses?${params.toString()}`;
-  };
+    const handler = (e: MouseEvent) => {
+      if (
+        suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node) &&
+        inputRef.current && !inputRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
-    <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 w-full max-w-2xl mx-auto">
+    <div className="flex flex-col sm:flex-row gap-2 w-full">
+
+      {/* Search with autocomplete */}
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         <input
+          ref={inputRef}
           type="text"
-          placeholder="Search restaurants, doctors, lawyers..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:border-transparent text-sm text-gray-900 placeholder-gray-400"
+          placeholder="Search businesses..."
+          value={search}
+          onChange={(e) => {
+            onSearchChange(e.target.value);
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-transparent shadow-sm"
         />
+
+        {/* Autocomplete dropdown */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div
+            ref={suggestionsRef}
+            className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden"
+          >
+            {suggestions.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onSearchChange(b.name);
+                  setShowSuggestions(false);
+                }}
+                className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-3 transition-colors"
+              >
+                <span className="text-xs font-semibold text-gray-800 truncate">{b.name}</span>
+                {b.name_fa && (
+                  <span className="text-xs text-gray-400 truncate" dir="rtl">{b.name_fa}</span>
+                )}
+                <span className="ml-auto text-xs text-gray-300 flex-shrink-0">{b.canton}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* Country */}
       <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+        <select
+          value={country}
+          onChange={(e) => {
+            onCountryChange(e.target.value);
+            onCantonChange(""); // reset canton when country changes
+          }}
+          className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
+        >
+          <option value="">All Countries</option>
+          {COUNTRIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Canton */}
+      <div className="relative">
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         <select
           value={canton}
-          onChange={(e) => setCanton(e.target.value)}
-          className="pl-10 pr-8 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 text-sm appearance-none min-w-[170px] text-gray-900"
+          onChange={(e) => onCantonChange(e.target.value)}
+          className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
         >
           <option value="">All Cantons</option>
           {SWISS_CANTONS.map((c) => (
@@ -56,13 +135,6 @@ export default function SearchBar() {
         </select>
       </div>
 
-      <button
-        type="submit"
-        className="text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
-        style={{ backgroundColor: "#8B1A1A" }}
-      >
-        Search
-      </button>
-    </form>
+    </div>
   );
 }
