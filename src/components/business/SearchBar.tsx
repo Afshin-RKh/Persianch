@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { Search, MapPin, Globe } from "lucide-react";
-import { SWISS_CANTONS, COUNTRIES, Business } from "@/types";
+import { COUNTRIES, REGIONS_BY_COUNTRY, Business } from "@/types";
 
 interface Props {
   // All businesses for autocomplete suggestions
@@ -27,6 +27,9 @@ export default function SearchBar({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Regions for selected country
+  const regions = country ? (REGIONS_BY_COUNTRY[country] ?? []) : Object.values(REGIONS_BY_COUNTRY).flat();
 
   // Build suggestions from all businesses matching current search text
   const suggestions = search.trim().length > 0
@@ -128,8 +131,8 @@ export default function SearchBar({
           onChange={(e) => onCantonChange(e.target.value)}
           className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
         >
-          <option value="">All Cantons</option>
-          {SWISS_CANTONS.map((c) => (
+          <option value="">{country ? "All Regions" : "All Regions"}</option>
+          {regions.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>

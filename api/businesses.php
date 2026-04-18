@@ -68,14 +68,15 @@ if ($method === 'POST') {
         exit();
     }
 
-    $sql = "INSERT INTO businesses (name, name_fa, category, canton, address, phone, website, email, instagram, description, description_fa, google_maps_url, lat, lng, is_featured, is_verified, is_approved)
-            VALUES (:name, :name_fa, :category, :canton, :address, :phone, :website, :email, :instagram, :description, :description_fa, :google_maps_url, :lat, :lng, :is_featured, :is_verified, :is_approved)";
+    $sql = "INSERT INTO businesses (name, name_fa, category, country, canton, address, phone, website, email, instagram, description, description_fa, google_maps_url, lat, lng, is_featured, is_verified, is_approved)
+            VALUES (:name, :name_fa, :category, :country, :canton, :address, :phone, :website, :email, :instagram, :description, :description_fa, :google_maps_url, :lat, :lng, :is_featured, :is_verified, :is_approved)";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':name'           => $data['name'] ?? '',
         ':name_fa'        => $data['name_fa'] ?? null,
         ':category'       => $data['category'] ?? 'other',
+        ':country'        => $data['country'] ?? 'Switzerland',
         ':canton'         => $data['canton'] ?? ($data['city'] ?? null),
         ':address'        => $data['address'] ?? null,
         ':phone'          => $data['phone'] ?? null,

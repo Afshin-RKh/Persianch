@@ -102,3 +102,51 @@ export const COUNTRIES = [
   "Italy",
   "Spain",
 ];
+
+export const REGIONS_BY_COUNTRY: Record<string, string[]> = {
+  Switzerland: [
+    "Aargau","Appenzell Ausserrhoden","Appenzell Innerrhoden","Basel-Landschaft",
+    "Basel-Stadt","Bern","Fribourg","Geneva","Glarus","Graubünden","Jura","Lucerne",
+    "Neuchâtel","Nidwalden","Obwalden","Schaffhausen","Schwyz","Solothurn",
+    "St. Gallen","Thurgau","Ticino","Uri","Valais","Vaud","Zug","Zurich",
+  ],
+  Germany: [
+    "Baden-Württemberg","Bavaria","Berlin","Brandenburg","Bremen","Hamburg",
+    "Hesse","Lower Saxony","Mecklenburg-Vorpommern","North Rhine-Westphalia",
+    "Rhineland-Palatinate","Saarland","Saxony","Saxony-Anhalt",
+    "Schleswig-Holstein","Thuringia",
+  ],
+  Austria: [
+    "Burgenland","Carinthia","Lower Austria","Salzburg","Styria",
+    "Tyrol","Upper Austria","Vienna","Vorarlberg",
+  ],
+  France: [
+    "Auvergne-Rhône-Alpes","Bourgogne-Franche-Comté","Bretagne",
+    "Centre-Val de Loire","Corse","Grand Est","Hauts-de-France",
+    "Île-de-France","Normandie","Nouvelle-Aquitaine","Occitanie",
+    "Pays de la Loire","Provence-Alpes-Côte d'Azur",
+  ],
+  "United Kingdom": [
+    "England","Scotland","Wales","Northern Ireland",
+    "London","South East","South West","East of England",
+    "West Midlands","East Midlands","Yorkshire","North West","North East",
+  ],
+  Netherlands: [
+    "Drenthe","Flevoland","Friesland","Gelderland","Groningen",
+    "Limburg","North Brabant","North Holland","Overijssel",
+    "South Holland","Utrecht","Zeeland",
+  ],
+  Sweden: [
+    "Stockholm","Västra Götaland","Skåne","Östergötland","Uppsala",
+    "Dalarna","Halland","Örebro","Västmanland","Jönköping",
+  ],
+  Belgium: ["Brussels","Flanders","Wallonia"],
+  Italy: [
+    "Lombardy","Lazio","Campania","Sicily","Veneto",
+    "Piedmont","Emilia-Romagna","Tuscany","Puglia","Calabria",
+  ],
+  Spain: [
+    "Madrid","Catalonia","Andalusia","Valencia","Galicia",
+    "Castile and León","Basque Country","Canary Islands","Murcia","Aragon",
+  ],
+};

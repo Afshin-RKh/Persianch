@@ -9,7 +9,7 @@ SET character_set_connection = utf8mb4;
 TRUNCATE TABLE `businesses`;
 
 -- Add country column if it doesn't exist
-ALTER TABLE `businesses` ADD COLUMN IF NOT EXISTS `country` VARCHAR(100) DEFAULT 'Switzerland' BEFORE `city`;
+ALTER TABLE `businesses` ADD COLUMN IF NOT EXISTS `country` VARCHAR(100) DEFAULT 'Switzerland' AFTER `canton`;
 
 INSERT INTO `businesses`
   (`id`, `name`, `name_fa`, `category`, `country`, `city`, `canton`, `address`, `phone`, `website`, `email`, `instagram`, `description`, `description_fa`, `logo_url`, `image_url`, `google_maps_url`, `lat`, `lng`, `is_featured`, `is_verified`, `is_approved`)
@@ -474,21 +474,21 @@ VALUES
  NULL, NULL, NULL, 52.52550000, 13.34270000, 0, 1, 1),
 
 -- LAWYER (Frankfurt)
-(135, 'Kanzlei Dr. Dr. Iranbomy', 'دفتر وکالت دکتر ایرانبومی', 'other', 'Germany', 'Frankfurt', 'Hesse',
+(135, 'Kanzlei Dr. Dr. Iranbomy', 'دفتر وکالت دکتر ایرانبومی', 'lawyer', 'Germany', 'Frankfurt', 'Hesse',
  'Düsseldorfer Str. 14, 60329 Frankfurt am Main', '+49 69 15028264', 'https://iranbomy.com', 'info@iranbomy.com', NULL,
  'Iranian-German law firm in Frankfurt led by Dr. Dr. Seyed Shahram Iranbomy. Farsi, English, German, Arabic and Russian-speaking. Specialises in criminal law, family law, inheritance, employment, immigration and international business law. Cooperates with lawyers in Iran, UAE, USA and China. Regularly featured in ARD, ZDF, Der Spiegel and FAZ.',
  'دفتر وکالت ایرانی-آلمانی در فرانکفورت به سرپرستی دکتر شهرام ایرانبومی. فارسی، انگلیسی، آلمانی، عربی و روسی. متخصص در حقوق کیفری، خانواده، ارث، کار، مهاجرت و تجارت بین‌المللی.',
  NULL, NULL, NULL, 50.10510000, 8.67510000, 1, 1, 1),
 
 -- LAWYER (Aachen / multi-city)
-(136, 'Schlun & Elseven – Iran Desk', 'اشلون و الزون – میز ایران', 'other', 'Germany', 'Aachen', 'North Rhine-Westphalia',
+(136, 'Schlun & Elseven – Iran Desk', 'اشلون و الزون – میز ایران', 'lawyer', 'Germany', 'Aachen', 'North Rhine-Westphalia',
  'Von-Coels-Str. 214, 52080 Aachen', '+49 241 4757140', 'https://se-legal.de', 'info@se-legal.de', NULL,
  'German law firm with a dedicated Iran Desk led by Dr. Sepehr Moshiri, a Farsi-fluent lawyer. Handles immigration, business formation, citizenship, family law and extradition defence for Iranian clients. Digital-first: full remote representation available. Also has offices in Düsseldorf. 24h contact line.',
  'موسسه حقوقی آلمانی با میز ایران به سرپرستی دکتر سپهر مشیری، وکیل فارسی‌زبان. مهاجرت، تشکیل شرکت، تابعیت، حقوق خانواده و استرداد. نمایندگی کاملاً از راه دور. دفتر دوم در دوسلدورف.',
  NULL, NULL, NULL, 50.77770000, 6.10420000, 0, 1, 1),
 
 -- DENTIST (Berlin)
-(137, 'Zahnarztpraxis Dr. Nasrin Boroujeni', 'دندانپزشکی دکتر نسرین بروجنی', 'other', 'Germany', 'Berlin', 'Berlin',
+(137, 'Zahnarztpraxis Dr. Nasrin Boroujeni', 'دندانپزشکی دکتر نسرین بروجنی', 'dentist', 'Germany', 'Berlin', 'Berlin',
  'Hindenburgdamm 74, 12203 Berlin', NULL, NULL, NULL, NULL,
  'Iranian dentist in Berlin-Lichterfelde. Dr. Nasrin Boroujeni provides personalised dental care with a focus on patient comfort and minimal waiting times. Farsi-speaking practice covering general dentistry, prophylaxis and cosmetic treatments. Accepts statutory and private health insurance.',
  'دندانپزشک ایرانی در برلین-لیختنفلده. دکتر نسرین بروجنی مراقبت دندانی شخصی‌سازی‌شده با تأکید بر آسایش بیمار. فارسی‌زبان. پوشش بیمه دولتی و خصوصی.',
@@ -573,13 +573,13 @@ VALUES
  NULL, NULL, NULL, 48.84690000, 2.29160000, 0, 1, 1),
 
 -- LAWYER
-(149, 'Cabinet Cohen Amir-Aslani', 'دفتر وکالت کوهن امیراسلانی', 'other', 'France', 'Paris', 'Île-de-France',
+(149, 'Cabinet Cohen Amir-Aslani', 'دفتر وکالت کوهن امیراسلانی', 'lawyer', 'France', 'Paris', 'Île-de-France',
  '45 Avenue Montaigne, 75008 Paris', '+33 1 42 12 99 00', 'https://www.cohenamiraslani.com', 'a.amiraslani@caa-avocats.com', NULL,
  'Prestigious Franco-Iranian law firm on Avenue Montaigne, co-founded by Maitre Ardavan Amir-Aslani, Farsi-fluent, admitted to the Paris Bar since 1994. Specialises in international business law, M&A, investment, family law and Middle East matters. Has represented states including Iraq and Pakistan. 50+ lawyers. Offices also in New York and Hanoi.',
  'موسسه حقوقی فرانسوی-ایرانی معتبر در خیابان مونتنی. مؤسس متر اردوان امیراسلانی، وکیل فارسی‌زبان از ۱۹۹۴. متخصص در حقوق تجاری بین‌المللی، M&A، سرمایه‌گذاری، حقوق خانواده و امور خاورمیانه. بیش از ۵۰ وکیل.',
  NULL, NULL, NULL, 48.86580000, 2.30510000, 1, 1, 1),
 
-(150, 'Cabinet Coline Dassant', 'دفتر وکالت دسان', 'other', 'France', 'Paris', 'Île-de-France',
+(150, 'Cabinet Coline Dassant', 'دفتر وکالت دسان', 'lawyer', 'France', 'Paris', 'Île-de-France',
  'Paris, France', NULL, 'https://www.avocat-dassant.fr', NULL, NULL,
  'Franco-Iranian law firm led by Maitre Coline Baharee Dassant. Farsi-speaking. Specialises in immigration (visas, carte de sejour, change of status), real estate investment in France, family law and international inheritance. Consultations in-office or by phone and videoconference.',
  'موسسه حقوقی فرانسوی-ایرانی به سرپرستی مِتر کولین بهاره دسان. فارسی‌زبان. متخصص در مهاجرت، کارت اقامت، سرمایه‌گذاری ملکی در فرانسه، حقوق خانواده و ارث بین‌المللی.',
