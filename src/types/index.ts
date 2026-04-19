@@ -140,6 +140,13 @@ export const REGIONS_BY_COUNTRY: Record<string, string[]> = {
     "Stockholm","Västra Götaland","Skåne","Östergötland","Uppsala",
     "Dalarna","Halland","Örebro","Västmanland","Jönköping",
   ],
+  Norway: [
+    "Oslo","Viken","Innlandet","Vestfold","Agder",
+    "Rogaland","Vestland","Møre","Trøndelag","Nordland","Troms","Finnmark",
+  ],
+  Denmark: [
+    "Copenhagen","Jutland","Funen","Zealand","Bornholm",
+  ],
   Belgium: ["Brussels","Flanders","Wallonia"],
   Italy: [
     "Lombardy","Lazio","Campania","Sicily","Veneto",
