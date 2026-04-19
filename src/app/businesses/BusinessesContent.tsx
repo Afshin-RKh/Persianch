@@ -114,7 +114,7 @@ export default function BusinessesContent() {
       {/* Main content */}
       <div className="flex flex-1" style={{ minHeight: "600px" }}>
         {/* Business list */}
-        <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "hidden md:block md:w-2/5 lg:w-1/3" : "w-full"} bg-[#FDF8F3]`}>
+        <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "hidden" : "w-full"} bg-[#FDF8F3]`}>
           <div className="p-4">
             {loading ? (
               <div className="text-center py-16 text-gray-400">
@@ -135,7 +135,7 @@ export default function BusinessesContent() {
             ) : (
               <>
                 <p className="text-sm text-gray-400 mb-4">{businesses.length} businesses found</p>
-                <div className={`grid gap-4 ${showMap ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}`}>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {businesses.map((b) => (
                     <div
                       key={b.id}
