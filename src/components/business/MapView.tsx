@@ -216,21 +216,10 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
       }).addTo(map);
 
       mapInstanceRef.current = map;
-      setTimeout(() => map.invalidateSize(), 150);
-
-      // Auto-correct on window resize only — debounced to avoid feedback loop
-      let resizeTimer: ReturnType<typeof setTimeout>;
-      const ro = new ResizeObserver(() => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => map.invalidateSize(), 200);
-      });
-      ro.observe(mapRef.current!);
-      (map as any)._resizeObserver = ro;
     });
 
     return () => {
       if (mapInstanceRef.current) {
-        (mapInstanceRef.current as any)._resizeObserver?.disconnect();
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
