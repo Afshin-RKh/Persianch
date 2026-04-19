@@ -114,7 +114,7 @@ export default function BusinessesContent() {
       {/* Main content */}
       <div className="flex flex-1" style={{ minHeight: "600px" }}>
         {/* Business list — hidden on mobile when map is shown */}
-        <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "hidden md:block md:w-[420px] lg:w-[480px]" : "w-full"} bg-[#FDF8F3]`}>
+        <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "hidden md:flex md:w-[420px] lg:w-[480px]" : "w-full"} bg-[#FDF8F3]`}>
           <div className="p-4">
             {loading ? (
               <div className="text-center py-16 text-gray-400">
@@ -153,7 +153,7 @@ export default function BusinessesContent() {
 
         {/* Map — full screen on mobile, sidebar on desktop */}
         {showMap && (
-          <div className="flex-1 relative">
+          <div className="flex-1 relative min-h-0">
             <Suspense fallback={
               <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
                 <p>Loading map...</p>
