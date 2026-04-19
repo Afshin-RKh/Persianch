@@ -123,26 +123,6 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Cities */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 gold-underline inline-block">Browse by City</h2>
-          <p className="text-gray-400 text-sm mt-2">Persian businesses across Europe</p>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {["Zurich", "Geneva", "Basel", "Bern", "Lausanne", "Lucerne", "Winterthur", "St. Gallen", "Lugano", "Biel"].map((city) => (
-            <Link
-              key={city}
-              href={`/businesses?canton=${city}`}
-              className="card-hover flex items-center justify-center gap-2 py-4 px-3 bg-white rounded-2xl border border-gray-100 text-center group"
-            >
-              <span className="text-lg">📍</span>
-              <span className="text-sm font-semibold text-gray-700 group-hover:text-[#1B3A6B] transition-colors">{city}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="py-20 px-4" style={{ background: "linear-gradient(135deg, #0D1B2E 0%, #1B3A6B 100%)" }}>
         <div className="max-w-2xl mx-auto text-center text-white">
