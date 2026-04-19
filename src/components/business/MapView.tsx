@@ -207,7 +207,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
       const map = L.map(mapRef.current!, {
         center: DEFAULT_CENTER,
         zoom: 8,
-        minZoom: 7,
+        minZoom: 4,
         maxZoom: 19,
       });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -216,6 +216,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
       }).addTo(map);
 
       mapInstanceRef.current = map;
+      setTimeout(() => map.invalidateSize(), 100);
     });
 
     return () => {
