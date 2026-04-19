@@ -8,15 +8,15 @@ import Script from "next/script";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PersianHub — Persian Businesses in Switzerland",
+  title: "PersianHub — Persian & Iranian Businesses Across Europe",
   description:
-    "Find Persian restaurants, doctors, lawyers, hairdressers and more in Switzerland. The largest directory of Iranian businesses in Switzerland.",
-  keywords: ["Persian businesses Switzerland", "Iranian restaurants Zurich", "Persian community Switzerland"],
+    "Find Persian, Afghan and Tajik restaurants, doctors, lawyers, hairdressers and more across Europe. The go-to directory for the Persian-speaking community in Europe.",
+  keywords: ["Persian businesses Europe", "Iranian restaurants Europe", "Afghan businesses Europe", "Persian community Europe", "Farsi speaking businesses"],
   openGraph: {
-    title: "PersianHub — Persian Businesses in Switzerland",
-    description: "The largest directory of Iranian businesses in Switzerland.",
+    title: "PersianHub — Persian & Iranian Businesses Across Europe",
+    description: "The go-to directory for Persian, Afghan and Tajik businesses across Europe — restaurants, doctors, lawyers and more.",
     siteName: "PersianHub",
-    locale: "en_CH",
+    locale: "en_GB",
     type: "website",
   },
 };
