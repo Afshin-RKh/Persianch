@@ -17,7 +17,7 @@ export default function BusinessesContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<Business | null>(null);
-  const [showMap, setShowMap] = useState(true);
+  const [showMap, setShowMap] = useState(false);
 
   // Filter state — initialised from URL params
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
@@ -113,8 +113,8 @@ export default function BusinessesContent() {
 
       {/* Main content */}
       <div className="flex flex-1" style={{ minHeight: "600px" }}>
-        {/* Business list */}
-        <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "w-full md:w-[420px] lg:w-[480px]" : "w-full"} bg-[#FDF8F3]`}>
+        {/* Business list — hidden on mobile when map is shown */}
+        <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "hidden md:block md:w-[420px] lg:w-[480px]" : "w-full"} bg-[#FDF8F3]`}>
           <div className="p-4">
             {loading ? (
               <div className="text-center py-16 text-gray-400">
@@ -151,9 +151,9 @@ export default function BusinessesContent() {
           </div>
         </div>
 
-        {/* Map */}
+        {/* Map — full screen on mobile, sidebar on desktop */}
         {showMap && (
-          <div className="hidden md:block flex-1 relative">
+          <div className="flex-1 relative">
             <Suspense fallback={
               <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
                 <p>Loading map...</p>
@@ -169,7 +169,7 @@ export default function BusinessesContent() {
             </Suspense>
 
             {selected && (
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-[1000]">
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] sm:w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-[1000]">
                 <button
                   onClick={() => setSelected(null)}
                   className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none"
