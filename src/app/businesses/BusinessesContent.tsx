@@ -153,7 +153,7 @@ export default function BusinessesContent() {
 
         {/* Map — full screen on mobile, sidebar on desktop */}
         {showMap && (
-          <div className="flex-1 relative" style={{ minHeight: "600px" }}>
+          <div className="flex-1 relative min-h-0">
             <Suspense fallback={
               <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
                 <p>Loading map...</p>
