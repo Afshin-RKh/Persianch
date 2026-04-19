@@ -5,10 +5,7 @@ export type Category =
   | "doctor"
   | "dentist"
   | "lawyer"
-  | "accountant"
   | "grocery"
-  | "beauty"
-  | "real-estate"
   | "other";
 
 export interface Business {
@@ -49,10 +46,7 @@ export const CATEGORIES: CategoryMeta[] = [
   { slug: "doctor", label_en: "Doctor", label_fa: "دکتر", icon: "🩺" },
   { slug: "dentist", label_en: "Dentist", label_fa: "دندانپزشک", icon: "🦷" },
   { slug: "lawyer", label_en: "Lawyer", label_fa: "وکیل", icon: "⚖️" },
-  { slug: "accountant", label_en: "Accountant", label_fa: "حسابدار", icon: "📊" },
   { slug: "grocery", label_en: "Grocery", label_fa: "سوپرمارکت", icon: "🛒" },
-  { slug: "beauty", label_en: "Beauty & Spa", label_fa: "سالن زیبایی", icon: "💅" },
-  { slug: "real-estate", label_en: "Real Estate", label_fa: "مشاور املاک", icon: "🏠" },
   { slug: "other", label_en: "Other", label_fa: "سایر", icon: "🔍" },
 ];
 

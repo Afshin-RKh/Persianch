@@ -48,25 +48,26 @@ export default function Navbar() {
               <span className="font-bold text-xl" style={{ color: "#8B1A1A" }}>Persian</span>
               <span className="font-bold text-xl" style={{ color: "#C9A84C" }}>Hub</span>
             </div>
-            <span className="hidden lg:inline text-xs text-gray-300 font-medium ml-1">· Switzerland</span>
+            <span className="hidden lg:inline text-xs text-gray-300 font-medium ml-1">· Europe</span>
           </Link>
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-7">
             {navLink("/", "Home")}
             {navLink("/businesses", "Businesses")}
-            {navLink("/blog", "Blog")}
             {navLink("/about", "About Us")}
+            {navLink("/contact", "Contact Us")}
+            {navLink("/blog", "Blog")}
           </div>
 
           {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
             <Link
-              href="/admin"
+              href="/contact#get-listed"
               className="text-white text-sm px-5 py-2 rounded-xl font-semibold transition-all hover:opacity-90 hover:scale-105 shadow-sm"
               style={{ backgroundColor: "#8B1A1A" }}
             >
-              + Add Business
+              + Get Listed
             </Link>
           </div>
 
@@ -87,8 +88,9 @@ export default function Navbar() {
           {[
             ["/", "🏠 Home"],
             ["/businesses", "🏪 Businesses"],
-            ["/blog", "📝 Blog"],
             ["/about", "🦁 About Us"],
+            ["/contact", "✉️ Contact Us"],
+            ["/blog", "📝 Blog"],
           ].map(([href, label]) => (
             <Link
               key={href}
@@ -101,12 +103,12 @@ export default function Navbar() {
           ))}
           <div className="pt-2">
             <Link
-              href="/admin"
+              href="/contact#get-listed"
               className="flex items-center justify-center w-full py-3 rounded-xl text-white text-sm font-bold"
               style={{ backgroundColor: "#8B1A1A" }}
               onClick={() => setOpen(false)}
             >
-              + Add Your Business
+              + Get Listed
             </Link>
           </div>
         </div>
