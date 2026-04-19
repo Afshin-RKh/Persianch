@@ -33,7 +33,7 @@ export default function HomePage() {
       {/* Hero */}
       <section
         className="relative text-white overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #5a0e0e 0%, #8B1A1A 50%, #6B1212 100%)" }}
+        style={{ background: "linear-gradient(135deg, #0D1B2E 0%, #1B3A6B 50%, #132D55 100%)" }}
       >
         {/* Decorative circles */}
         <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10"
@@ -49,12 +49,12 @@ export default function HomePage() {
                 <span className="font-bold text-4xl sm:text-6xl tracking-tight">Persian</span>
                 <span className="font-bold text-4xl sm:text-6xl tracking-tight" style={{ color: "#C9A84C" }}>Hub</span>
               </div>
-              <p className="text-sm sm:text-base font-medium opacity-80 tracking-widest uppercase">Switzerland</p>
+              <p className="text-sm sm:text-base font-medium opacity-80 tracking-widest uppercase">Europe</p>
             </div>
           </div>
 
-          <p className="text-lg sm:text-xl text-red-100 mb-10 max-w-xl mx-auto leading-relaxed">
-            Discover Persian restaurants, doctors, lawyers, hairdressers &amp; more across Switzerland
+          <p className="text-lg sm:text-xl text-blue-100 mb-10 max-w-xl mx-auto leading-relaxed">
+            Discover Persian, Afghan &amp; Tajik restaurants, doctors, lawyers, hairdressers &amp; more across Europe
           </p>
 
           <div className="max-w-2xl mx-auto">
@@ -68,7 +68,7 @@ export default function HomePage() {
             {[["100+", "Businesses"], ["10", "Cities"], ["11", "Categories"]].map(([n, l]) => (
               <div key={l}>
                 <p className="text-2xl font-bold" style={{ color: "#C9A84C" }}>{n}</p>
-                <p className="text-xs text-red-200 uppercase tracking-wide mt-0.5">{l}</p>
+                <p className="text-xs text-blue-200 uppercase tracking-wide mt-0.5">{l}</p>
               </div>
             ))}
           </div>
@@ -127,7 +127,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 gold-underline inline-block">Browse by City</h2>
-          <p className="text-gray-400 text-sm mt-2">Persian businesses across Switzerland</p>
+          <p className="text-gray-400 text-sm mt-2">Persian businesses across Europe</p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {["Zurich", "Geneva", "Basel", "Bern", "Lausanne", "Lucerne", "Winterthur", "St. Gallen", "Lugano", "Biel"].map((city) => (
@@ -144,17 +144,17 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4" style={{ background: "linear-gradient(135deg, #5a0e0e 0%, #8B1A1A 100%)" }}>
+      <section className="py-20 px-4" style={{ background: "linear-gradient(135deg, #0D1B2E 0%, #1B3A6B 100%)" }}>
         <div className="max-w-2xl mx-auto text-center text-white">
           <span className="text-5xl block mb-6">🏪</span>
-          <h2 className="text-3xl font-bold mb-3">Own a Persian Business in Switzerland?</h2>
-          <p className="text-red-200 mb-8 text-lg">List your business for free and reach thousands of Iranians across Switzerland.</p>
+          <h2 className="text-3xl font-bold mb-3">Own a Persian, Afghan or Tajik Business in Europe?</h2>
+          <p className="text-blue-200 mb-8 text-lg">List your business for free and reach your community across Europe.</p>
           <Link
-            href="/admin"
+            href="/get-listed"
             className="inline-block font-bold px-10 py-4 rounded-2xl transition-all hover:opacity-90 hover:scale-105 text-base shadow-lg"
-            style={{ backgroundColor: "#C9A84C", color: "#3a0a0a" }}
+            style={{ backgroundColor: "#8B1A1A", color: "white" }}
           >
-            Add Your Business — Free
+            Get Listed — Free
           </Link>
         </div>
       </section>
