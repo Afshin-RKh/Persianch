@@ -101,8 +101,8 @@ export default function BusinessesContent() {
               onClick={() => setShowMap((v) => !v)}
               className="text-xs font-semibold px-4 py-1.5 rounded-full border transition-colors"
               style={showMap
-                ? { backgroundColor: "#8B1A1A", color: "white", borderColor: "#8B1A1A" }
-                : { backgroundColor: "white", color: "#8B1A1A", borderColor: "#8B1A1A" }
+                ? { backgroundColor: "#8B1A1A", color: "white", borderColor: "#1B3A6B" }
+                : { backgroundColor: "white", color: "#1B3A6B", borderColor: "#1B3A6B" }
               }
             >
               {showMap ? "🗺️ Hide Map" : "🗺️ Show Map"}
@@ -140,7 +140,7 @@ export default function BusinessesContent() {
                     <div
                       key={b.id}
                       onClick={() => setSelected(b)}
-                      className={`cursor-pointer rounded-2xl transition-all ${selected?.id === b.id ? "outline outline-2 outline-offset-1 outline-[#8B1A1A]" : ""}`}
+                      className={`cursor-pointer rounded-2xl transition-all ${selected?.id === b.id ? "outline outline-2 outline-offset-1 outline-[#1B3A6B]" : ""}`}
                     >
                       <BusinessCard business={b} />
                     </div>

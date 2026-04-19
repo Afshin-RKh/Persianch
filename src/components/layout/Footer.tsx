@@ -3,7 +3,7 @@ import { CATEGORIES } from "@/types";
 
 export default function Footer() {
   return (
-    <footer className="text-gray-300 mt-20" style={{ backgroundColor: "#1a0505" }}>
+    <footer className="text-gray-300 mt-20" style={{ backgroundColor: "#0D1B2E" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
@@ -52,7 +52,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 text-center text-xs text-gray-600" style={{ borderTop: "1px solid #3a1515" }}>
+        <div className="mt-10 pt-6 text-center text-xs text-gray-600" style={{ borderTop: "1px solid #1a2e4a" }}>
           © {new Date().getFullYear()} PersianHub · Connecting the Persian community across Europe
         </div>
       </div>

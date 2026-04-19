@@ -23,9 +23,9 @@ export default function Navbar() {
         className={`text-sm font-medium transition-colors pb-0.5 ${
           active
             ? "border-b-2 border-[#C9A84C]"
-            : "text-gray-600 hover:text-[#8B1A1A]"
+            : "text-gray-600 hover:text-[#1B3A6B]"
         }`}
-        style={active ? { color: "#8B1A1A" } : {}}
+        style={active ? { color: "#1B3A6B" } : {}}
       >
         {label}
       </Link>
@@ -45,7 +45,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <span className="text-2xl">🦁</span>
             <div>
-              <span className="font-bold text-xl" style={{ color: "#8B1A1A" }}>Persian</span>
+              <span className="font-bold text-xl" style={{ color: "#1B3A6B" }}>Persian</span>
               <span className="font-bold text-xl" style={{ color: "#C9A84C" }}>Hub</span>
             </div>
             <span className="hidden lg:inline text-xs text-gray-300 font-medium ml-1">· Europe</span>

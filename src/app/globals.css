@@ -3,8 +3,8 @@
 :root {
   --background: #FDF8F3;
   --foreground: #1a0a0a;
-  --primary: #8B1A1A;
-  --primary-dark: #6B1212;
+  --primary: #1B3A6B;
+  --primary-dark: #132D55;
   --gold: #C9A84C;
   --gold-light: #E8C96A;
   --cream: #FDF8F3;
@@ -59,6 +59,6 @@ body {
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 .card-hover:hover {
-  box-shadow: 0 10px 36px rgba(139, 26, 26, 0.13);
+  box-shadow: 0 10px 36px rgba(27, 58, 107, 0.13);
   transform: translateY(-3px);
 }

@@ -52,13 +52,13 @@ export default function BlogPage() {
                       year: "numeric", month: "long", day: "numeric",
                     })}
                   </p>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#8B1A1A]">
+                  <h2 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#1B3A6B]">
                     {post.title}
                   </h2>
                   <p className="text-sm text-gray-500 line-clamp-3">
                     {post.content?.replace(/<[^>]+>/g, "").slice(0, 200)}...
                   </p>
-                  <span className="mt-4 inline-block text-xs font-semibold" style={{ color: "#8B1A1A" }}>
+                  <span className="mt-4 inline-block text-xs font-semibold" style={{ color: "#1B3A6B" }}>
                     Read more →
                   </span>
                 </div>

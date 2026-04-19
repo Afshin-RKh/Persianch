@@ -8,7 +8,7 @@ export default function AboutPage() {
       <div className="text-center mb-14">
         <span className="text-6xl block mb-5">🦁</span>
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          About <span style={{ color: "#8B1A1A" }}>Persian</span><span style={{ color: "#C9A84C" }}>Hub</span>
+          About <span style={{ color: "#1B3A6B" }}>Persian</span><span style={{ color: "#C9A84C" }}>Hub</span>
         </h1>
         <p className="text-gray-500 text-lg leading-relaxed max-w-xl mx-auto">
           A community-driven directory connecting Persian-speaking businesses with their customers — starting in Switzerland, growing across Europe.

@@ -48,7 +48,7 @@ export default function BusinessCard({ business }: Props) {
             )}
             {business.is_verified && (
               <span className="bg-white text-xs font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1"
-                style={{ color: "#8B1A1A" }}>
+                style={{ color: "#1B3A6B" }}>
                 <CheckCircle size={11} /> Verified
               </span>
             )}
@@ -57,7 +57,7 @@ export default function BusinessCard({ business }: Props) {
           {/* Category pill overlay */}
           <div className="absolute bottom-3 left-3">
             <span className="bg-white/90 backdrop-blur-sm text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm"
-              style={{ color: "#8B1A1A" }}>
+              style={{ color: "#1B3A6B" }}>
               {category?.icon} {category?.label_en}
             </span>
           </div>
@@ -65,7 +65,7 @@ export default function BusinessCard({ business }: Props) {
 
         {/* Content */}
         <div className="p-4 flex-1 flex flex-col">
-          <h3 className="font-bold text-gray-900 group-hover:text-[#8B1A1A] transition-colors leading-snug">
+          <h3 className="font-bold text-gray-900 group-hover:text-[#1B3A6B] transition-colors leading-snug">
             {business.name}
           </h3>
           {business.name_fa && (
@@ -80,10 +80,10 @@ export default function BusinessCard({ business }: Props) {
 
           <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
             <span className="flex items-center gap-1 text-xs text-gray-400">
-              <MapPin size={11} style={{ color: "#8B1A1A" }} />
+              <MapPin size={11} style={{ color: "#1B3A6B" }} />
               {business.canton}
             </span>
-            <span className="text-xs font-semibold transition-colors" style={{ color: "#8B1A1A" }}>
+            <span className="text-xs font-semibold transition-colors" style={{ color: "#1B3A6B" }}>
               View →
             </span>
           </div>

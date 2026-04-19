@@ -67,7 +67,7 @@ function BusinessDetailContent() {
       <main className="max-w-4xl mx-auto px-4 py-20 text-center text-gray-500">
         <p className="text-5xl mb-4">🔍</p>
         <p className="font-bold text-lg">Business not found.</p>
-        <Link href="/businesses" className="hover:underline mt-4 inline-block text-sm" style={{ color: "#8B1A1A" }}>
+        <Link href="/businesses" className="hover:underline mt-4 inline-block text-sm" style={{ color: "#1B3A6B" }}>
           ← Back to listings
         </Link>
       </main>
@@ -80,7 +80,7 @@ function BusinessDetailContent() {
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-up">
       <Link
         href="/businesses"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#8B1A1A] mb-6 transition-colors font-medium"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] mb-6 transition-colors font-medium"
       >
         <ArrowLeft size={15} /> Back to listings
       </Link>
@@ -105,7 +105,7 @@ function BusinessDetailContent() {
           )}
           {business.is_verified && (
             <span className="bg-white text-xs font-bold px-3 py-1.5 rounded-full shadow flex items-center gap-1"
-              style={{ color: "#8B1A1A" }}>
+              style={{ color: "#1B3A6B" }}>
               <CheckCircle size={12} /> Verified
             </span>
           )}
@@ -128,11 +128,11 @@ function BusinessDetailContent() {
                 )}
                 <div className="flex items-center gap-2 mt-3 flex-wrap">
                   <span className="text-xs font-semibold px-3 py-1 rounded-full"
-                    style={{ backgroundColor: "#FDF0E8", color: "#8B1A1A" }}>
+                    style={{ backgroundColor: "#FDF0E8", color: "#1B3A6B" }}>
                     {category?.icon} {category?.label_en}
                   </span>
                   <span className="flex items-center gap-1 text-xs text-gray-500">
-                    <MapPin size={12} style={{ color: "#8B1A1A" }} /> {business.canton}
+                    <MapPin size={12} style={{ color: "#1B3A6B" }} /> {business.canton}
                   </span>
                 </div>
               </div>
@@ -163,19 +163,19 @@ function BusinessDetailContent() {
           <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide px-1">Contact</h2>
 
           {business.phone && (
-            <ContactRow icon={<Phone size={16} style={{ color: "#8B1A1A" }} />} label="Phone">
-              <a href={`tel:${business.phone}`} className="text-sm font-medium text-gray-800 hover:text-[#8B1A1A] transition-colors">
+            <ContactRow icon={<Phone size={16} style={{ color: "#1B3A6B" }} />} label="Phone">
+              <a href={`tel:${business.phone}`} className="text-sm font-medium text-gray-800 hover:text-[#1B3A6B] transition-colors">
                 {business.phone}
               </a>
             </ContactRow>
           )}
 
           {business.address && (
-            <ContactRow icon={<MapPin size={16} style={{ color: "#8B1A1A" }} />} label="Address">
+            <ContactRow icon={<MapPin size={16} style={{ color: "#1B3A6B" }} />} label="Address">
               <p className="text-sm text-gray-700">{business.address}, {business.canton}</p>
               {business.google_maps_url && (
                 <a href={business.google_maps_url} target="_blank" rel="noopener noreferrer"
-                  className="text-xs font-semibold mt-1 block hover:underline" style={{ color: "#8B1A1A" }}>
+                  className="text-xs font-semibold mt-1 block hover:underline" style={{ color: "#1B3A6B" }}>
                   Open in Google Maps →
                 </a>
               )}
@@ -183,27 +183,27 @@ function BusinessDetailContent() {
           )}
 
           {business.website && (
-            <ContactRow icon={<Globe size={16} style={{ color: "#8B1A1A" }} />} label="Website">
+            <ContactRow icon={<Globe size={16} style={{ color: "#1B3A6B" }} />} label="Website">
               <a href={business.website} target="_blank" rel="noopener noreferrer"
-                className="text-sm font-medium hover:underline break-all" style={{ color: "#8B1A1A" }}>
+                className="text-sm font-medium hover:underline break-all" style={{ color: "#1B3A6B" }}>
                 {business.website.replace(/^https?:\/\//, "")}
               </a>
             </ContactRow>
           )}
 
           {business.email && (
-            <ContactRow icon={<Mail size={16} style={{ color: "#8B1A1A" }} />} label="Email">
-              <a href={`mailto:${business.email}`} className="text-sm font-medium text-gray-800 hover:text-[#8B1A1A] transition-colors break-all">
+            <ContactRow icon={<Mail size={16} style={{ color: "#1B3A6B" }} />} label="Email">
+              <a href={`mailto:${business.email}`} className="text-sm font-medium text-gray-800 hover:text-[#1B3A6B] transition-colors break-all">
                 {business.email}
               </a>
             </ContactRow>
           )}
 
           {business.instagram && (
-            <ContactRow icon={<span style={{ color: "#8B1A1A", fontSize: 16 }}>📸</span>} label="Instagram">
+            <ContactRow icon={<span style={{ color: "#1B3A6B", fontSize: 16 }}>📸</span>} label="Instagram">
               <a href={`https://instagram.com/${business.instagram.replace("@", "")}`}
                 target="_blank" rel="noopener noreferrer"
-                className="text-sm font-medium hover:underline" style={{ color: "#8B1A1A" }}>
+                className="text-sm font-medium hover:underline" style={{ color: "#1B3A6B" }}>
                 @{business.instagram.replace("@", "")}
               </a>
             </ContactRow>

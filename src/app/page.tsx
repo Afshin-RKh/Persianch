@@ -82,7 +82,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold text-gray-900 gold-underline inline-block">Browse by Category</h2>
             <p className="text-gray-400 text-sm mt-2">What are you looking for?</p>
           </div>
-          <Link href="/businesses" className="text-sm font-semibold hover:underline" style={{ color: "#8B1A1A" }}>
+          <Link href="/businesses" className="text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
             View all →
           </Link>
         </div>
@@ -110,7 +110,7 @@ export default function HomePage() {
                 <h2 className="text-2xl font-bold text-gray-900 gold-underline inline-block">Featured Businesses</h2>
                 <p className="text-gray-400 text-sm mt-2">Trusted by the community</p>
               </div>
-              <Link href="/businesses?featured=1" className="text-sm font-semibold hover:underline" style={{ color: "#8B1A1A" }}>
+              <Link href="/businesses?featured=1" className="text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
                 See all →
               </Link>
             </div>
@@ -137,7 +137,7 @@ export default function HomePage() {
               className="card-hover flex items-center justify-center gap-2 py-4 px-3 bg-white rounded-2xl border border-gray-100 text-center group"
             >
               <span className="text-lg">📍</span>
-              <span className="text-sm font-semibold text-gray-700 group-hover:text-[#8B1A1A] transition-colors">{city}</span>
+              <span className="text-sm font-semibold text-gray-700 group-hover:text-[#1B3A6B] transition-colors">{city}</span>
             </Link>
           ))}
         </div>

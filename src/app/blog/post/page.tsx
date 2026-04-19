@@ -32,7 +32,7 @@ function BlogPostContent() {
       <main className="max-w-3xl mx-auto px-4 py-20 text-center text-gray-500">
         <p className="text-4xl mb-4">🔍</p>
         <p className="font-medium">Article not found.</p>
-        <Link href="/blog" className="hover:underline mt-4 inline-block" style={{ color: "#8B1A1A" }}>
+        <Link href="/blog" className="hover:underline mt-4 inline-block" style={{ color: "#1B3A6B" }}>
           ← Back to Blog
         </Link>
       </main>
@@ -43,7 +43,7 @@ function BlogPostContent() {
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <Link
         href="/blog"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#8B1A1A] mb-8 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] mb-8 transition-colors"
       >
         <ArrowLeft size={16} /> Back to Blog
       </Link>

@@ -31,7 +31,7 @@ export default function ContactPage() {
       <section id="get-listed" className="mb-20">
         <div className="text-center mb-10">
           <span className="text-4xl">🏪</span>
-          <h1 className="text-3xl font-bold mt-3 mb-3" style={{ color: "#8B1A1A" }}>
+          <h1 className="text-3xl font-bold mt-3 mb-3" style={{ color: "#1B3A6B" }}>
             Get Your Business Listed
           </h1>
           <p className="text-gray-600 leading-relaxed max-w-xl mx-auto">
@@ -70,7 +70,7 @@ export default function ContactPage() {
       <section id="contact">
         <div className="text-center mb-10">
           <span className="text-4xl">✉️</span>
-          <h2 className="text-3xl font-bold mt-3 mb-3" style={{ color: "#8B1A1A" }}>
+          <h2 className="text-3xl font-bold mt-3 mb-3" style={{ color: "#1B3A6B" }}>
             Get in Touch
           </h2>
           <p className="text-gray-600 leading-relaxed max-w-xl mx-auto">
@@ -81,7 +81,7 @@ export default function ContactPage() {
         {contactSent ? (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
             <span className="text-5xl">🙏</span>
-            <h3 className="text-xl font-bold mt-4 mb-2" style={{ color: "#8B1A1A" }}>Message received!</h3>
+            <h3 className="text-xl font-bold mt-4 mb-2" style={{ color: "#1B3A6B" }}>Message received!</h3>
             <p className="text-gray-500 text-sm">We'll get back to you as soon as possible.</p>
           </div>
         ) : (
