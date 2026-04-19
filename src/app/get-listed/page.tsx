@@ -11,6 +11,7 @@ export default function GetListedPage() {
     address: "",
     phone: "",
     website: "",
+    instagram: "",
     email: "",
     description: "",
   });
@@ -114,9 +115,10 @@ export default function GetListedPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">City</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">City *</label>
               <input
                 type="text"
+                required
                 value={form.city}
                 onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
                 placeholder="e.g. Berlin"
@@ -125,9 +127,10 @@ export default function GetListedPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Address *</label>
             <input
               type="text"
+              required
               value={form.address}
               onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
               placeholder="Street address"
@@ -136,9 +139,10 @@ export default function GetListedPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone *</label>
               <input
                 type="tel"
+                required
                 value={form.phone}
                 onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                 placeholder="+49 30 123456"
@@ -156,20 +160,33 @@ export default function GetListedPage() {
               />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Email *</label>
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              placeholder="your@email.com"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Instagram</label>
+              <input
+                type="text"
+                value={form.instagram}
+                onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))}
+                placeholder="@yourbusiness"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Email *</label>
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                placeholder="your@email.com"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
+              />
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Short Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Short Description *</label>
             <textarea
+              required
               rows={3}
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
