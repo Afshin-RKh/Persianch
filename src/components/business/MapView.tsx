@@ -216,11 +216,14 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
       }).addTo(map);
 
       mapInstanceRef.current = map;
-      setTimeout(() => map.invalidateSize(), 100);
-      setTimeout(() => map.invalidateSize(), 500);
+      setTimeout(() => map.invalidateSize(), 150);
 
-      // Auto-correct whenever the container is resized (layout shifts, sidebar toggle, etc.)
-      const ro = new ResizeObserver(() => map.invalidateSize());
+      // Auto-correct on window resize only — debounced to avoid feedback loop
+      let resizeTimer: ReturnType<typeof setTimeout>;
+      const ro = new ResizeObserver(() => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => map.invalidateSize(), 200);
+      });
       ro.observe(mapRef.current!);
       (map as any)._resizeObserver = ro;
     });
@@ -295,9 +298,6 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
 
         markersRef.current.push(marker);
       });
-
-      // After markers update the DOM, re-check container size
-      mapInstanceRef.current?.invalidateSize();
     });
   }, [businesses, onSelect, router]);
 
