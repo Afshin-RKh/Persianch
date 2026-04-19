@@ -109,12 +109,12 @@ export default function SearchBar({
       </div>
 
       {/* Country */}
-      <div className="relative w-full sm:w-auto">
+      <div className="relative">
         <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         <select
           value={country}
           onChange={(e) => setCountry(e.target.value)}
-          className="w-full sm:w-auto pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none sm:min-w-[150px] shadow-sm cursor-pointer"
+          className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
         >
           <option value="">All Countries</option>
           {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -122,12 +122,12 @@ export default function SearchBar({
       </div>
 
       {/* Region / Canton */}
-      <div className="relative w-full sm:w-auto">
+      <div className="relative">
         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         <select
           value={canton}
           onChange={(e) => setCanton(e.target.value)}
-          className="w-full sm:w-auto pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none sm:min-w-[150px] shadow-sm cursor-pointer"
+          className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
         >
           <option value="">All Regions</option>
           {regions.map((c) => <option key={c} value={c}>{c}</option>)}
