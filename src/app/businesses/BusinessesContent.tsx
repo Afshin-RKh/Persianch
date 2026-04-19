@@ -114,7 +114,7 @@ export default function BusinessesContent() {
       {/* Main content */}
       <div className="flex flex-1" style={{ minHeight: "600px" }}>
         {/* Business list */}
-        <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "hidden md:block md:w-[420px] lg:w-[480px]" : "w-full"} bg-[#FDF8F3]`}>
+        <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "hidden md:block md:w-2/5 lg:w-1/3" : "w-full"} bg-[#FDF8F3]`}>
           <div className="p-4">
             {loading ? (
               <div className="text-center py-16 text-gray-400">
