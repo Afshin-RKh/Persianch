@@ -217,6 +217,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
 
       mapInstanceRef.current = map;
       setTimeout(() => map.invalidateSize(), 100);
+      setTimeout(() => map.invalidateSize(), 500);
     });
 
     return () => {
