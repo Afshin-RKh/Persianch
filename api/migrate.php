@@ -95,4 +95,19 @@ try {
     $results[] = "blog_posts alter error: " . $e->getMessage();
 }
 
+// 7. Add tags, country, city to blog_posts — check each column separately
+foreach (['tags' => 'VARCHAR(500)', 'country' => 'VARCHAR(100)', 'city' => 'VARCHAR(100)'] as $col => $def) {
+    try {
+        $exists = $pdo->query("SHOW COLUMNS FROM blog_posts LIKE '$col'")->fetchAll();
+        if (count($exists) === 0) {
+            $pdo->exec("ALTER TABLE blog_posts ADD COLUMN $col $def");
+            $results[] = "blog_posts: added column $col";
+        } else {
+            $results[] = "blog_posts.$col: already exists";
+        }
+    } catch (PDOException $e) {
+        $results[] = "blog_posts.$col error: " . $e->getMessage();
+    }
+}
+
 echo json_encode(['done' => true, 'results' => $results]);
