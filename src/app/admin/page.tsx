@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, authHeaders } from "@/lib/auth";
 import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
+
+const BLOG_REGIONS = (country: string) => REGIONS_BY_COUNTRY[country] ?? [];
 import { Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
@@ -471,13 +473,24 @@ export default function AdminPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-                        <input type="text" value={postForm.country} onChange={(e) => setPostForm((f) => ({ ...f, country: e.target.value }))}
-                          placeholder="e.g. Switzerland" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
+                        <select value={postForm.country} onChange={(e) => setPostForm((f) => ({ ...f, country: e.target.value, city: "" }))}
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white">
+                          <option value="">— none —</option>
+                          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">City</label>
-                        <input type="text" value={postForm.city} onChange={(e) => setPostForm((f) => ({ ...f, city: e.target.value }))}
-                          placeholder="e.g. Zurich" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Region / City</label>
+                        {BLOG_REGIONS(postForm.country).length > 0 ? (
+                          <select value={postForm.city} onChange={(e) => setPostForm((f) => ({ ...f, city: e.target.value }))}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white">
+                            <option value="">— none —</option>
+                            {BLOG_REGIONS(postForm.country).map((r) => <option key={r} value={r}>{r}</option>)}
+                          </select>
+                        ) : (
+                          <input type="text" value={postForm.city} onChange={(e) => setPostForm((f) => ({ ...f, city: e.target.value }))}
+                            placeholder="City or region" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
+                        )}
                       </div>
                     </div>
                     <div>

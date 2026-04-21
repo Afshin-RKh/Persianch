@@ -3,13 +3,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getBlogPosts, BlogPost, BlogFilters } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 
 const TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
 
 export default function BlogPage() {
-  const [posts, setPosts]       = useState<BlogPost[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [filters, setFilters]   = useState<BlogFilters>({});
+  const [posts, setPosts]     = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<BlogFilters>({});
   const { user } = useAuth();
 
   useEffect(() => {
@@ -20,11 +21,12 @@ export default function BlogPage() {
       .finally(() => setLoading(false));
   }, [filters]);
 
-  const setTag     = (tag: string)     => setFilters((f) => ({ ...f, tag:     f.tag === tag ? undefined : tag }));
-  const setCountry = (country: string) => setFilters((f) => ({ ...f, country: f.country === country ? undefined : country, city: undefined }));
-  const setCity    = (city: string)    => setFilters((f) => ({ ...f, city:    f.city === city ? undefined : city }));
-  const clearAll   = ()                => setFilters({});
+  const toggleTag   = (tag: string)     => setFilters((f) => ({ ...f, tag: f.tag === tag ? undefined : tag }));
+  const setCountry  = (country: string) => setFilters((f) => ({ ...f, country: country || undefined, city: undefined }));
+  const setCity     = (city: string)    => setFilters((f) => ({ ...f, city: city || undefined }));
+  const clearAll    = ()                => setFilters({});
 
+  const regions = filters.country ? (REGIONS_BY_COUNTRY[filters.country] ?? []) : [];
   const activeFilters = !!(filters.tag || filters.country || filters.city);
 
   return (
@@ -41,45 +43,60 @@ export default function BlogPage() {
         )}
       </div>
 
-      {/* Tag filter pills */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {TAGS.map((tag) => (
-          <button
-            key={tag}
-            onClick={() => setTag(tag)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all capitalize ${
-              filters.tag === tag
-                ? "text-white border-transparent"
-                : "text-gray-600 border-gray-200 bg-white hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
-            }`}
-            style={filters.tag === tag ? { backgroundColor: "#1B3A6B" } : {}}
-          >
-            {tag}
-          </button>
-        ))}
-      </div>
+      {/* Filters */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-8 space-y-4">
+        {/* Tag filter pills */}
+        <div>
+          <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Filter by topic</p>
+          <div className="flex flex-wrap gap-2">
+            {TAGS.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => toggleTag(tag)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all capitalize ${
+                  filters.tag === tag
+                    ? "text-white border-transparent"
+                    : "text-gray-600 border-gray-200 bg-gray-50 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
+                }`}
+                style={filters.tag === tag ? { backgroundColor: "#1B3A6B" } : {}}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      {/* Location filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Country (e.g. Switzerland)"
-          value={filters.country || ""}
-          onChange={(e) => setCountry(e.target.value)}
-          className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] w-48"
-        />
-        <input
-          type="text"
-          placeholder="City (e.g. Zurich)"
-          value={filters.city || ""}
-          onChange={(e) => setCity(e.target.value)}
-          className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] w-40"
-        />
-        {activeFilters && (
-          <button onClick={clearAll} className="text-xs text-gray-400 hover:text-red-500 transition-colors px-2">
-            ✕ Clear filters
-          </button>
-        )}
+        {/* Location dropdowns */}
+        <div>
+          <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Filter by location</p>
+          <div className="flex flex-wrap gap-3 items-center">
+            <select
+              value={filters.country || ""}
+              onChange={(e) => setCountry(e.target.value)}
+              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white"
+            >
+              <option value="">All countries</option>
+              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+
+            {regions.length > 0 && (
+              <select
+                value={filters.city || ""}
+                onChange={(e) => setCity(e.target.value)}
+                className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white"
+              >
+                <option value="">All regions</option>
+                {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            )}
+
+            {activeFilters && (
+              <button onClick={clearAll} className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium">
+                ✕ Clear all filters
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {loading ? (
@@ -90,9 +107,13 @@ export default function BlogPage() {
       ) : posts.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <div className="text-4xl mb-4">📝</div>
-          <p className="font-medium text-gray-500">{activeFilters ? "No articles match your filters." : "No articles published yet."}</p>
+          <p className="font-medium text-gray-500">
+            {activeFilters ? "No articles match your filters." : "No articles published yet."}
+          </p>
           {activeFilters && (
-            <button onClick={clearAll} className="mt-3 text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>Clear filters</button>
+            <button onClick={clearAll} className="mt-3 text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
+              Clear filters
+            </button>
           )}
         </div>
       ) : (
@@ -101,37 +122,41 @@ export default function BlogPage() {
             <Link key={post.id} href={`/blog/post?slug=${post.slug}`}>
               <article className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex gap-0">
                 {post.cover_image && (
-                  <div className="w-48 flex-shrink-0">
-                    <img
-                      src={post.cover_image}
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-44 flex-shrink-0">
+                    <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
                   </div>
                 )}
-                <div className="p-6 flex-1">
+                <div className="p-6 flex-1 flex flex-col">
                   <p className="text-xs text-gray-400 mb-2">
-                    {new Date(post.created_at).toLocaleDateString("en-CH", {
-                      year: "numeric", month: "long", day: "numeric",
-                    })}
+                    {new Date(post.created_at).toLocaleDateString("en-CH", { year: "numeric", month: "long", day: "numeric" })}
                     {(post.city || post.country) && (
                       <span className="ml-2">· {[post.city, post.country].filter(Boolean).join(", ")}</span>
                     )}
+                    {post.author_name && <span className="ml-2">· by {post.author_name}</span>}
                   </p>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">
-                    {post.title}
-                  </h2>
+
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">{post.title}</h2>
+
+                  <p className="text-sm text-gray-500 line-clamp-2 flex-1">
+                    {post.content?.replace(/<[^>]+>/g, "").slice(0, 200)}
+                  </p>
+
+                  {/* Tags */}
                   {post.tags && (
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {post.tags.split(",").map((t) => (
-                        <span key={t} className="text-xs px-2 py-0.5 rounded-full font-medium capitalize" style={{ backgroundColor: "#EEF2FF", color: "#1B3A6B" }}>{t.trim()}</span>
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {post.tags.split(",").map((t) => t.trim()).filter(Boolean).map((t) => (
+                        <span
+                          key={t}
+                          className="text-xs px-2.5 py-1 rounded-full font-semibold capitalize"
+                          style={{ backgroundColor: "#EEF2FF", color: "#1B3A6B" }}
+                        >
+                          {t}
+                        </span>
                       ))}
                     </div>
                   )}
-                  <p className="text-sm text-gray-500 line-clamp-3">
-                    {post.content?.replace(/<[^>]+>/g, "").slice(0, 200)}...
-                  </p>
-                  <span className="mt-4 inline-block text-xs font-semibold" style={{ color: "#1B3A6B" }}>
+
+                  <span className="mt-3 inline-block text-xs font-semibold" style={{ color: "#1B3A6B" }}>
                     Read more →
                   </span>
                 </div>

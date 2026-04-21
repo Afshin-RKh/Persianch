@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, authHeaders } from "@/lib/auth";
 
+import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
+
 const API = process.env.NEXT_PUBLIC_API_URL || "https://phub.ch/api";
 const TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
 
@@ -134,23 +136,35 @@ export default function WriteBlogPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5">Country</label>
-            <input
-              type="text"
+            <select
               value={form.country}
-              onChange={(e) => setForm({ ...form, country: e.target.value })}
-              placeholder="e.g. Switzerland"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
-            />
+              onChange={(e) => setForm({ ...form, country: e.target.value, city: "" })}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white"
+            >
+              <option value="">— select country —</option>
+              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">City</label>
-            <input
-              type="text"
-              value={form.city}
-              onChange={(e) => setForm({ ...form, city: e.target.value })}
-              placeholder="e.g. Zurich"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
-            />
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Region / City</label>
+            {(REGIONS_BY_COUNTRY[form.country] ?? []).length > 0 ? (
+              <select
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white"
+              >
+                <option value="">— select region —</option>
+                {(REGIONS_BY_COUNTRY[form.country] ?? []).map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                placeholder="City or region"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
+              />
+            )}
           </div>
         </div>
 
