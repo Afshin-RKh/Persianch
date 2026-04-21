@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, authHeaders } from "@/lib/auth";
-import { CATEGORIES } from "@/types";
+import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 import { Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
@@ -12,6 +12,7 @@ type BizForm = {
   name: string; name_fa: string; category: string; canton: string; country: string;
   address: string; phone: string; website: string; email: string; instagram: string;
   description: string; description_fa: string; google_maps_url: string;
+  image_url: string; logo_url: string; lat: string; lng: string;
   is_featured: boolean; is_verified: boolean; is_approved: boolean;
 };
 
@@ -19,6 +20,7 @@ const EMPTY_BIZ: BizForm = {
   name: "", name_fa: "", category: "restaurant", canton: "Zurich", country: "Switzerland",
   address: "", phone: "", website: "", email: "", instagram: "",
   description: "", description_fa: "", google_maps_url: "",
+  image_url: "", logo_url: "", lat: "", lng: "",
   is_featured: false, is_verified: false, is_approved: true,
 };
 
@@ -29,48 +31,112 @@ function BizForm({ title, form, setForm, onSubmit, loading, success, onClose, is
   onSubmit: (e: React.FormEvent) => void; loading: boolean; success: boolean;
   onClose: () => void; isEdit: boolean;
 }) {
-  const textFields = ["name", "name_fa", "address", "phone", "email", "website", "instagram", "google_maps_url"] as const;
+  const regions = REGIONS_BY_COUNTRY[form.country] ?? [];
+  const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]";
+
   return (
     <div className="bg-white rounded-2xl border border-[#1B3A6B]/20 p-6 mb-2 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <h3 className="font-bold text-gray-800">{title}</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
       </div>
       {success && <p className="text-green-600 text-sm mb-3 font-medium">{isEdit ? "Saved!" : "Business added!"}</p>}
-      <form onSubmit={onSubmit} className="space-y-4">
+
+      <form onSubmit={onSubmit} className="space-y-5">
+
+        {/* Basic info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {textFields.map((k) => (
-            <div key={k}>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">{k.replace(/_/g, " ")}</label>
-              <input type="text" value={(form as unknown as Record<string, string>)[k]}
-                onChange={(e) => setForm({ ...form, [k]: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
-            </div>
-          ))}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Business Name (English) *</label>
+            <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inp} required />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Business Name (Persian)</label>
+            <input type="text" value={form.name_fa} onChange={(e) => setForm({ ...form, name_fa: e.target.value })} className={inp} dir="rtl" />
+          </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
-            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={inp}>
               {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-            <input type="text" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
+            <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value, canton: "" })} className={inp}>
+              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Region / Canton / State</label>
+            {regions.length > 0 ? (
+              <select value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} className={inp}>
+                <option value="">— select —</option>
+                {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            ) : (
+              <input type="text" value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} placeholder="Region or city" className={inp} />
+            )}
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Address</label>
+            <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inp} />
           </div>
         </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Description (English)</label>
-          <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-none" />
+
+        {/* Contact */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {([["phone", "Phone"], ["email", "Email"], ["website", "Website URL"], ["instagram", "Instagram handle"], ["google_maps_url", "Google Maps URL"]] as const).map(([k, label]) => (
+            <div key={k}>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
+              <input type="text" value={(form as unknown as Record<string, string>)[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className={inp} />
+            </div>
+          ))}
         </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Description (Persian)</label>
-          <textarea value={form.description_fa} onChange={(e) => setForm({ ...form, description_fa: e.target.value })} rows={2} dir="rtl"
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-none" />
+
+        {/* Descriptions */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Description (English)</label>
+            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className={`${inp} resize-none`} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Description (Persian)</label>
+            <textarea value={form.description_fa} onChange={(e) => setForm({ ...form, description_fa: e.target.value })} rows={3} dir="rtl" className={`${inp} resize-none`} />
+          </div>
         </div>
-        <div className="flex gap-4">
+
+        {/* Images */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Cover Image URL</label>
+            <input type="text" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." className={inp} />
+            {form.image_url && <img src={form.image_url} alt="" className="mt-2 h-20 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display = "none")} />}
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Logo URL</label>
+            <input type="text" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://..." className={inp} />
+            {form.logo_url && <img src={form.logo_url} alt="" className="mt-2 h-20 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display = "none")} />}
+          </div>
+        </div>
+
+        {/* Coordinates */}
+        <div>
+          <p className="text-xs font-semibold text-gray-600 mb-2">Coordinates <span className="text-gray-400 font-normal">(used for map pin)</span></p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Latitude</label>
+              <input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="e.g. 47.3769" className={inp} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Longitude</label>
+              <input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="e.g. 8.5417" className={inp} />
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Find coordinates: right-click any location on Google Maps → &quot;What&apos;s here?&quot;</p>
+        </div>
+
+        {/* Flags */}
+        <div className="flex gap-5">
           {(["is_featured", "is_verified", "is_approved"] as const).map((k) => (
             <label key={k} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
               <input type="checkbox" checked={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.checked })} className="rounded accent-red-600" />
@@ -78,6 +144,7 @@ function BizForm({ title, form, setForm, onSubmit, loading, success, onClose, is
             </label>
           ))}
         </div>
+
         <button type="submit" disabled={loading || !form.name}
           className="text-white font-semibold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
           {loading ? "Saving..." : isEdit ? "Save Changes" : "Add Business"}
@@ -207,10 +274,12 @@ export default function AdminPage() {
     setEditBiz(b);
     setBizForm({
       name: b.name ?? "", name_fa: b.name_fa ?? "", category: b.category ?? "restaurant",
-      canton: b.canton ?? "", country: b.country ?? "", address: b.address ?? "",
+      canton: b.canton ?? "", country: b.country ?? "Switzerland", address: b.address ?? "",
       phone: b.phone ?? "", website: b.website ?? "", email: b.email ?? "",
       instagram: b.instagram ?? "", description: b.description ?? "",
       description_fa: b.description_fa ?? "", google_maps_url: b.google_maps_url ?? "",
+      image_url: (b as any).image_url ?? "", logo_url: (b as any).logo_url ?? "",
+      lat: (b as any).lat?.toString() ?? "", lng: (b as any).lng?.toString() ?? "",
       is_featured: !!b.is_featured, is_verified: !!b.is_verified, is_approved: !!b.is_approved,
     });
     setShowAddBiz(false);
