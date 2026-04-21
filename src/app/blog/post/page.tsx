@@ -161,7 +161,19 @@ function BlogPostContent() {
 
       <p className="text-xs text-gray-400 mb-3">
         {new Date(post.created_at).toLocaleDateString("en-CH", { year: "numeric", month: "long", day: "numeric" })}
+        {(post.city || post.country) && (
+          <span className="ml-2">· {[post.city, post.country].filter(Boolean).join(", ")}</span>
+        )}
+        {post.author_name && <span className="ml-2">· by {post.author_name}</span>}
       </p>
+
+      {post.tags && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {post.tags.split(",").map((t) => (
+            <span key={t} className="text-xs px-2.5 py-1 rounded-full font-medium capitalize" style={{ backgroundColor: "#EEF2FF", color: "#1B3A6B" }}>{t.trim()}</span>
+          ))}
+        </div>
+      )}
 
       <h1 className="text-3xl font-bold text-gray-900 mb-8 gold-underline inline-block">{post.title}</h1>
 

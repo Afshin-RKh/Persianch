@@ -4,13 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, authHeaders } from "@/lib/auth";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://phub.ch/api";
+const TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
 
 export default function WriteBlogPage() {
   const { user, token, isAdmin } = useAuth();
   const router = useRouter();
 
-  const [form, setForm]     = useState({ title: "", content: "", cover_image: "" });
+  const [form, setForm] = useState({
+    title: "", content: "", cover_image: "", country: "", city: "",
+  });
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone]     = useState(false);
@@ -28,6 +32,9 @@ export default function WriteBlogPage() {
     );
   }
 
+  const toggleTag = (tag: string) =>
+    setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim() || !form.content.trim()) { setError("Title and content are required"); return; }
@@ -37,7 +44,7 @@ export default function WriteBlogPage() {
       const res = await fetch(`${API}/blog.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders(token) },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, tags: selectedTags }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to submit");
@@ -101,6 +108,50 @@ export default function WriteBlogPage() {
             placeholder="https://..."
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-2">Tags</label>
+          <div className="flex flex-wrap gap-2">
+            {TAGS.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all capitalize ${
+                  selectedTags.includes(tag)
+                    ? "text-white border-transparent"
+                    : "text-gray-600 border-gray-200 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
+                }`}
+                style={selectedTags.includes(tag) ? { backgroundColor: "#1B3A6B" } : {}}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Country</label>
+            <input
+              type="text"
+              value={form.country}
+              onChange={(e) => setForm({ ...form, country: e.target.value })}
+              placeholder="e.g. Switzerland"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">City</label>
+            <input
+              type="text"
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              placeholder="e.g. Zurich"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
+            />
+          </div>
         </div>
 
         <div>

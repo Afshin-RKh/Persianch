@@ -154,6 +154,8 @@ function BizForm({ title, form, setForm, onSubmit, loading, success, onClose, is
   );
 }
 
+const POST_TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
+
 interface BlogPost {
   id: number;
   title: string;
@@ -161,6 +163,9 @@ interface BlogPost {
   status: string;
   author_name: string;
   created_at: string;
+  tags?: string;
+  country?: string;
+  city?: string;
 }
 
 interface BusinessRow {
@@ -190,6 +195,11 @@ export default function AdminPage() {
   const [businesses, setBusinesses] = useState<BusinessRow[]>([]);
   const [users, setUsers]           = useState<UserRow[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
+
+  // Edit blog post inline
+  const [editPost, setEditPost] = useState<BlogPost | null>(null);
+  const [postForm, setPostForm] = useState<{ tags: string[]; country: string; city: string; status: string }>({ tags: [], country: "", city: "", status: "approved" });
+  const [postSaving, setPostSaving] = useState(false);
 
   // Add / Edit business form
   const [showAddBiz, setShowAddBiz] = useState(false);
@@ -242,6 +252,30 @@ export default function AdminPage() {
   const deletePost = async (id: number) => {
     if (!confirm("Delete this post?")) return;
     await fetch(`${API}/blog.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
+    loadData();
+  };
+
+  const openEditPost = (p: BlogPost) => {
+    setEditPost(p);
+    setPostForm({
+      tags: p.tags ? p.tags.split(",").map((t) => t.trim()) : [],
+      country: p.country ?? "",
+      city: p.city ?? "",
+      status: p.status,
+    });
+  };
+
+  const savePostMeta = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editPost) return;
+    setPostSaving(true);
+    await fetch(`${API}/blog.php`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders(token) },
+      body: JSON.stringify({ id: editPost.id, tags: postForm.tags, country: postForm.country, city: postForm.city, status: postForm.status }),
+    });
+    setPostSaving(false);
+    setEditPost(null);
     loadData();
   };
 
@@ -365,39 +399,101 @@ export default function AdminPage() {
           <div className="space-y-3">
             {posts.length === 0 && <p className="text-gray-400 text-sm">No posts yet.</p>}
             {posts.map((p) => (
-              <div key={p.id} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    {statusBadge(p.status)}
-                    <span className="text-xs text-gray-400">by {p.author_name ?? "unknown"} · {new Date(p.created_at).toLocaleDateString()}</span>
+              <div key={p.id}>
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {statusBadge(p.status)}
+                      <span className="text-xs text-gray-400">by {p.author_name ?? "unknown"} · {new Date(p.created_at).toLocaleDateString()}</span>
+                      {(p.city || p.country) && <span className="text-xs text-gray-400">· {[p.city, p.country].filter(Boolean).join(", ")}</span>}
+                    </div>
+                    <p className="font-semibold text-gray-900 truncate">{p.title}</p>
+                    {p.tags && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {p.tags.split(",").map((t) => (
+                          <span key={t} className="text-xs px-2 py-0.5 rounded-full capitalize" style={{ backgroundColor: "#EEF2FF", color: "#1B3A6B" }}>{t.trim()}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <p className="font-semibold text-gray-900 truncate">{p.title}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {p.status === "pending" && (
-                    <>
-                      <button onClick={() => updatePostStatus(p.id, "approved")} title="Approve" className="text-green-500 hover:text-green-700 transition-colors">
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {p.status === "pending" && (
+                      <>
+                        <button onClick={() => updatePostStatus(p.id, "approved")} title="Approve" className="text-green-500 hover:text-green-700 transition-colors">
+                          <CheckCircle size={18} />
+                        </button>
+                        <button onClick={() => updatePostStatus(p.id, "rejected")} title="Reject" className="text-red-400 hover:text-red-600 transition-colors">
+                          <XCircle size={18} />
+                        </button>
+                      </>
+                    )}
+                    {p.status === "rejected" && (
+                      <button onClick={() => updatePostStatus(p.id, "approved")} title="Approve anyway" className="text-green-500 hover:text-green-700 transition-colors">
                         <CheckCircle size={18} />
                       </button>
-                      <button onClick={() => updatePostStatus(p.id, "rejected")} title="Reject" className="text-red-400 hover:text-red-600 transition-colors">
-                        <XCircle size={18} />
-                      </button>
-                    </>
-                  )}
-                  {p.status === "approved" && (
-                    <Link href={`/blog/post?slug=${p.slug}`} className="text-gray-400 hover:text-[#1B3A6B] transition-colors" title="View">
+                    )}
+                    <button onClick={() => editPost?.id === p.id ? setEditPost(null) : openEditPost(p)} title="Edit tags/location" className="text-gray-400 hover:text-[#1B3A6B] transition-colors">
                       <Edit2 size={16} />
-                    </Link>
-                  )}
-                  {p.status === "rejected" && (
-                    <button onClick={() => updatePostStatus(p.id, "approved")} title="Approve anyway" className="text-green-500 hover:text-green-700 transition-colors">
-                      <CheckCircle size={18} />
                     </button>
-                  )}
-                  <button onClick={() => deletePost(p.id)} title="Delete" className="text-gray-300 hover:text-red-500 transition-colors">
-                    <Trash2 size={16} />
-                  </button>
+                    {p.status === "approved" && (
+                      <Link href={`/blog/post?slug=${p.slug}`} target="_blank" className="text-xs text-[#1B3A6B] hover:underline font-medium">View</Link>
+                    )}
+                    <button onClick={() => deletePost(p.id)} title="Delete" className="text-gray-300 hover:text-red-500 transition-colors">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
+
+                {editPost?.id === p.id && (
+                  <form onSubmit={savePostMeta} className="bg-gray-50 rounded-2xl border border-[#1B3A6B]/10 p-5 mt-2 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-700">Edit tags &amp; location</p>
+                      <button type="button" onClick={() => setEditPost(null)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600 mb-2">Tags</p>
+                      <div className="flex flex-wrap gap-2">
+                        {POST_TAGS.map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => setPostForm((f) => ({ ...f, tags: f.tags.includes(tag) ? f.tags.filter((t) => t !== tag) : [...f.tags, tag] }))}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all capitalize ${
+                              postForm.tags.includes(tag) ? "text-white border-transparent" : "text-gray-600 border-gray-200 hover:border-[#1B3A6B]"
+                            }`}
+                            style={postForm.tags.includes(tag) ? { backgroundColor: "#1B3A6B" } : {}}
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+                        <input type="text" value={postForm.country} onChange={(e) => setPostForm((f) => ({ ...f, country: e.target.value }))}
+                          placeholder="e.g. Switzerland" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">City</label>
+                        <input type="text" value={postForm.city} onChange={(e) => setPostForm((f) => ({ ...f, city: e.target.value }))}
+                          placeholder="e.g. Zurich" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+                      <select value={postForm.status} onChange={(e) => setPostForm((f) => ({ ...f, status: e.target.value }))}
+                        className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+                        <option value="approved">approved</option>
+                        <option value="pending">pending</option>
+                        <option value="rejected">rejected</option>
+                      </select>
+                    </div>
+                    <button type="submit" disabled={postSaving} className="text-white font-semibold px-5 py-2 rounded-xl text-sm disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
+                      {postSaving ? "Saving..." : "Save Changes"}
+                    </button>
+                  </form>
+                )}
               </div>
             ))}
           </div>

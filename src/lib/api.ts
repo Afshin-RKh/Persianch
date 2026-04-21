@@ -52,8 +52,19 @@ export async function deleteBusiness(id: string | number): Promise<{ success: bo
   return res.json();
 }
 
-export async function getBlogPosts(): Promise<BlogPost[]> {
-  const res = await fetch(`${API_URL}/blog.php`);
+export interface BlogFilters {
+  tag?: string;
+  country?: string;
+  city?: string;
+}
+
+export async function getBlogPosts(filters?: BlogFilters): Promise<BlogPost[]> {
+  const params = new URLSearchParams();
+  if (filters?.tag)     params.set("tag",     filters.tag);
+  if (filters?.country) params.set("country", filters.country);
+  if (filters?.city)    params.set("city",    filters.city);
+  const qs = params.toString();
+  const res = await fetch(`${API_URL}/blog.php${qs ? "?" + qs : ""}`);
   if (!res.ok) throw new Error("Failed to fetch blog posts");
   return res.json();
 }
@@ -74,4 +85,8 @@ export interface BlogPost {
   cover_image?: string;
   published: boolean;
   created_at: string;
+  tags?: string;
+  country?: string;
+  city?: string;
+  author_name?: string;
 }
