@@ -18,7 +18,6 @@ interface AuthCtx {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  loginWithGoogle: () => void;
   isAdmin: boolean;
   isSuperAdmin: boolean;
 }
@@ -105,13 +104,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(data.user);
   };
 
-  const loginWithGoogle = () => {
-    window.location.href = `${API}/auth_google.php`;
-  };
-
   return (
     <Ctx.Provider value={{
-      user, token, loading, login, register, logout, loginWithGoogle,
+      user, token, loading, login, register, logout,
       isAdmin: user?.role === "admin" || user?.role === "superadmin",
       isSuperAdmin: user?.role === "superadmin",
     }}>
