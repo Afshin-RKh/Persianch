@@ -4,11 +4,88 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, authHeaders } from "@/lib/auth";
 import { CATEGORIES } from "@/types";
-import { Trash2, CheckCircle, XCircle, Edit2, ChevronDown } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
 
+type BizForm = {
+  name: string; name_fa: string; category: string; canton: string; country: string;
+  address: string; phone: string; website: string; email: string; instagram: string;
+  description: string; description_fa: string; google_maps_url: string;
+  is_featured: boolean; is_verified: boolean; is_approved: boolean;
+};
+
+const EMPTY_BIZ: BizForm = {
+  name: "", name_fa: "", category: "restaurant", canton: "Zurich", country: "Switzerland",
+  address: "", phone: "", website: "", email: "", instagram: "",
+  description: "", description_fa: "", google_maps_url: "",
+  is_featured: false, is_verified: false, is_approved: true,
+};
+
 type Tab = "posts" | "businesses" | "users";
+
+function BizForm({ title, form, setForm, onSubmit, loading, success, onClose, isEdit }: {
+  title: string; form: BizForm; setForm: (f: BizForm) => void;
+  onSubmit: (e: React.FormEvent) => void; loading: boolean; success: boolean;
+  onClose: () => void; isEdit: boolean;
+}) {
+  const textFields = ["name", "name_fa", "address", "phone", "email", "website", "instagram", "google_maps_url"] as const;
+  return (
+    <div className="bg-white rounded-2xl border border-[#1B3A6B]/20 p-6 mb-2 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-gray-800">{title}</h3>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
+      </div>
+      {success && <p className="text-green-600 text-sm mb-3 font-medium">{isEdit ? "Saved!" : "Business added!"}</p>}
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {textFields.map((k) => (
+            <div key={k}>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{k.replace(/_/g, " ")}</label>
+              <input type="text" value={(form as unknown as Record<string, string>)[k]}
+                onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
+            </div>
+          ))}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+              {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+            <input type="text" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Description (English)</label>
+          <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-none" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Description (Persian)</label>
+          <textarea value={form.description_fa} onChange={(e) => setForm({ ...form, description_fa: e.target.value })} rows={2} dir="rtl"
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-none" />
+        </div>
+        <div className="flex gap-4">
+          {(["is_featured", "is_verified", "is_approved"] as const).map((k) => (
+            <label key={k} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox" checked={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.checked })} className="rounded accent-red-600" />
+              {k.replace("is_", "")}
+            </label>
+          ))}
+        </div>
+        <button type="submit" disabled={loading || !form.name}
+          className="text-white font-semibold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
+          {loading ? "Saving..." : isEdit ? "Save Changes" : "Add Business"}
+        </button>
+      </form>
+    </div>
+  );
+}
 
 interface BlogPost {
   id: number;
@@ -21,12 +98,10 @@ interface BlogPost {
 
 interface BusinessRow {
   id: number;
-  name: string;
-  category: string;
-  canton: string;
-  country: string;
-  is_approved: boolean;
-  is_featured: boolean;
+  name: string; name_fa?: string; category: string; canton: string; country: string;
+  address?: string; phone?: string; website?: string; email?: string; instagram?: string;
+  description?: string; description_fa?: string; google_maps_url?: string;
+  is_approved: boolean; is_featured: boolean; is_verified: boolean;
 }
 
 interface UserRow {
@@ -49,14 +124,10 @@ export default function AdminPage() {
   const [users, setUsers]           = useState<UserRow[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
 
-  // Add business form
+  // Add / Edit business form
   const [showAddBiz, setShowAddBiz] = useState(false);
-  const [bizForm, setBizForm] = useState({
-    name: "", name_fa: "", category: "restaurant", canton: "Zurich", country: "Switzerland",
-    address: "", phone: "", website: "", email: "", instagram: "",
-    description: "", description_fa: "", google_maps_url: "",
-    is_featured: false, is_verified: false, is_approved: true,
-  });
+  const [editBiz, setEditBiz]       = useState<BusinessRow | null>(null);
+  const [bizForm, setBizForm]       = useState<BizForm>(EMPTY_BIZ);
   const [bizLoading, setBizLoading] = useState(false);
   const [bizSuccess, setBizSuccess] = useState(false);
 
@@ -132,20 +203,34 @@ export default function AdminPage() {
     loadData();
   };
 
+  const openEdit = (b: BusinessRow) => {
+    setEditBiz(b);
+    setBizForm({
+      name: b.name ?? "", name_fa: b.name_fa ?? "", category: b.category ?? "restaurant",
+      canton: b.canton ?? "", country: b.country ?? "", address: b.address ?? "",
+      phone: b.phone ?? "", website: b.website ?? "", email: b.email ?? "",
+      instagram: b.instagram ?? "", description: b.description ?? "",
+      description_fa: b.description_fa ?? "", google_maps_url: b.google_maps_url ?? "",
+      is_featured: !!b.is_featured, is_verified: !!b.is_verified, is_approved: !!b.is_approved,
+    });
+    setShowAddBiz(false);
+  };
+
   const submitBusiness = async (e: React.FormEvent) => {
     e.preventDefault();
     setBizLoading(true);
     try {
+      const isEdit = !!editBiz;
       const res = await fetch(`${API}/businesses.php`, {
-        method: "POST",
+        method: isEdit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json", ...authHeaders(token) },
-        body: JSON.stringify(bizForm),
+        body: JSON.stringify(isEdit ? { id: editBiz.id, ...bizForm } : bizForm),
       });
       const data = await res.json();
       if (data.success) {
         setBizSuccess(true);
-        setBizForm({ name: "", name_fa: "", category: "restaurant", canton: "Zurich", country: "Switzerland", address: "", phone: "", website: "", email: "", instagram: "", description: "", description_fa: "", google_maps_url: "", is_featured: false, is_verified: false, is_approved: true });
-        setTimeout(() => { setBizSuccess(false); setShowAddBiz(false); loadData(); }, 1500);
+        setBizForm(EMPTY_BIZ);
+        setTimeout(() => { setBizSuccess(false); setEditBiz(null); setShowAddBiz(false); loadData(); }, 1200);
       }
     } finally {
       setBizLoading(false);
@@ -256,7 +341,7 @@ export default function AdminPage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-gray-800">All Businesses ({businesses.length})</h2>
             <button
-              onClick={() => setShowAddBiz((v) => !v)}
+              onClick={() => { setShowAddBiz((v) => !v); setEditBiz(null); setBizForm(EMPTY_BIZ); }}
               className="text-white text-sm font-semibold px-4 py-2 rounded-xl flex items-center gap-1"
               style={{ backgroundColor: "#8B1A1A" }}
             >
@@ -265,67 +350,52 @@ export default function AdminPage() {
           </div>
 
           {/* Add business form */}
-          {showAddBiz && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
-              <h3 className="font-bold text-gray-800 mb-4">New Business</h3>
-              {bizSuccess && <p className="text-green-600 text-sm mb-3 font-medium">Business added!</p>}
-              <form onSubmit={submitBusiness} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {(["name", "name_fa", "address", "phone", "email", "website", "instagram", "google_maps_url"] as const).map((k) => (
-                    <div key={k}>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">{k.replace(/_/g, " ")}</label>
-                      <input type="text" value={(bizForm as unknown as Record<string, string>)[k]} onChange={(e) => setBizForm({ ...bizForm, [k]: e.target.value })}
-                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
-                    </div>
-                  ))}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
-                    <select value={bizForm.category} onChange={(e) => setBizForm({ ...bizForm, category: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
-                      {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-                    <input type="text" value={bizForm.country} onChange={(e) => setBizForm({ ...bizForm, country: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Description (English)</label>
-                  <textarea value={bizForm.description} onChange={(e) => setBizForm({ ...bizForm, description: e.target.value })} rows={2}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-none" />
-                </div>
-                <div className="flex gap-4">
-                  {(["is_featured", "is_verified", "is_approved"] as const).map((k) => (
-                    <label key={k} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                      <input type="checkbox" checked={bizForm[k]} onChange={(e) => setBizForm({ ...bizForm, [k]: e.target.checked })} className="rounded accent-red-600" />
-                      {k.replace("is_", "")}
-                    </label>
-                  ))}
-                </div>
-                <button type="submit" disabled={bizLoading || !bizForm.name}
-                  className="text-white font-semibold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
-                  {bizLoading ? "Saving..." : "Add Business"}
-                </button>
-              </form>
-            </div>
+          {showAddBiz && !editBiz && (
+            <BizForm
+              title="New Business"
+              form={bizForm}
+              setForm={setBizForm}
+              onSubmit={submitBusiness}
+              loading={bizLoading}
+              success={bizSuccess}
+              onClose={() => setShowAddBiz(false)}
+              isEdit={false}
+            />
           )}
 
           <div className="space-y-2">
             {businesses.length === 0 && <p className="text-gray-400 text-sm">No businesses.</p>}
             {businesses.map((b) => (
-              <div key={b.id} className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">{b.name}</p>
-                  <p className="text-xs text-gray-400">{b.category} · {b.canton}, {b.country}</p>
+              <div key={b.id}>
+                <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{b.name}</p>
+                    <p className="text-xs text-gray-400">{b.category} · {b.canton}, {b.country}</p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <Link href={`/businesses/detail?id=${b.id}`} className="text-xs text-[#1B3A6B] hover:underline font-medium">View</Link>
+                    <button onClick={() => { openEdit(b); setShowAddBiz(false); }} className="text-gray-400 hover:text-[#1B3A6B] transition-colors" title="Edit">
+                      <Edit2 size={15} />
+                    </button>
+                    <button onClick={() => deleteBusiness(b.id)} className="text-gray-300 hover:text-red-500 transition-colors" title="Delete">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <Link href={`/businesses/detail?id=${b.id}`} className="text-xs text-[#1B3A6B] hover:underline font-medium">View</Link>
-                  <button onClick={() => deleteBusiness(b.id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                    <Trash2 size={15} />
-                  </button>
-                </div>
+                {editBiz?.id === b.id && (
+                  <div className="mt-2 mb-2">
+                    <BizForm
+                      title={`Editing: ${b.name}`}
+                      form={bizForm}
+                      setForm={setBizForm}
+                      onSubmit={submitBusiness}
+                      loading={bizLoading}
+                      success={bizSuccess}
+                      onClose={() => setEditBiz(null)}
+                      isEdit={true}
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
