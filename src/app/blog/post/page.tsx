@@ -4,9 +4,9 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getBlogPost, BlogPost } from "@/lib/api";
 import { useAuth, authHeaders } from "@/lib/auth";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Edit2 } from "lucide-react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://phub.ch/api";
 
 interface Comment {
   id: number;
@@ -118,13 +118,24 @@ function Comments({ postId }: { postId: number }) {
 function BlogPostContent() {
   const searchParams = useSearchParams();
   const slug = searchParams.get("slug");
+  const id   = searchParams.get("id");
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isAdmin, token } = useAuth();
 
   useEffect(() => {
-    if (!slug) { setLoading(false); return; }
-    getBlogPost(slug).then(setPost).finally(() => setLoading(false));
-  }, [slug]);
+    if (id && isAdmin !== undefined) {
+      if (!isAdmin) { setLoading(false); return; }
+      fetch(`${API}/blog.php?id=${id}`, { headers: authHeaders(token) })
+        .then((r) => r.json())
+        .then(setPost)
+        .finally(() => setLoading(false));
+    } else if (slug) {
+      getBlogPost(slug).then(setPost).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [slug, id, isAdmin, token]);
 
   if (loading) {
     return (
@@ -149,9 +160,23 @@ function BlogPostContent() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] mb-8 transition-colors">
-        <ArrowLeft size={16} /> Back to Blog
-      </Link>
+      <div className="flex items-center justify-between mb-8">
+        <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors">
+          <ArrowLeft size={16} /> Back to Blog
+        </Link>
+        {isAdmin && (
+          <Link href={`/blog/edit?id=${post.id}`} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors hover:bg-gray-50" style={{ color: "#1B3A6B", borderColor: "#1B3A6B" }}>
+            <Edit2 size={13} /> Edit Post
+          </Link>
+        )}
+      </div>
+
+      {(post as any).status && (post as any).status !== "approved" && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs font-semibold px-4 py-2.5 rounded-xl mb-6 flex items-center gap-2">
+          <span className="uppercase tracking-wide">{(post as any).status}</span>
+          <span className="font-normal text-yellow-700">— This post is not yet published. Only admins can see it.</span>
+        </div>
+      )}
 
       {post.cover_image && (
         <div className="rounded-2xl overflow-hidden mb-8 h-64">

@@ -434,12 +434,10 @@ export default function AdminPage() {
                         <CheckCircle size={18} />
                       </button>
                     )}
-                    <button onClick={() => editPost?.id === p.id ? setEditPost(null) : openEditPost(p)} title="Edit tags/location" className="text-gray-400 hover:text-[#1B3A6B] transition-colors">
+                    <Link href={`/blog/edit?id=${p.id}`} title="Edit post" className="text-gray-400 hover:text-[#1B3A6B] transition-colors">
                       <Edit2 size={16} />
-                    </button>
-                    {p.status === "approved" && (
-                      <Link href={`/blog/post?slug=${p.slug}`} target="_blank" className="text-xs text-[#1B3A6B] hover:underline font-medium">View</Link>
-                    )}
+                    </Link>
+                    <Link href={`/blog/post?id=${p.id}`} target="_blank" className="text-xs text-[#1B3A6B] hover:underline font-medium">Preview</Link>
                     <button onClick={() => deletePost(p.id)} title="Delete" className="text-gray-300 hover:text-red-500 transition-colors">
                       <Trash2 size={16} />
                     </button>
