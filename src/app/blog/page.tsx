@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getBlogPosts, BlogPost } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     getBlogPosts()
@@ -16,9 +18,16 @@ export default function BlogPage() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-gray-900 gold-underline inline-block">Blog</h1>
-        <p className="text-gray-500 mt-3">News, tips and stories from the Persian community in Switzerland.</p>
+      <div className="flex items-start justify-between mb-10">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 gold-underline inline-block">Blog</h1>
+          <p className="text-gray-500 mt-3">News, tips and stories from the Persian community across Europe.</p>
+        </div>
+        {user && (
+          <Link href="/blog/write" className="text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:opacity-90 flex-shrink-0 mt-1" style={{ backgroundColor: "#8B1A1A" }}>
+            ✍️ Write a Post
+          </Link>
+        )}
       </div>
 
       {loading ? (

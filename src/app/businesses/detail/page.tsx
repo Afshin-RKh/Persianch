@@ -1,11 +1,119 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getBusinessById } from "@/lib/api";
 import { Business, CATEGORIES } from "@/types";
-import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft } from "lucide-react";
+import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useAuth, authHeaders } from "@/lib/auth";
+
+const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
+
+interface Comment {
+  id: number;
+  content: string;
+  created_at: string;
+  user_id: number;
+  user_name: string;
+  avatar?: string;
+}
+
+function BusinessComments({ businessId }: { businessId: number }) {
+  const { user, token, isAdmin } = useAuth();
+  const [comments, setComments] = React.useState<Comment[]>([]);
+  const [text, setText]         = React.useState("");
+  const [loading, setLoading]   = React.useState(false);
+
+  React.useEffect(() => {
+    fetch(`${API}/comments.php?entity_type=business&entity_id=${businessId}`)
+      .then((r) => r.json())
+      .then(setComments)
+      .catch(() => {});
+  }, [businessId]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/comments.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders(token) },
+        body: JSON.stringify({ entity_type: "business", entity_id: businessId, content: text }),
+      });
+      const c = await res.json();
+      if (res.ok) { setComments((prev) => [...prev, c]); setText(""); }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteComment = async (id: number) => {
+    await fetch(`${API}/comments.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
+    setComments((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  return (
+    <section className="mt-8 pt-8 border-t border-gray-100">
+      <h2 className="text-lg font-bold text-gray-900 mb-4">Comments ({comments.length})</h2>
+
+      {comments.length === 0 && <p className="text-gray-400 text-sm mb-6">No comments yet.</p>}
+
+      <div className="space-y-3 mb-6">
+        {comments.map((c) => (
+          <div key={c.id} className="bg-gray-50 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                {c.avatar ? (
+                  <img src={c.avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
+                ) : (
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#1B3A6B" }}>
+                    {c.user_name[0]?.toUpperCase()}
+                  </div>
+                )}
+                <span className="text-sm font-semibold text-gray-800">{c.user_name}</span>
+                <span className="text-xs text-gray-400">
+                  {new Date(c.created_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" })}
+                </span>
+              </div>
+              {(user?.id === c.user_id || isAdmin) && (
+                <button onClick={() => deleteComment(c.id)} className="text-gray-300 hover:text-red-500 transition-colors">
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </div>
+            <p className="text-sm text-gray-700">{c.content}</p>
+          </div>
+        ))}
+      </div>
+
+      {user ? (
+        <form onSubmit={submit} className="space-y-2">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Write a comment..."
+            rows={2}
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-none"
+          />
+          <button
+            type="submit"
+            disabled={loading || !text.trim()}
+            className="text-white font-semibold px-5 py-2 rounded-xl text-sm disabled:opacity-50 transition-colors"
+            style={{ backgroundColor: "#8B1A1A" }}
+          >
+            {loading ? "Posting..." : "Post"}
+          </button>
+        </form>
+      ) : (
+        <p className="text-sm text-gray-500">
+          <Link href="/auth/signin" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>Sign in</Link> to leave a comment.
+        </p>
+      )}
+    </section>
+  );
+}
 
 const BusinessMap = dynamic(() => import("@/components/business/BusinessMap"), { ssr: false });
 
@@ -211,6 +319,8 @@ function BusinessDetailContent() {
 
         </div>
       </div>
+
+      <BusinessComments businessId={Number(business.id)} />
     </main>
   );
 }
