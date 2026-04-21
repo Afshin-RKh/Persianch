@@ -2,8 +2,8 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getBusinessById } from "@/lib/api";
-import { Business, CATEGORIES } from "@/types";
-import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2 } from "lucide-react";
+import { Business, CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
+import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2, Pencil, X } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAuth, authHeaders } from "@/lib/auth";
@@ -146,11 +146,157 @@ function ContactRow({ icon, label, children }: { icon: React.ReactNode; label: s
   );
 }
 
+function AdminEditPanel({ business, token, onSaved }: { business: Business; token: string | null; onSaved: (b: Business) => void }) {
+  const [form, setForm] = React.useState({
+    name: business.name ?? "", name_fa: business.name_fa ?? "",
+    category: business.category ?? "restaurant", country: (business as any).country ?? "Switzerland",
+    canton: business.canton ?? "", address: business.address ?? "",
+    phone: business.phone ?? "", email: business.email ?? "",
+    website: business.website ?? "", instagram: business.instagram ?? "",
+    google_maps_url: business.google_maps_url ?? "",
+    description: business.description ?? "", description_fa: business.description_fa ?? "",
+    image_url: (business as any).image_url ?? "", logo_url: (business as any).logo_url ?? "",
+    lat: business.lat?.toString() ?? "", lng: business.lng?.toString() ?? "",
+    is_featured: !!business.is_featured, is_verified: !!business.is_verified,
+    is_approved: !!(business as any).is_approved,
+  });
+  const [saving, setSaving] = React.useState(false);
+  const [saved, setSaved]   = React.useState(false);
+  const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]";
+  const regions = REGIONS_BY_COUNTRY[form.country] ?? [];
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const body = { id: business.id, ...form, lat: form.lat ? parseFloat(form.lat) : null, lng: form.lng ? parseFloat(form.lng) : null };
+    const res = await fetch(`${API}/businesses.php`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders(token) },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) { setSaved(true); onSaved({ ...business, ...body } as any); setTimeout(() => setSaved(false), 2000); }
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-6">
+      <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-4">Admin — Edit Business</p>
+      {saved && <p className="text-green-600 text-sm font-medium mb-3">Saved!</p>}
+      <form onSubmit={save} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Name (English)</label>
+            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inp} required />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Name (Persian)</label>
+            <input value={form.name_fa} onChange={(e) => setForm({ ...form, name_fa: e.target.value })} className={inp} dir="rtl" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Business["category"] })} className={inp}>
+              {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+            <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value, canton: "" })} className={inp}>
+              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Region / Canton</label>
+            {regions.length > 0 ? (
+              <select value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} className={inp}>
+                <option value="">— select —</option>
+                {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            ) : (
+              <input value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} className={inp} />
+            )}
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Address</label>
+            <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inp} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Phone</label>
+            <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inp} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Email</label>
+            <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inp} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Website</label>
+            <input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} className={inp} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Instagram</label>
+            <input value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} className={inp} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Google Maps URL</label>
+            <input value={form.google_maps_url} onChange={(e) => setForm({ ...form, google_maps_url: e.target.value })} className={inp} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Description (English)</label>
+            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className={`${inp} resize-none`} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Description (Persian)</label>
+            <textarea value={form.description_fa} onChange={(e) => setForm({ ...form, description_fa: e.target.value })} rows={3} dir="rtl" className={`${inp} resize-none`} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Cover Image URL</label>
+            <input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className={inp} placeholder="https://..." />
+            {form.image_url && <img src={form.image_url} alt="" className="mt-2 h-16 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display="none")} />}
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Logo URL</label>
+            <input value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} className={inp} placeholder="https://..." />
+            {form.logo_url && <img src={form.logo_url} alt="" className="mt-2 h-16 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display="none")} />}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-gray-600 mb-2">Coordinates <span className="text-gray-400 font-normal">(map pin)</span></p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Latitude</label>
+              <input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="e.g. 47.3769" className={inp} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Longitude</label>
+              <input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="e.g. 8.5417" className={inp} />
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Right-click on Google Maps → &quot;What&apos;s here?&quot; to get coordinates.</p>
+        </div>
+        <div className="flex gap-5">
+          {(["is_featured", "is_verified", "is_approved"] as const).map((k) => (
+            <label key={k} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox" checked={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.checked })} className="rounded accent-red-600" />
+              {k.replace("is_", "")}
+            </label>
+          ))}
+        </div>
+        <button type="submit" disabled={saving} className="text-white font-semibold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function BusinessDetailContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const { isAdmin, token } = useAuth();
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
@@ -186,12 +332,24 @@ function BusinessDetailContent() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-up">
-      <Link
-        href="/businesses"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] mb-6 transition-colors font-medium"
-      >
-        <ArrowLeft size={15} /> Back to listings
-      </Link>
+      <div className="flex items-center justify-between mb-6">
+        <Link href="/businesses" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors font-medium">
+          <ArrowLeft size={15} /> Back to listings
+        </Link>
+        {isAdmin && (
+          <button
+            onClick={() => setEditing((v) => !v)}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+            style={editing ? { backgroundColor: "#f3f4f6", color: "#374151" } : { backgroundColor: "#1B3A6B", color: "#fff" }}
+          >
+            {editing ? <><X size={14} /> Close Editor</> : <><Pencil size={14} /> Edit Business</>}
+          </button>
+        )}
+      </div>
+
+      {editing && isAdmin && (
+        <AdminEditPanel business={business} token={token} onSaved={(updated) => setBusiness(updated)} />
+      )}
 
       {/* Hero banner */}
       <div className={`relative h-64 sm:h-80 bg-gradient-to-br ${gradient} rounded-3xl overflow-hidden mb-6 flex items-center justify-center`}>
