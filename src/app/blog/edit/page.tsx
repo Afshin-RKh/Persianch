@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, authHeaders } from "@/lib/auth";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
+import RichTextEditor from "@/components/RichTextEditor";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://phub.ch/api";
 const TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
@@ -209,15 +210,19 @@ function EditForm() {
         {/* Content */}
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1.5">Content (English) *</label>
-          <textarea required value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })}
-            rows={18} className={`${inp} resize-y font-mono`} />
-          <p className="text-xs text-gray-400 mt-1">HTML supported: &lt;p&gt;, &lt;h2&gt;, &lt;b&gt;, &lt;i&gt;, &lt;a&gt;, &lt;ul&gt;, &lt;li&gt;</p>
+          <RichTextEditor
+            value={form.content}
+            onChange={(html) => setForm({ ...form, content: html })}
+          />
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1.5">Content (Persian / Farsi)</label>
-          <textarea value={form.content_fa} onChange={(e) => setForm({ ...form, content_fa: e.target.value })}
-            rows={8} dir="rtl" className={`${inp} resize-y font-mono`} />
+          <RichTextEditor
+            value={form.content_fa}
+            onChange={(html) => setForm({ ...form, content_fa: html })}
+            minHeight={200}
+          />
         </div>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}

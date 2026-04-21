@@ -3,8 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, authHeaders } from "@/lib/auth";
-
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
+import RichTextEditor from "@/components/RichTextEditor";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://phub.ch/api";
 const TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
@@ -39,7 +39,8 @@ export default function WriteBlogPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.content.trim()) { setError("Title and content are required"); return; }
+    const contentText = form.content.replace(/<[^>]+>/g, "").trim();
+    if (!form.title.trim() || !contentText) { setError("Title and content are required"); return; }
     setLoading(true);
     setError("");
     try {
@@ -170,15 +171,11 @@ export default function WriteBlogPage() {
 
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1.5">Content *</label>
-          <textarea
+          <RichTextEditor
             value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
-            placeholder="Write your post here. HTML is supported."
-            required
-            rows={16}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-y font-mono"
+            onChange={(html) => setForm({ ...form, content: html })}
+            placeholder="Write your post here…"
           />
-          <p className="text-xs text-gray-400 mt-1">Basic HTML is supported: &lt;b&gt;, &lt;i&gt;, &lt;p&gt;, &lt;h2&gt;, &lt;a&gt;, &lt;ul&gt;, &lt;li&gt;</p>
         </div>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
