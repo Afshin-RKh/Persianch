@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Business, CATEGORIES } from "@/types";
 import { getBusinesses } from "@/lib/api";
 
-const FALLBACK_CENTER: [number, number] = [48.8566, 2.3522];
+const FALLBACK_CENTER: [number, number] = [48.8566, 2.3522]; // Paris as world fallback
 const FALLBACK_ZOOM = 5;
 
 export default function HomeMap() {
@@ -14,6 +14,7 @@ export default function HomeMap() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Load all businesses with coordinates
   useEffect(() => {
     getBusinesses({}).then((all) => {
       setBusinesses(all.filter((b) => b.lat && b.lng));
@@ -21,6 +22,7 @@ export default function HomeMap() {
     }).catch(() => setLoading(false));
   }, []);
 
+  // Init map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -47,11 +49,12 @@ export default function HomeMap() {
 
       mapInstanceRef.current = map;
 
-      fetch("https://ip-api.com/json/")
+      // Detect user location via IP
+      fetch("https://ipapi.co/json/")
         .then((r) => r.json())
         .then((data) => {
-          if (data.lat && data.lon) {
-            map.flyTo([data.lat, data.lon], 10, { duration: 1.5 });
+          if (data.latitude && data.longitude) {
+            map.flyTo([data.latitude, data.longitude], 10, { duration: 1.5 });
           }
         })
         .catch(() => {});
@@ -65,6 +68,7 @@ export default function HomeMap() {
     };
   }, []);
 
+  // Add markers when businesses load
   useEffect(() => {
     if (!mapInstanceRef.current || businesses.length === 0) return;
 
