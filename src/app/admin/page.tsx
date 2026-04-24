@@ -198,6 +198,11 @@ export default function AdminPage() {
   const [users, setUsers]           = useState<UserRow[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
 
+  // Business search/filter
+  const [bizSearch, setBizSearch]     = useState("");
+  const [bizCategory, setBizCategory] = useState("");
+  const [bizApproved, setBizApproved] = useState<"all" | "approved" | "pending">("all");
+
   // Edit blog post inline
   const [editPost, setEditPost] = useState<BlogPost | null>(null);
   const [postForm, setPostForm] = useState<{ tags: string[]; country: string; city: string; status: string }>({ tags: [], country: "", city: "", status: "approved" });
@@ -525,6 +530,34 @@ export default function AdminPage() {
             </button>
           </div>
 
+          {/* Search & filter */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <input
+              type="text"
+              placeholder="Search by name, city, country…"
+              value={bizSearch}
+              onChange={(e) => setBizSearch(e.target.value)}
+              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] flex-1 min-w-48"
+            />
+            <select
+              value={bizCategory}
+              onChange={(e) => setBizCategory(e.target.value)}
+              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
+            >
+              <option value="">All categories</option>
+              {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
+            </select>
+            <select
+              value={bizApproved}
+              onChange={(e) => setBizApproved(e.target.value as any)}
+              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
+            >
+              <option value="all">All statuses</option>
+              <option value="approved">Approved only</option>
+              <option value="pending">Not approved</option>
+            </select>
+          </div>
+
           {/* Add business form */}
           {showAddBiz && !editBiz && (
             <BizForm
@@ -541,7 +574,18 @@ export default function AdminPage() {
 
           <div className="space-y-2">
             {businesses.length === 0 && <p className="text-gray-400 text-sm">No businesses.</p>}
-            {businesses.map((b) => (
+            {businesses
+              .filter((b) => {
+                if (bizCategory && b.category !== bizCategory) return false;
+                if (bizApproved === "approved" && !b.is_approved) return false;
+                if (bizApproved === "pending" && b.is_approved) return false;
+                if (bizSearch.trim()) {
+                  const q = bizSearch.trim().toLowerCase();
+                  return b.name.toLowerCase().includes(q) || b.canton?.toLowerCase().includes(q) || b.country?.toLowerCase().includes(q);
+                }
+                return true;
+              })
+              .map((b) => (
               <div key={b.id}>
                 <div className={`bg-white rounded-2xl border px-5 py-4 flex items-center gap-4 ${b.is_approved ? "border-gray-100" : "border-yellow-200 opacity-60"}`}>
                   <div className="flex-1 min-w-0">

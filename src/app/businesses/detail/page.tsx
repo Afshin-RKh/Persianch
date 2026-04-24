@@ -302,8 +302,14 @@ function BusinessDetailContent() {
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
-    getBusinessById(id).then(setBusiness).finally(() => setLoading(false));
-  }, [id]);
+    // Pass auth token so admins can view unapproved businesses
+    const headers: Record<string, string> = {};
+    if (token) Object.assign(headers, authHeaders(token));
+    fetch(`${API}/businesses.php?id=${id}`, { headers })
+      .then((r) => r.ok ? r.json() : null)
+      .then(setBusiness)
+      .finally(() => setLoading(false));
+  }, [id, token]);
 
   const handleDelete = async () => {
     if (!business || !confirm(`Delete "${business.name}"? This cannot be undone.`)) return;
