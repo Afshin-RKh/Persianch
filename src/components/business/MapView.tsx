@@ -217,6 +217,16 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
 
       mapInstanceRef.current = map;
 
+      // Detect user location via IP (same as HomeMap)
+      fetch("https://ipapi.co/json/")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.latitude && data.longitude) {
+            map.flyTo([data.latitude, data.longitude], 10, { duration: 1.5 });
+          }
+        })
+        .catch(() => {});
+
       let resizeTimer: ReturnType<typeof setTimeout>;
       const onResize = () => {
         clearTimeout(resizeTimer);
@@ -321,8 +331,6 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
     } else if (focusCountry && COUNTRY_COORDS[focusCountry]) {
       const { center, zoom } = COUNTRY_COORDS[focusCountry];
       mapInstanceRef.current.flyTo(center, zoom, { duration: 1.2 });
-    } else if (!focusCountry && !focusCanton) {
-      mapInstanceRef.current.flyTo(DEFAULT_CENTER, 8, { duration: 1 });
     }
   }, [focusCountry, focusCanton]);
 
