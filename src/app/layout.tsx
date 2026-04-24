@@ -9,13 +9,13 @@ import { AuthProvider } from "@/lib/auth";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PersianHub — Persian & Iranian Businesses Across Europe",
+  title: "PersianHub — Persian & Iranian Businesses Worldwide",
   description:
-    "Find Persian, Afghan and Tajik restaurants, doctors, lawyers, hairdressers and more across Europe. The go-to directory for the Persian-speaking community in Europe.",
-  keywords: ["Persian businesses Europe", "Iranian restaurants Europe", "Afghan businesses Europe", "Persian community Europe", "Farsi speaking businesses"],
+    "Find Persian and Iranian restaurants, doctors, lawyers, hairdressers and more worldwide. The go-to directory for the Persian community outside of Iran.",
+  keywords: ["Persian businesses", "Iranian restaurants", "Persian community worldwide", "Farsi speaking businesses", "Iranian diaspora"],
   openGraph: {
-    title: "PersianHub — Persian & Iranian Businesses Across Europe",
-    description: "The go-to directory for Persian, Afghan and Tajik businesses across Europe — restaurants, doctors, lawyers and more.",
+    title: "PersianHub — Persian & Iranian Businesses Worldwide",
+    description: "The go-to directory for Persian and Iranian businesses worldwide — restaurants, doctors, lawyers and more.",
     siteName: "PersianHub",
     locale: "en_GB",
     type: "website",

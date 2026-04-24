@@ -3,23 +3,10 @@ import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import SearchBar from "@/components/business/SearchBar";
 import BusinessCard from "@/components/business/BusinessCard";
-import { CATEGORIES } from "@/types";
+import HomeMap from "@/components/business/HomeMap";
 import { getBusinesses } from "@/lib/api";
 import type { Business } from "@/types";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  restaurant:   "from-orange-50 to-red-50 border-orange-200",
-  cafe:         "from-amber-50 to-yellow-50 border-amber-200",
-  hairdresser:  "from-pink-50 to-rose-50 border-pink-200",
-  doctor:       "from-blue-50 to-cyan-50 border-blue-200",
-  dentist:      "from-sky-50 to-blue-50 border-sky-200",
-  lawyer:       "from-slate-50 to-gray-50 border-slate-200",
-  accountant:   "from-green-50 to-emerald-50 border-green-200",
-  grocery:      "from-lime-50 to-green-50 border-lime-200",
-  beauty:       "from-purple-50 to-pink-50 border-purple-200",
-  "real-estate":"from-indigo-50 to-blue-50 border-indigo-200",
-  other:        "from-gray-50 to-slate-50 border-gray-200",
-};
 
 export default function HomePage() {
   const [featured, setFeatured] = useState<Business[]>([]);
@@ -49,12 +36,12 @@ export default function HomePage() {
                 <span className="font-bold text-4xl sm:text-6xl tracking-tight">Persian</span>
                 <span className="font-bold text-4xl sm:text-6xl tracking-tight" style={{ color: "#C9A84C" }}>Hub</span>
               </div>
-              <p className="text-sm sm:text-base font-medium opacity-80 tracking-widest uppercase">Europe</p>
+              <p className="text-sm sm:text-base font-medium opacity-80 tracking-widest uppercase">Worldwide</p>
             </div>
           </div>
 
           <p className="text-lg sm:text-xl text-blue-100 mb-10 max-w-xl mx-auto leading-relaxed">
-            Discover Persian, Afghan &amp; Tajik restaurants, doctors, lawyers, hairdressers &amp; more across Europe
+            Discover Persian &amp; Iranian restaurants, doctors, lawyers, hairdressers &amp; more — worldwide
           </p>
 
           <div className="max-w-2xl mx-auto">
@@ -75,30 +62,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex items-center justify-between mb-8">
+      {/* Map — auto-focused on user location */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 gold-underline inline-block">Browse by Category</h2>
-            <p className="text-gray-400 text-sm mt-2">What are you looking for?</p>
+            <h2 className="text-2xl font-bold text-gray-900 gold-underline inline-block">Businesses Near You</h2>
+            <p className="text-gray-400 text-sm mt-2">Map auto-focuses on your location</p>
           </div>
           <Link href="/businesses" className="text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
-            View all →
+            Browse all →
           </Link>
         </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {CATEGORIES.map((cat) => (
-            <Link
-              key={cat.slug}
-              href={`/businesses?category=${cat.slug}`}
-              className={`card-hover flex flex-col items-center justify-center gap-2 p-4 bg-gradient-to-br ${CATEGORY_COLORS[cat.slug]} rounded-2xl border text-center`}
-            >
-              <span className="text-3xl">{cat.icon}</span>
-              <span className="text-xs font-semibold text-gray-700">{cat.label_en}</span>
-            </Link>
-          ))}
-        </div>
+        <Suspense fallback={<div className="w-full rounded-2xl bg-gray-100" style={{ height: 480 }} />}>
+          <HomeMap />
+        </Suspense>
       </section>
 
       {/* Featured businesses */}
@@ -127,8 +104,8 @@ export default function HomePage() {
       <section className="py-20 px-4" style={{ background: "linear-gradient(135deg, #0D1B2E 0%, #1B3A6B 100%)" }}>
         <div className="max-w-2xl mx-auto text-center text-white">
           <span className="text-5xl block mb-6">🏪</span>
-          <h2 className="text-3xl font-bold mb-3">Own a Persian, Afghan or Tajik Business in Europe?</h2>
-          <p className="text-blue-200 mb-8 text-lg">List your business for free and reach your community across Europe.</p>
+          <h2 className="text-3xl font-bold mb-3">Own a Persian or Iranian Business?</h2>
+          <p className="text-blue-200 mb-8 text-lg">List your business for free and reach the Persian community worldwide.</p>
           <Link
             href="/get-listed"
             className="inline-block font-bold px-10 py-4 rounded-2xl transition-all hover:opacity-90 hover:scale-105 text-base shadow-lg"

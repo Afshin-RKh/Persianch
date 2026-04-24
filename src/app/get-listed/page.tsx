@@ -42,7 +42,7 @@ export default function GetListedPage() {
           Get Your Business Listed
         </h1>
         <p className="text-gray-600 leading-relaxed max-w-xl mx-auto">
-          Are you Persian, Afghan, or Tajik — running a business where your language, culture, and cuisine make a real difference for your audience? Fill in the form below and we'll review and add your business within a few days — for free.
+          Are you Persian or Iranian — running a business where your language, culture, and cuisine make a real difference for your audience? Fill in the form below and we'll review and add your business within a few days — for free.
         </p>
       </div>
 

@@ -20,8 +20,8 @@ export default function AboutPage() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">Who We Are</h2>
         <p className="text-gray-600 leading-relaxed mb-4">
           We are a group of passionate Persians living in Europe who believe in the strength of our community.
-          PersianHub was built to make it easier for Iranians, Afghans, Tajiks and anyone who shares our language,
-          food and culture to find businesses that feel like home — wherever they are in Europe.
+          PersianHub was built to make it easier for Iranians and anyone who shares our language,
+          food and culture to find businesses that feel like home — wherever they are in the world.
         </p>
         <p className="text-gray-600 leading-relaxed">
           Whether you're looking for a restaurant that makes real <em>ghormeh sabzi</em>, a doctor who speaks Farsi,
@@ -33,7 +33,7 @@ export default function AboutPage() {
       <section className="rounded-3xl p-8 mb-6" style={{ background: "linear-gradient(135deg, #0D1B2E 0%, #1B3A6B 100%)" }}>
         <h2 className="text-xl font-bold text-white mb-4">Our Mission</h2>
         <p className="text-blue-100 leading-relaxed mb-4">
-          We support Persian-speaking founders from Iran, Afghanistan and Tajikistan who run businesses in Europe —
+          We support Persian and Iranian founders who run businesses around the world —
           businesses that bring shared language, food and culture as a genuine value to their customers.
         </p>
         <p className="text-blue-100 leading-relaxed">
@@ -81,7 +81,7 @@ export default function AboutPage() {
 
       {/* Add your business CTA */}
       <section className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center">
-        <h2 className="text-xl font-bold text-gray-900 mb-3">Own a Persian, Afghan or Tajik Business in Europe?</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-3">Own a Persian or Iranian Business?</h2>
         <p className="text-gray-500 leading-relaxed mb-2 max-w-lg mx-auto">
           Listings on PersianHub are completely free. Fill in the form and your business
           will be on the map within a few days.
