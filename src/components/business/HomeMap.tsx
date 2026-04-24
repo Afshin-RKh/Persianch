@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Business, CATEGORIES } from "@/types";
 import { getBusinesses } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
 
 const FALLBACK_CENTER: [number, number] = [48.8566, 2.3522]; // Paris as world fallback
 const FALLBACK_ZOOM = 5;
@@ -12,18 +11,16 @@ export default function HomeMap() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const router = useRouter();
-  const { token } = useAuth();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load all businesses with coordinates — admins get unapproved too
+  // Load all businesses with coordinates
   useEffect(() => {
-    if (token === undefined) return;
-    getBusinesses({ token: token ?? undefined }).then((all) => {
+    getBusinesses({}).then((all) => {
       setBusinesses(all.filter((b) => b.lat && b.lng));
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [token]);
+  }, []);
 
   // Init map
   useEffect(() => {
@@ -52,11 +49,11 @@ export default function HomeMap() {
 
       mapInstanceRef.current = map;
 
-      // Detect user location via IP (ipwho.is is more reliable than ipapi.co)
-      fetch("https://ipwho.is/")
+      // Detect user location via IP
+      fetch("https://ipapi.co/json/")
         .then((r) => r.json())
         .then((data) => {
-          if (data.success && data.latitude && data.longitude) {
+          if (data.latitude && data.longitude) {
             map.flyTo([data.latitude, data.longitude], 10, { duration: 1.5 });
           }
         })
@@ -82,12 +79,11 @@ export default function HomeMap() {
         const category = CATEGORIES.find((c) => c.slug === business.category);
         const icon = category?.icon ?? "🏪";
 
-        const approved = business.is_approved !== false;
         const divIcon = L.divIcon({
           html: `<div style="
             font-size: 18px;
-            background: ${approved ? "white" : "#fefce8"};
-            border: 2.5px solid ${approved ? "#8B1A1A" : "#eab308"};
+            background: white;
+            border: 2.5px solid #8B1A1A;
             border-radius: 50%;
             width: 36px;
             height: 36px;
@@ -96,10 +92,9 @@ export default function HomeMap() {
             justify-content: center;
             box-shadow: 0 3px 8px rgba(0,0,0,0.25);
             cursor: pointer;
-            position: relative;
           " onmouseover="this.style.transform='scale(1.25)'"
              onmouseout="this.style.transform='scale(1)'"
-          >${icon}${!approved ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;line-height:1;">⚠️</span>' : ''}</div>`,
+          >${icon}</div>`,
           className: "",
           iconSize: [36, 36],
           iconAnchor: [18, 18],
@@ -142,10 +137,9 @@ export default function HomeMap() {
         .persian-hub-tooltip::before { border-top-color: #e8d5b0 !important; }
       `}</style>
       <div className="relative w-full" style={{ height: "480px" }}>
-        {/* Small non-blocking spinner while markers load */}
         {loading && (
-          <div className="absolute top-3 right-3 z-20 bg-white rounded-full px-3 py-1 text-xs text-gray-400 shadow border border-gray-100">
-            Loading…
+          <div className="absolute inset-0 flex items-center justify-center z-10 bg-gray-50 rounded-2xl">
+            <div className="text-gray-400 text-sm">Loading map…</div>
           </div>
         )}
         <div ref={mapRef} className="w-full h-full rounded-2xl" />
