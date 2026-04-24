@@ -254,8 +254,8 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
         const divIcon = L.divIcon({
           html: `<div style="
             font-size: 20px;
-            background: ${approved ? "white" : "#f3f4f6"};
-            border: 2.5px ${approved ? "solid #8B1A1A" : "dashed #9ca3af"};
+            background: ${approved ? "white" : "#fefce8"};
+            border: 2.5px solid ${approved ? "#8B1A1A" : "#eab308"};
             border-radius: 50%;
             width: 38px;
             height: 38px;
@@ -264,11 +264,11 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
             justify-content: center;
             box-shadow: 0 3px 8px rgba(0,0,0,0.25);
             cursor: pointer;
-            opacity: ${approved ? "1" : "0.55"};
+            position: relative;
             transition: transform 0.15s, box-shadow 0.15s;
           " onmouseover="this.style.transform='scale(1.25)';this.style.boxShadow='0 6px 16px rgba(139,26,26,0.4)'"
              onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 3px 8px rgba(0,0,0,0.25)'"
-          >${icon}</div>`,
+          >${icon}${!approved ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;line-height:1;">⚠️</span>' : ''}</div>`,
           className: "",
           iconSize: [38, 38],
           iconAnchor: [19, 19],
