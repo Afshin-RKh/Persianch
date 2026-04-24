@@ -250,11 +250,12 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
         const lng = business.lng ?? CANTON_COORDS[cityKey]?.[1];
         if (!lat || !lng) return;
 
+        const approved = business.is_approved !== false;
         const divIcon = L.divIcon({
           html: `<div style="
             font-size: 20px;
-            background: white;
-            border: 2.5px solid #8B1A1A;
+            background: ${approved ? "white" : "#f3f4f6"};
+            border: 2.5px ${approved ? "solid #8B1A1A" : "dashed #9ca3af"};
             border-radius: 50%;
             width: 38px;
             height: 38px;
@@ -263,6 +264,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
             justify-content: center;
             box-shadow: 0 3px 8px rgba(0,0,0,0.25);
             cursor: pointer;
+            opacity: ${approved ? "1" : "0.55"};
             transition: transform 0.15s, box-shadow 0.15s;
           " onmouseover="this.style.transform='scale(1.25)';this.style.boxShadow='0 6px 16px rgba(139,26,26,0.4)'"
              onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 3px 8px rgba(0,0,0,0.25)'"

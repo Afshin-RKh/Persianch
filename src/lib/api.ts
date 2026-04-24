@@ -7,6 +7,7 @@ export async function getBusinesses(filters?: {
   canton?: string;
   search?: string;
   featured?: boolean;
+  token?: string;
 }): Promise<Business[]> {
   const params = new URLSearchParams();
   if (filters?.category) params.set("category", filters.category);
@@ -14,7 +15,10 @@ export async function getBusinesses(filters?: {
   if (filters?.search) params.set("search", filters.search);
   if (filters?.featured) params.set("featured", "1");
 
-  const res = await fetch(`${API_URL}/businesses.php?${params.toString()}`);
+  const headers: Record<string, string> = {};
+  if (filters?.token) headers["Authorization"] = `Bearer ${filters.token}`;
+
+  const res = await fetch(`${API_URL}/businesses.php?${params.toString()}`, { headers });
   if (!res.ok) throw new Error("Failed to fetch businesses");
   return res.json();
 }

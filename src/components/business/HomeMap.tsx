@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Business, CATEGORIES } from "@/types";
 import { getBusinesses } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 
 const FALLBACK_CENTER: [number, number] = [48.8566, 2.3522]; // Paris as world fallback
 const FALLBACK_ZOOM = 5;
@@ -11,16 +12,18 @@ export default function HomeMap() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const router = useRouter();
+  const { token } = useAuth();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load all businesses with coordinates
+  // Load all businesses with coordinates — admins get unapproved too
   useEffect(() => {
-    getBusinesses({}).then((all) => {
+    if (token === undefined) return;
+    getBusinesses({ token: token ?? undefined }).then((all) => {
       setBusinesses(all.filter((b) => b.lat && b.lng));
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, []);
+  }, [token]);
 
   // Init map
   useEffect(() => {
@@ -79,11 +82,12 @@ export default function HomeMap() {
         const category = CATEGORIES.find((c) => c.slug === business.category);
         const icon = category?.icon ?? "🏪";
 
+        const approved = business.is_approved !== false;
         const divIcon = L.divIcon({
           html: `<div style="
             font-size: 18px;
-            background: white;
-            border: 2.5px solid #8B1A1A;
+            background: ${approved ? "white" : "#f3f4f6"};
+            border: 2.5px ${approved ? "solid #8B1A1A" : "dashed #9ca3af"};
             border-radius: 50%;
             width: 36px;
             height: 36px;
@@ -92,6 +96,7 @@ export default function HomeMap() {
             justify-content: center;
             box-shadow: 0 3px 8px rgba(0,0,0,0.25);
             cursor: pointer;
+            opacity: ${approved ? "1" : "0.6"};
           " onmouseover="this.style.transform='scale(1.25)'"
              onmouseout="this.style.transform='scale(1)'"
           >${icon}</div>`,

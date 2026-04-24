@@ -5,12 +5,14 @@ import BusinessCard from "@/components/business/BusinessCard";
 import SearchBar from "@/components/business/SearchBar";
 import { getBusinesses } from "@/lib/api";
 import { CATEGORIES, Category, Business } from "@/types";
+import { useAuth } from "@/lib/auth";
 import Link from "next/link";
 
 const MapView = lazy(() => import("@/components/business/MapView"));
 
 export default function BusinessesContent() {
   const searchParams = useSearchParams();
+  const { token, isAdmin } = useAuth();
 
   // All businesses fetched once
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
@@ -25,14 +27,15 @@ export default function BusinessesContent() {
   const [canton, setCanton] = useState(searchParams.get("canton") ?? "");
   const [category, setCategory] = useState(searchParams.get("category") ?? "");
 
-  // Fetch all approved businesses once
+  // Fetch businesses — admins get all including unapproved
   useEffect(() => {
+    if (token === undefined) return; // wait for auth to resolve
     setLoading(true);
-    getBusinesses()
+    getBusinesses({ token: token ?? undefined })
       .then(setAllBusinesses)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, []);
+  }, [token]);
 
   // Client-side filtering — updates map live as filters change
   const businesses = useMemo(() => {
