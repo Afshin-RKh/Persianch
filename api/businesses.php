@@ -4,7 +4,13 @@ require_once 'config.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    $where = ['b.is_approved = 1'];
+    // Admins can see unapproved businesses
+    require_once 'jwt.php';
+    $token     = bearer_token();
+    $authUser  = $token ? jwt_verify($token) : null;
+    $isAdmin   = $authUser && in_array($authUser['role'] ?? '', ['admin', 'superadmin']);
+
+    $where = $isAdmin ? [] : ['b.is_approved = 1'];
     $params = [];
 
     if (!empty($_GET['category'])) {
@@ -36,8 +42,8 @@ if ($method === 'GET') {
         $params[':id'] = $_GET['id'];
     }
 
-    $whereClause = implode(' AND ', $where);
-    $sql = "SELECT * FROM businesses b WHERE $whereClause ORDER BY b.is_featured DESC, b.created_at DESC";
+    $whereClause = count($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+    $sql = "SELECT * FROM businesses b $whereClause ORDER BY b.is_featured DESC, b.created_at DESC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
