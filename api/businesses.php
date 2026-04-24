@@ -4,6 +4,7 @@ require_once 'config.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
+    header("Cache-Control: public, max-age=300");
     // Admins can see unapproved businesses
     require_once 'jwt.php';
     $token     = bearer_token();
