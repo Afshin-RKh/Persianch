@@ -4,12 +4,17 @@ require_once 'config.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    header("Cache-Control: public, max-age=300");
     // Admins can see unapproved businesses
     require_once 'jwt.php';
     $token     = bearer_token();
     $authUser  = $token ? jwt_verify($token) : null;
     $isAdmin   = $authUser && in_array($authUser['role'] ?? '', ['admin', 'superadmin']);
+
+    if ($isAdmin) {
+        header("Cache-Control: no-store");
+    } else {
+        header("Cache-Control: public, max-age=300");
+    }
 
     $where = $isAdmin ? [] : ['b.is_approved = 1'];
     $params = [];
