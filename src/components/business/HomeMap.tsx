@@ -4,17 +4,17 @@ import { useRouter } from "next/navigation";
 import { Business, CATEGORIES } from "@/types";
 import { getBusinesses } from "@/lib/api";
 
-const FALLBACK_CENTER: [number, number] = [48.8566, 2.3522]; // Paris as world fallback
+const FALLBACK_CENTER: [number, number] = [48.8566, 2.3522];
 const FALLBACK_ZOOM = 5;
 
 export default function HomeMap() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
+  const clusterGroupRef = useRef<any>(null);
   const router = useRouter();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load all businesses with coordinates
   useEffect(() => {
     getBusinesses({}).then((all) => {
       setBusinesses(all.filter((b) => b.lat && b.lng));
@@ -22,11 +22,13 @@ export default function HomeMap() {
     }).catch(() => setLoading(false));
   }, []);
 
-  // Init map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    import("leaflet").then((L) => {
+    Promise.all([
+      import("leaflet"),
+      import("leaflet.markercluster"),
+    ]).then(([L]) => {
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -47,14 +49,44 @@ export default function HomeMap() {
         maxZoom: 19,
       }).addTo(map);
 
-      mapInstanceRef.current = map;
+      const cluster = (L as any).markerClusterGroup({
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        iconCreateFunction: (c: any) => {
+          const count = c.getChildCount();
+          return L.divIcon({
+            html: `<div style="
+              background: #8B1A1A;
+              color: white;
+              border-radius: 50%;
+              width: 38px;
+              height: 38px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 13px;
+              font-weight: 700;
+              box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+              border: 2px solid white;
+            ">${count}</div>`,
+            className: "",
+            iconSize: [38, 38],
+            iconAnchor: [19, 19],
+          });
+        },
+      });
 
-      // Detect user location via IP
-      fetch("https://ipapi.co/json/")
+      map.addLayer(cluster);
+      mapInstanceRef.current = map;
+      clusterGroupRef.current = cluster;
+
+      fetch("https://ip-api.com/json/")
         .then((r) => r.json())
         .then((data) => {
-          if (data.latitude && data.longitude) {
-            map.flyTo([data.latitude, data.longitude], 10, { duration: 1.5 });
+          if (data.lat && data.lon) {
+            map.flyTo([data.lat, data.lon], 10, { duration: 1.5 });
           }
         })
         .catch(() => {});
@@ -64,15 +96,18 @@ export default function HomeMap() {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        clusterGroupRef.current = null;
       }
     };
   }, []);
 
-  // Add markers when businesses load
   useEffect(() => {
-    if (!mapInstanceRef.current || businesses.length === 0) return;
+    if (!clusterGroupRef.current || businesses.length === 0) return;
 
     import("leaflet").then((L) => {
+      const cluster = clusterGroupRef.current;
+      cluster.clearLayers();
+
       businesses.forEach((business) => {
         const lat = business.lat!;
         const lng = business.lng!;
@@ -108,8 +143,7 @@ export default function HomeMap() {
             <div style="font-size:11px;color:#C9A84C;margin-top:4px;font-weight:600;">Click to view →</div>
           </div>`;
 
-        L.marker([lat, lng], { icon: divIcon })
-          .addTo(mapInstanceRef.current!)
+        const marker = L.marker([lat, lng], { icon: divIcon })
           .bindTooltip(tooltipHtml, {
             direction: "top",
             offset: [0, -20],
@@ -119,6 +153,8 @@ export default function HomeMap() {
           .on("click", () => {
             router.push(`/businesses/detail?id=${business.id}`);
           });
+
+        cluster.addLayer(marker);
       });
     });
   }, [businesses, router]);
@@ -126,6 +162,8 @@ export default function HomeMap() {
   return (
     <>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+      <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
       <style>{`
         .persian-hub-tooltip {
           background: white !important;
