@@ -82,11 +82,12 @@ export default function HomeMap() {
         const category = CATEGORIES.find((c) => c.slug === business.category);
         const icon = category?.icon ?? "🏪";
 
+        const approved = business.is_approved !== false;
         const divIcon = L.divIcon({
           html: `<div style="
             font-size: 18px;
-            background: white;
-            border: 2.5px solid #8B1A1A;
+            background: ${approved ? "white" : "#fefce8"};
+            border: 2.5px solid ${approved ? "#8B1A1A" : "#eab308"};
             border-radius: 50%;
             width: 36px;
             height: 36px;
@@ -95,9 +96,10 @@ export default function HomeMap() {
             justify-content: center;
             box-shadow: 0 3px 8px rgba(0,0,0,0.25);
             cursor: pointer;
+            position: relative;
           " onmouseover="this.style.transform='scale(1.25)'"
              onmouseout="this.style.transform='scale(1)'"
-          >${icon}</div>`,
+          >${icon}${!approved ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;line-height:1;">⚠️</span>' : ''}</div>`,
           className: "",
           iconSize: [36, 36],
           iconAnchor: [18, 18],
