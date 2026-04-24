@@ -27,6 +27,7 @@ export interface Business {
   canton?: string;
   is_featured: boolean;
   is_verified: boolean;
+  is_approved: boolean;
   created_at: string;
   lat?: number;
   lng?: number;

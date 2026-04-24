@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { getBusinessById } from "@/lib/api";
 import { Business, CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
-import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2, Pencil, X } from "lucide-react";
+import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2, Pencil, X, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAuth, authHeaders } from "@/lib/auth";
@@ -296,12 +296,25 @@ function BusinessDetailContent() {
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { isAdmin, token } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
     getBusinessById(id).then(setBusiness).finally(() => setLoading(false));
   }, [id]);
+
+  const handleDelete = async () => {
+    if (!business || !confirm(`Delete "${business.name}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    await fetch(`${API}/businesses.php`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", ...authHeaders(token) },
+      body: JSON.stringify({ id: business.id }),
+    });
+    router.push("/businesses");
+  };
 
   const category = business ? CATEGORIES.find((c) => c.slug === business.category) : null;
 
@@ -337,15 +350,44 @@ function BusinessDetailContent() {
           <ArrowLeft size={15} /> Back to listings
         </Link>
         {isAdmin && (
-          <button
-            onClick={() => setEditing((v) => !v)}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
-            style={editing ? { backgroundColor: "#f3f4f6", color: "#374151" } : { backgroundColor: "#1B3A6B", color: "#fff" }}
-          >
-            {editing ? <><X size={14} /> Close Editor</> : <><Pencil size={14} /> Edit Business</>}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setEditing((v) => !v)}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+              style={editing ? { backgroundColor: "#f3f4f6", color: "#374151" } : { backgroundColor: "#1B3A6B", color: "#fff" }}
+            >
+              {editing ? <><X size={14} /> Close Editor</> : <><Pencil size={14} /> Edit</>}
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+              style={{ backgroundColor: "#8B1A1A", color: "#fff" }}
+            >
+              <Trash2 size={14} /> {deleting ? "Deleting…" : "Delete"}
+            </button>
+          </div>
         )}
       </div>
+
+      {/* Unapproved — block public entirely */}
+      {!(business as any).is_approved && !isAdmin && (
+        <div className="text-center py-20 text-gray-400">
+          <p className="text-4xl mb-3">🔍</p>
+          <p className="font-semibold text-gray-600">This listing is not available.</p>
+          <Link href="/businesses" className="text-sm mt-3 inline-block hover:underline" style={{ color: "#1B3A6B" }}>← Browse all businesses</Link>
+        </div>
+      )}
+
+      {(isAdmin || (business as any).is_approved) && (
+      <>
+      {/* Unapproved warning for admins */}
+      {!(business as any).is_approved && isAdmin && (
+        <div className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-2xl px-5 py-3 mb-6 text-yellow-800 text-sm font-medium">
+          <AlertTriangle size={16} className="flex-shrink-0" />
+          This business is <strong>not approved</strong> and is hidden from the public.
+        </div>
+      )}
 
       {editing && isAdmin && (
         <AdminEditPanel business={business} token={token} onSaved={(updated) => setBusiness(updated)} />
@@ -479,6 +521,8 @@ function BusinessDetailContent() {
       </div>
 
       <BusinessComments businessId={Number(business.id)} />
+      </>
+      )}
     </main>
   );
 }

@@ -543,9 +543,12 @@ export default function AdminPage() {
             {businesses.length === 0 && <p className="text-gray-400 text-sm">No businesses.</p>}
             {businesses.map((b) => (
               <div key={b.id}>
-                <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-4">
+                <div className={`bg-white rounded-2xl border px-5 py-4 flex items-center gap-4 ${b.is_approved ? "border-gray-100" : "border-yellow-200 opacity-60"}`}>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">{b.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-gray-900 truncate">{b.name}</p>
+                      {!b.is_approved && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 flex-shrink-0">not approved</span>}
+                    </div>
                     <p className="text-xs text-gray-400">{b.category} · {b.canton}, {b.country}</p>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
