@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Business, CATEGORIES } from "@/types";
 import { getBusinesses } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 
 const FALLBACK_CENTER: [number, number] = [48.8566, 2.3522]; // Paris as world fallback
 const FALLBACK_ZOOM = 5;
@@ -11,16 +12,18 @@ export default function HomeMap() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const router = useRouter();
+  const { token } = useAuth();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load all businesses with coordinates
+  // Load all businesses with coordinates — admins get unapproved too
   useEffect(() => {
-    getBusinesses({}).then((all) => {
+    if (token === undefined) return;
+    getBusinesses({ token: token ?? undefined }).then((all) => {
       setBusinesses(all.filter((b) => b.lat && b.lng));
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, []);
+  }, [token]);
 
   // Init map
   useEffect(() => {
