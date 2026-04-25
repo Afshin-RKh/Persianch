@@ -191,6 +191,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const markersRef = useRef<import("leaflet").Marker[]>([]);
+  const userLocationRef = useRef<[number, number] | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -217,11 +218,12 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
 
       mapInstanceRef.current = map;
 
-      // Detect user location via IP (same as HomeMap)
+      // Detect user location via IP and store for "near me" button
       fetch("https://ipapi.co/json/")
         .then((r) => r.json())
         .then((data) => {
           if (data.latitude && data.longitude) {
+            userLocationRef.current = [data.latitude, data.longitude];
             map.flyTo([data.latitude, data.longitude], 10, { duration: 1.5 });
           }
         })
@@ -351,6 +353,35 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
         }
       `}</style>
       <div ref={mapRef} className="w-full h-full rounded-xl" />
+      <button
+        onClick={() => {
+          if (userLocationRef.current && mapInstanceRef.current) {
+            mapInstanceRef.current.flyTo(userLocationRef.current, 10, { duration: 1.5 });
+          }
+        }}
+        title="Find businesses near me"
+        style={{
+          position: "absolute",
+          bottom: "24px",
+          left: "12px",
+          zIndex: 1000,
+          background: "white",
+          border: "1.5px solid #e8d5b0",
+          borderRadius: "8px",
+          padding: "7px 12px",
+          fontSize: "13px",
+          fontWeight: 600,
+          color: "#8B1A1A",
+          cursor: "pointer",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          whiteSpace: "nowrap",
+        }}
+      >
+        📍 Find businesses near me
+      </button>
     </>
   );
 }
