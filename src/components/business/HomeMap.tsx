@@ -54,10 +54,10 @@ export default function HomeMap() {
 
       // Beating heart on Iran
       const heartIcon = L.divIcon({
-        html: `<div style="font-size:32px;line-height:1;animation:heartbeat 1s ease-in-out infinite;transform-origin:center;filter:drop-shadow(0 0 6px rgba(220,30,30,0.7));">❤️</div>`,
+        html: `<div style="font-size:96px;line-height:1;animation:heartbeat 1s ease-in-out infinite;transform-origin:center;filter:drop-shadow(0 0 12px rgba(220,30,30,0.7));">❤️</div>`,
         className: "",
-        iconSize: [40, 40],
-        iconAnchor: [20, 20],
+        iconSize: [120, 120],
+        iconAnchor: [60, 60],
       });
       L.marker([32.4279, 53.6880], { icon: heartIcon, interactive: false, zIndexOffset: -1000 }).addTo(map);
 
