@@ -373,7 +373,7 @@ const COUNTRY_COORDS: Record<string, { center: [number, number]; zoom: number }>
   Mozambique:             { center: [-18.6657, 35.5296], zoom: 6 },
   Madagascar:             { center: [-18.7669, 46.8691], zoom: 6 },
   Cameroon:               { center: [3.8480, 11.5021],   zoom: 6 },
-  Ivory Coast:            { center: [7.5400, -5.5471],   zoom: 7 },
+  "Ivory Coast":          { center: [7.5400, -5.5471],   zoom: 7 },
   Niger:                  { center: [17.6078, 8.0817],   zoom: 6 },
   Mali:                   { center: [17.5707, -3.9962],  zoom: 6 },
   Senegal:                { center: [14.4974, -14.4524], zoom: 7 },
