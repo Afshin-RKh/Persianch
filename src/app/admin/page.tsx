@@ -400,6 +400,9 @@ export default function AdminPage() {
   const [inspectProfile, setInspectProfile] = useState<UserProfile | null>(null);
   const [userSearch, setUserSearch]         = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("");
+  const [assignBizUser, setAssignBizUser]   = useState<number | null>(null);
+  const [assignBizId, setAssignBizId]       = useState("");
+  const [assignBizSaving, setAssignBizSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) router.replace("/auth/signin");
@@ -428,8 +431,12 @@ export default function AdminPage() {
         setOwnerUsers(Array.isArray(all) ? all.filter((u: UserRow) => u.role === "user" || u.role === "business_owner") : []);
       }
       if (tab === "users") {
-        const r = await fetch(`${API}/users.php`, { headers: authHeaders(token) });
-        setUsers(await r.json());
+        const [ur, br] = await Promise.all([
+          fetch(`${API}/users.php`, { headers: authHeaders(token) }),
+          fetch(`${API}/businesses.php`, { headers: authHeaders(token) }),
+        ]);
+        setUsers(await ur.json());
+        setBusinesses(await br.json());
       }
     } finally {
       setDataLoading(false);
@@ -518,6 +525,19 @@ export default function AdminPage() {
   const saveAdminLocs = async (uid: number, locs: Location[]) => {
     await fetch(`${API}/locations.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ user_id: uid, locations: locs }) });
     setInspectUser(null); setInspectProfile(null);
+  };
+  const assignBusinessToUser = async (userId: number) => {
+    if (!assignBizId) return;
+    setAssignBizSaving(true);
+    await fetch(`${API}/businesses.php`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders(token) },
+      body: JSON.stringify({ id: parseInt(assignBizId), owner_user_id: userId }),
+    });
+    setAssignBizSaving(false);
+    setAssignBizUser(null);
+    setAssignBizId("");
+    loadData();
   };
 
   if (loading || !user) return null;
@@ -834,6 +854,15 @@ export default function AdminPage() {
                         <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                           {u.id !== user.id ? (
                             <>
+                              {/* Assign business — all admins */}
+                              {(u.role === "user" || u.role === "business_owner") && (
+                                <button
+                                  onClick={() => { setAssignBizUser(assignBizUser === u.id ? null : u.id); setAssignBizId(u.owned_business_id ? String(u.owned_business_id) : ""); }}
+                                  className={`p-1.5 rounded-lg transition-colors text-xs font-semibold flex items-center gap-1 ${assignBizUser === u.id ? "bg-amber-100 text-amber-700" : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"}`}
+                                  title="Assign business">
+                                  <Building2 size={14} />
+                                </button>
+                              )}
                               {isSuperAdmin && (
                                 <select value={u.role} onChange={(e) => changeUserRole(u.id, e.target.value)}
                                   className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#1B3A6B]">
@@ -853,6 +882,33 @@ export default function AdminPage() {
                           )}
                         </div>
                       </div>
+
+                      {/* Assign business panel */}
+                      {assignBizUser === u.id && (
+                        <div className="mx-5 mb-3 p-4 bg-amber-50 border border-amber-200 rounded-xl" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs font-bold text-amber-800 flex items-center gap-1.5"><Building2 size={13} /> Assign Business to {u.name}</p>
+                            <button onClick={() => setAssignBizUser(null)} className="text-amber-400 hover:text-amber-600"><X size={14} /></button>
+                          </div>
+                          <select value={assignBizId} onChange={(e) => setAssignBizId(e.target.value)}
+                            className="w-full border border-amber-200 bg-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 mb-3">
+                            <option value="">— No business (remove assignment) —</option>
+                            {businesses.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name} — {b.canton}, {b.country}{b.owner_name && b.owner_user_id !== u.id ? ` (owned by ${b.owner_name})` : ""}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="flex items-center gap-2">
+                            <button disabled={assignBizSaving} onClick={() => assignBusinessToUser(u.id)}
+                              className="text-xs font-semibold px-4 py-2 text-white rounded-xl disabled:opacity-50 flex items-center gap-1.5"
+                              style={{ backgroundColor: "#8B1A1A" }}>
+                              <Save size={12} /> {assignBizSaving ? "Saving…" : "Save"}
+                            </button>
+                            <p className="text-xs text-amber-600">Assigning auto-promotes user to Business Owner role.</p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Profile inspector (superadmin) */}
                       {inspectUser === u.id && (
