@@ -212,14 +212,18 @@ if ($method === 'PATCH') {
         $pdo->prepare("UPDATE users SET role = 'business_owner' WHERE id = :uid AND role = 'user'")
             ->execute([':uid' => (int)$data['owner_user_id']]);
     }
-    // If removing owner, demote user back to 'user'
+    // If removing owner, demote user back to 'user' only if they own no other businesses
     if (array_key_exists('owner_user_id', $data) && !$data['owner_user_id']) {
         $prev = $pdo->prepare("SELECT owner_user_id FROM businesses WHERE id = :id");
         $prev->execute([':id' => $id]);
         $prevOwner = (int)$prev->fetchColumn();
         if ($prevOwner) {
-            $pdo->prepare("UPDATE users SET role = 'user' WHERE id = :uid AND role = 'business_owner'")
-                ->execute([':uid' => $prevOwner]);
+            $otherBiz = $pdo->prepare("SELECT COUNT(*) FROM businesses WHERE owner_user_id = :uid AND id != :id");
+            $otherBiz->execute([':uid' => $prevOwner, ':id' => $id]);
+            if ((int)$otherBiz->fetchColumn() === 0) {
+                $pdo->prepare("UPDATE users SET role = 'user' WHERE id = :uid AND role = 'business_owner'")
+                    ->execute([':uid' => $prevOwner]);
+            }
         }
     }
 

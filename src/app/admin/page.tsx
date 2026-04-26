@@ -47,7 +47,7 @@ interface BusinessRow {
 interface UserRow {
   id: number; name: string; email: string; role: string; avatar?: string;
   created_at: string; blog_count: number; comment_count: number;
-  owned_business_id?: number; owned_business_name?: string;
+  owned_businesses_count?: number; owned_businesses_names?: string;
 }
 interface UserProfile {
   id: number; name: string; email: string; role: string; avatar?: string; created_at: string;
@@ -56,7 +56,7 @@ interface UserProfile {
   comments: { id: number; content: string; entity_type: string; created_at: string }[];
   admin_locations?: Location[];
   activity_log?: { action: string; entity_type: string; entity_id: number; entity_name: string; created_at: string }[];
-  owned_business?: { id: number; name: string; category: string; country: string; canton: string; is_approved: boolean } | null;
+  owned_businesses?: { id: number; name: string; category: string; country: string; canton: string; is_approved: boolean }[];
 }
 
 // ── Badges ───────────────────────────────────────────────────────────────────
@@ -307,12 +307,18 @@ function UserProfilePanel({ profile, onClose, token, onSaveAdminLocs }: {
                 </div>
               </div>
             )}
-            {/* Owned business */}
-            {profile.owned_business && (
+            {/* Owned businesses */}
+            {profile.owned_businesses && profile.owned_businesses.length > 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <p className="text-xs font-semibold text-amber-700 mb-1">Assigned Business</p>
-                <p className="text-sm font-bold text-gray-900">{profile.owned_business.name}</p>
-                <p className="text-xs text-gray-500">{profile.owned_business.canton}, {profile.owned_business.country}</p>
+                <p className="text-xs font-semibold text-amber-700 mb-2">Assigned Businesses ({profile.owned_businesses.length})</p>
+                <div className="space-y-1.5">
+                  {profile.owned_businesses.map((b) => (
+                    <div key={b.id}>
+                      <p className="text-sm font-bold text-gray-900">{b.name}</p>
+                      <p className="text-xs text-gray-500">{b.canton}, {b.country}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             {/* Recent posts */}
@@ -535,8 +541,17 @@ export default function AdminPage() {
       body: JSON.stringify({ id: parseInt(assignBizId), owner_user_id: userId }),
     });
     setAssignBizSaving(false);
-    setAssignBizUser(null);
     setAssignBizId("");
+    loadData();
+  };
+  const unassignBusinessFromUser = async (bizId: number) => {
+    setAssignBizSaving(true);
+    await fetch(`${API}/businesses.php`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders(token) },
+      body: JSON.stringify({ id: bizId, owner_user_id: null }),
+    });
+    setAssignBizSaving(false);
     loadData();
   };
 
@@ -849,7 +864,7 @@ export default function AdminPage() {
                             )}
                           </div>
                           <p className="text-xs text-gray-400">{u.email} · {u.blog_count} posts · joined {new Date(u.created_at).toLocaleDateString()}</p>
-                          {u.owned_business_name && <p className="text-xs text-amber-600 font-medium mt-0.5">👤 owns: {u.owned_business_name}</p>}
+                          {(u.owned_businesses_count ?? 0) > 0 && <p className="text-xs text-amber-600 font-medium mt-0.5">👤 {u.owned_businesses_count} business{u.owned_businesses_count === 1 ? "" : "es"}: {u.owned_businesses_names}</p>}
                         </div>
                         <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                           {u.id !== user.id ? (
@@ -857,7 +872,7 @@ export default function AdminPage() {
                               {/* Assign business — all admins */}
                               {(u.role === "user" || u.role === "business_owner") && (
                                 <button
-                                  onClick={() => { setAssignBizUser(assignBizUser === u.id ? null : u.id); setAssignBizId(u.owned_business_id ? String(u.owned_business_id) : ""); }}
+                                  onClick={() => { setAssignBizUser(assignBizUser === u.id ? null : u.id); setAssignBizId(""); }}
                                   className={`p-1.5 rounded-lg transition-colors text-xs font-semibold flex items-center gap-1 ${assignBizUser === u.id ? "bg-amber-100 text-amber-700" : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"}`}
                                   title="Assign business">
                                   <Building2 size={14} />
@@ -884,31 +899,54 @@ export default function AdminPage() {
                       </div>
 
                       {/* Assign business panel */}
-                      {assignBizUser === u.id && (
-                        <div className="mx-5 mb-3 p-4 bg-amber-50 border border-amber-200 rounded-xl" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-between mb-3">
-                            <p className="text-xs font-bold text-amber-800 flex items-center gap-1.5"><Building2 size={13} /> Assign Business to {u.name}</p>
-                            <button onClick={() => setAssignBizUser(null)} className="text-amber-400 hover:text-amber-600"><X size={14} /></button>
+                      {assignBizUser === u.id && (() => {
+                        const userBizIds = new Set(businesses.filter(b => b.owner_user_id === u.id).map(b => b.id));
+                        const userBizList = businesses.filter(b => b.owner_user_id === u.id);
+                        const available = businesses.filter(b => !userBizIds.has(b.id));
+                        return (
+                          <div className="mx-5 mb-3 p-4 bg-amber-50 border border-amber-200 rounded-xl" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-xs font-bold text-amber-800 flex items-center gap-1.5"><Building2 size={13} /> Businesses for {u.name}</p>
+                              <button onClick={() => setAssignBizUser(null)} className="text-amber-400 hover:text-amber-600"><X size={14} /></button>
+                            </div>
+                            {userBizList.length > 0 && (
+                              <div className="mb-3 space-y-1.5">
+                                {userBizList.map(b => (
+                                  <div key={b.id} className="flex items-center justify-between bg-white border border-amber-200 rounded-xl px-3 py-2">
+                                    <div>
+                                      <p className="text-sm font-semibold text-gray-900">{b.name}</p>
+                                      <p className="text-xs text-gray-400">{b.canton}, {b.country}</p>
+                                    </div>
+                                    <button disabled={assignBizSaving} onClick={() => unassignBusinessFromUser(b.id)}
+                                      className="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 disabled:opacity-40">
+                                      <X size={13} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {available.length > 0 && (
+                              <div className="flex gap-2">
+                                <select value={assignBizId} onChange={(e) => setAssignBizId(e.target.value)}
+                                  className="flex-1 border border-amber-200 bg-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300">
+                                  <option value="">— Add a business —</option>
+                                  {available.map(b => (
+                                    <option key={b.id} value={b.id}>
+                                      {b.name} — {b.canton}, {b.country}{b.owner_name ? ` (owned by ${b.owner_name})` : ""}
+                                    </option>
+                                  ))}
+                                </select>
+                                <button disabled={assignBizSaving || !assignBizId} onClick={() => assignBusinessToUser(u.id)}
+                                  className="text-xs font-semibold px-4 py-2 text-white rounded-xl disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0"
+                                  style={{ backgroundColor: "#8B1A1A" }}>
+                                  <Save size={12} /> {assignBizSaving ? "…" : "Add"}
+                                </button>
+                              </div>
+                            )}
+                            <p className="text-xs text-amber-600 mt-2">Adding a business auto-promotes the user to Business Owner.</p>
                           </div>
-                          <select value={assignBizId} onChange={(e) => setAssignBizId(e.target.value)}
-                            className="w-full border border-amber-200 bg-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 mb-3">
-                            <option value="">— No business (remove assignment) —</option>
-                            {businesses.map((b) => (
-                              <option key={b.id} value={b.id}>
-                                {b.name} — {b.canton}, {b.country}{b.owner_name && b.owner_user_id !== u.id ? ` (owned by ${b.owner_name})` : ""}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="flex items-center gap-2">
-                            <button disabled={assignBizSaving} onClick={() => assignBusinessToUser(u.id)}
-                              className="text-xs font-semibold px-4 py-2 text-white rounded-xl disabled:opacity-50 flex items-center gap-1.5"
-                              style={{ backgroundColor: "#8B1A1A" }}>
-                              <Save size={12} /> {assignBizSaving ? "Saving…" : "Save"}
-                            </button>
-                            <p className="text-xs text-amber-600">Assigning auto-promotes user to Business Owner role.</p>
-                          </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Profile inspector (superadmin) */}
                       {inspectUser === u.id && (
