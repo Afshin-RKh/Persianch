@@ -6,7 +6,7 @@ import { useAuth, authHeaders } from "@/lib/auth";
 import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 import LocationSelector, { type Location } from "@/components/LocationSelector";
 import {
-  Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X,
+  Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X, Eye,
   Users, Building2, FileText, Shield,
   ChevronRight, Save,
 } from "lucide-react";
@@ -384,9 +384,13 @@ export default function AdminPage() {
   const [dataLoading, setDataLoading] = useState(false);
 
   // Blog
+  const [postSearch, setPostSearch]   = useState("");
+  const [postTag, setPostTag]         = useState("");
+  const [postCountry, setPostCountry] = useState("");
 
   // Business
   const [bizSearch, setBizSearch]     = useState("");
+  const [bizCountry, setBizCountry]   = useState("");
   const [bizCategory, setBizCategory] = useState("");
   const [bizApproved, setBizApproved] = useState<"all" | "approved" | "pending">("all");
   const [showAddBiz, setShowAddBiz]   = useState(false);
@@ -402,6 +406,7 @@ export default function AdminPage() {
   const [inspectProfile, setInspectProfile] = useState<UserProfile | null>(null);
   const [userSearch, setUserSearch]         = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("");
+  const [userCountry, setUserCountry]       = useState("");
   const [assignBizUser, setAssignBizUser]   = useState<number | null>(null);
   const [assignBizId, setAssignBizId]       = useState("");
   const [assignBizSaving, setAssignBizSaving] = useState(false);
@@ -549,8 +554,24 @@ export default function AdminPage() {
     { key: "users",      label: "Users",       icon: <Users size={15} /> },
   ];
 
+  const POST_TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
+  const postCountries = [...new Set(posts.map((p) => p.country).filter(Boolean))] as string[];
+
+  const filteredPosts = posts.filter((p) => {
+    if (postCountry && p.country !== postCountry) return false;
+    if (postTag && !(p.tags ?? "").split(",").map((t) => t.trim()).includes(postTag)) return false;
+    if (postSearch.trim()) {
+      const q = postSearch.toLowerCase();
+      return p.title.toLowerCase().includes(q) || (p.author_name ?? "").toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const bizCountries = [...new Set(businesses.map((b) => b.country).filter(Boolean))] as string[];
+
   const filteredBiz = businesses.filter((b) => {
     if (bizCategory && b.category !== bizCategory) return false;
+    if (bizCountry && b.country !== bizCountry) return false;
     if (bizApproved === "approved" && !b.is_approved) return false;
     if (bizApproved === "pending" && b.is_approved) return false;
     if (bizSearch.trim()) {
@@ -560,8 +581,16 @@ export default function AdminPage() {
     return true;
   });
 
+  const userCountries = [...new Set(
+    businesses.filter((b) => b.owner_user_id).map((b) => b.country).filter(Boolean)
+  )] as string[];
+
   const filteredUsers = users.filter((u) => {
     if (userRoleFilter && u.role !== userRoleFilter) return false;
+    if (userCountry) {
+      const userBizCountries = businesses.filter((b) => b.owner_user_id === u.id).map((b) => b.country);
+      if (!userBizCountries.includes(userCountry)) return false;
+    }
     if (userSearch.trim()) {
       const q = userSearch.toLowerCase();
       return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
@@ -632,15 +661,29 @@ export default function AdminPage() {
         {tab === "posts" && !dataLoading && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-900">Blog Posts <span className="text-gray-400 font-normal text-sm">({posts.length})</span></h2>
+              <h2 className="font-bold text-gray-900">Blog Posts <span className="text-gray-400 font-normal text-sm">({filteredPosts.length}/{posts.length})</span></h2>
               <Link href="/blog/write" className="flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-opacity hover:opacity-90" style={{ backgroundColor: "#8B1A1A" }}>
                 + New Post
               </Link>
             </div>
-            {posts.length === 0
-              ? <p className="text-gray-400 text-sm p-6">No posts yet.</p>
+            <div className="px-6 py-3 border-b border-gray-50 flex flex-wrap gap-2">
+              <input type="text" placeholder="Search title or author…" value={postSearch} onChange={(e) => setPostSearch(e.target.value)}
+                className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] flex-1 min-w-40" />
+              <select value={postTag} onChange={(e) => setPostTag(e.target.value)}
+                className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+                <option value="">All tags</option>
+                {POST_TAGS.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <select value={postCountry} onChange={(e) => setPostCountry(e.target.value)}
+                className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+                <option value="">All countries</option>
+                {postCountries.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            {filteredPosts.length === 0
+              ? <p className="text-gray-400 text-sm p-6">No posts match your filters.</p>
               : <div className="divide-y divide-gray-50">
-                {posts.map((p) => (
+                {filteredPosts.map((p) => (
                   <div key={p.id}>
                     <div className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
                       <div className="flex-1 min-w-0">
@@ -664,6 +707,7 @@ export default function AdminPage() {
                           <button onClick={() => updatePostStatus(p.id, "rejected")} title="Reject" className="text-red-400 hover:text-red-600 transition-colors"><XCircle size={17} /></button>
                         </>}
                         {p.status === "rejected" && <button onClick={() => updatePostStatus(p.id, "approved")} title="Approve" className="text-green-500 hover:text-green-700 transition-colors"><CheckCircle size={17} /></button>}
+                        <Link href={`/blog/post?slug=${p.slug}`} title="View post" className="text-gray-300 hover:text-[#C9A84C] transition-colors"><Eye size={15} /></Link>
                         <Link href={`/blog/edit?id=${p.id}`} title="Edit post" className="text-gray-300 hover:text-[#1B3A6B] transition-colors"><Edit2 size={15} /></Link>
                         <button onClick={() => deletePost(p.id)} className="text-gray-200 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
                       </div>
@@ -693,6 +737,11 @@ export default function AdminPage() {
                   className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
                   <option value="">All categories</option>
                   {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
+                </select>
+                <select value={bizCountry} onChange={(e) => setBizCountry(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+                  <option value="">All countries</option>
+                  {bizCountries.sort().map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
                 <select value={bizApproved} onChange={(e) => setBizApproved(e.target.value as any)}
                   className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
@@ -774,6 +823,11 @@ export default function AdminPage() {
                   <option value="business_owner">Business Owner</option>
                   <option value="admin">Admin</option>
                   {isSuperAdmin && <option value="superadmin">Super Admin</option>}
+                </select>
+                <select value={userCountry} onChange={(e) => setUserCountry(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+                  <option value="">All countries</option>
+                  {userCountries.sort().map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
             </div>
