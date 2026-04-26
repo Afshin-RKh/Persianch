@@ -42,7 +42,7 @@ export default function SearchBar({
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const regions = useMemo(() => {
-    if (country) return REGIONS_BY_COUNTRY[country] ?? [];
+    if (country) return [...(REGIONS_BY_COUNTRY[country] ?? [])].sort((a, b) => a.localeCompare(b));
     return [];
   }, [country]);
 
