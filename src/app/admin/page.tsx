@@ -7,11 +7,10 @@ import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 import LocationSelector, { type Location } from "@/components/LocationSelector";
 import {
   Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X,
-  MapPin, UserPlus, Users, Building2, FileText, Shield,
-  ChevronRight, Eye, Save,
+  Users, Building2, FileText, Shield,
+  ChevronRight, Save,
 } from "lucide-react";
 
-const BLOG_REGIONS = (country: string) => REGIONS_BY_COUNTRY[country] ?? [];
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white";
 
@@ -80,7 +79,7 @@ const actionBadge = (action: string) => {
 };
 
 // ── Business Form ─────────────────────────────────────────────────────────────
-const POST_TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
+
 
 function BizFormPanel({ title, form, setForm, onSubmit, loading, success, onClose, isEdit, ownerUsers, assignOwner, setAssignOwner }: {
   title: string; form: BizForm; setForm: (f: BizForm) => void;
@@ -385,9 +384,6 @@ export default function AdminPage() {
   const [dataLoading, setDataLoading] = useState(false);
 
   // Blog
-  const [editPost, setEditPost]     = useState<BlogPost | null>(null);
-  const [postForm, setPostForm]     = useState<{ tags: string[]; country: string; city: string; status: string }>({ tags: [], country: "", city: "", status: "approved" });
-  const [postSaving, setPostSaving] = useState(false);
 
   // Business
   const [bizSearch, setBizSearch]     = useState("");
@@ -460,17 +456,6 @@ export default function AdminPage() {
     if (!confirm("Delete this post?")) return;
     await fetch(`${API}/blog.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
     loadData();
-  };
-  const openEditPost = (p: BlogPost) => {
-    setEditPost(p);
-    setPostForm({ tags: p.tags ? p.tags.split(",").map((t) => t.trim()) : [], country: p.country ?? "", city: p.city ?? "", status: p.status });
-  };
-  const savePostMeta = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editPost) return;
-    setPostSaving(true);
-    await fetch(`${API}/blog.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: editPost.id, ...postForm }) });
-    setPostSaving(false); setEditPost(null); loadData();
   };
 
   // ── Business actions ───────────────────────────────────────────────────────
@@ -679,60 +664,10 @@ export default function AdminPage() {
                           <button onClick={() => updatePostStatus(p.id, "rejected")} title="Reject" className="text-red-400 hover:text-red-600 transition-colors"><XCircle size={17} /></button>
                         </>}
                         {p.status === "rejected" && <button onClick={() => updatePostStatus(p.id, "approved")} title="Approve" className="text-green-500 hover:text-green-700 transition-colors"><CheckCircle size={17} /></button>}
-                        <button onClick={() => openEditPost(p)} title="Edit meta" className={`transition-colors ${editPost?.id === p.id ? "text-[#1B3A6B]" : "text-gray-300 hover:text-[#1B3A6B]"}`}><Edit2 size={15} /></button>
-                        <Link href={`/blog/edit?id=${p.id}`} title="Full edit" className="text-gray-300 hover:text-[#C9A84C] transition-colors"><Eye size={15} /></Link>
+                        <Link href={`/blog/edit?id=${p.id}`} title="Edit post" className="text-gray-300 hover:text-[#1B3A6B] transition-colors"><Edit2 size={15} /></Link>
                         <button onClick={() => deletePost(p.id)} className="text-gray-200 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
                       </div>
                     </div>
-                    {editPost?.id === p.id && (
-                      <form onSubmit={savePostMeta} className="bg-gray-50 border-t border-gray-100 px-6 py-5 space-y-4">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-bold text-gray-700">Edit tags &amp; location</p>
-                          <button type="button" onClick={() => setEditPost(null)} className="text-gray-400 hover:text-gray-600"><X size={15} /></button>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 mb-2">Tags</p>
-                          <div className="flex flex-wrap gap-2">
-                            {POST_TAGS.map((tag) => (
-                              <button key={tag} type="button"
-                                onClick={() => setPostForm((f) => ({ ...f, tags: f.tags.includes(tag) ? f.tags.filter((t) => t !== tag) : [...f.tags, tag] }))}
-                                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all capitalize ${postForm.tags.includes(tag) ? "text-white border-transparent" : "text-gray-600 border-gray-200 hover:border-[#1B3A6B]"}`}
-                                style={postForm.tags.includes(tag) ? { backgroundColor: "#1B3A6B" } : {}}>{tag}</button>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-                            <select value={postForm.country} onChange={(e) => setPostForm((f) => ({ ...f, country: e.target.value, city: "" }))} className={inp}>
-                              <option value="">— none —</option>
-                              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">City</label>
-                            {BLOG_REGIONS(postForm.country).length > 0
-                              ? <select value={postForm.city} onChange={(e) => setPostForm((f) => ({ ...f, city: e.target.value }))} className={inp}>
-                                  <option value="">— none —</option>
-                                  {BLOG_REGIONS(postForm.country).map((r) => <option key={r} value={r}>{r}</option>)}
-                                </select>
-                              : <input type="text" value={postForm.city} onChange={(e) => setPostForm((f) => ({ ...f, city: e.target.value }))} placeholder="City" className={inp} />
-                            }
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
-                            <select value={postForm.status} onChange={(e) => setPostForm((f) => ({ ...f, status: e.target.value }))} className={inp}>
-                              <option value="approved">approved</option>
-                              <option value="pending">pending</option>
-                              <option value="rejected">rejected</option>
-                            </select>
-                          </div>
-                        </div>
-                        <button type="submit" disabled={postSaving} className="text-white font-semibold px-4 py-2 rounded-xl text-xs disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
-                          {postSaving ? "Saving…" : "Save"}
-                        </button>
-                      </form>
-                    )}
                   </div>
                 ))}
               </div>
