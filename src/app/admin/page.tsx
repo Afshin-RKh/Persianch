@@ -4,13 +4,20 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, authHeaders } from "@/lib/auth";
 import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
+import LocationSelector, { type Location } from "@/components/LocationSelector";
+import {
+  Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X,
+  MapPin, UserPlus, Users, Building2, FileText, Shield,
+  ChevronRight, Eye, Save,
+} from "lucide-react";
 
 const BLOG_REGIONS = (country: string) => REGIONS_BY_COUNTRY[country] ?? [];
-import { Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X, MapPin, UserPlus } from "lucide-react";
-import LocationSelector, { type Location } from "@/components/LocationSelector";
-
 const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
+const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white";
 
+type Tab = "posts" | "businesses" | "users";
+
+// ── Types ────────────────────────────────────────────────────────────────────
 type BizForm = {
   name: string; name_fa: string; category: string; canton: string; country: string;
   address: string; phone: string; website: string; email: string; instagram: string;
@@ -18,7 +25,6 @@ type BizForm = {
   image_url: string; logo_url: string; lat: string; lng: string;
   is_featured: boolean; is_verified: boolean; is_approved: boolean;
 };
-
 const EMPTY_BIZ: BizForm = {
   name: "", name_fa: "", category: "restaurant", canton: "Zurich", country: "Switzerland",
   address: "", phone: "", website: "", email: "", instagram: "",
@@ -27,169 +33,341 @@ const EMPTY_BIZ: BizForm = {
   is_featured: false, is_verified: false, is_approved: true,
 };
 
-type Tab = "posts" | "businesses" | "users";
+interface BlogPost {
+  id: number; title: string; slug: string; status: string;
+  author_name: string; created_at: string; tags?: string; country?: string; city?: string;
+}
+interface BusinessRow {
+  id: number; name: string; name_fa?: string; category: string; canton: string; country: string;
+  address?: string; phone?: string; website?: string; email?: string; instagram?: string;
+  description?: string; description_fa?: string; google_maps_url?: string;
+  is_approved: boolean; is_featured: boolean; is_verified: boolean;
+  owner_user_id?: number; owner_name?: string; owner_email?: string;
+}
+interface UserRow {
+  id: number; name: string; email: string; role: string; avatar?: string;
+  created_at: string; blog_count: number; comment_count: number;
+  owned_business_id?: number; owned_business_name?: string;
+}
+interface UserProfile {
+  id: number; name: string; email: string; role: string; avatar?: string; created_at: string;
+  interest_locations: Location[];
+  blog_posts: { id: number; title: string; slug: string; status: string; created_at: string }[];
+  comments: { id: number; content: string; entity_type: string; created_at: string }[];
+  admin_locations?: Location[];
+  activity_log?: { action: string; entity_type: string; entity_id: number; entity_name: string; created_at: string }[];
+  owned_business?: { id: number; name: string; category: string; country: string; canton: string; is_approved: boolean } | null;
+}
 
-function BizForm({ title, form, setForm, onSubmit, loading, success, onClose, isEdit }: {
+// ── Badges ───────────────────────────────────────────────────────────────────
+const roleBadge = (role: string) => {
+  const map: Record<string, string> = {
+    user: "bg-gray-100 text-gray-600",
+    business_owner: "bg-amber-100 text-amber-700",
+    admin: "bg-blue-100 text-blue-700",
+    superadmin: "bg-purple-100 text-purple-700",
+  };
+  const labels: Record<string, string> = { user: "User", business_owner: "Business Owner", admin: "Admin", superadmin: "Super Admin" };
+  return <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${map[role] ?? map.user}`}>{labels[role] ?? role}</span>;
+};
+const statusBadge = (status: string) => {
+  const map: Record<string, string> = { pending: "bg-yellow-100 text-yellow-700", approved: "bg-green-100 text-green-700", rejected: "bg-red-100 text-red-600" };
+  return <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${map[status] ?? "bg-gray-100 text-gray-500"}`}>{status}</span>;
+};
+const actionBadge = (action: string) => {
+  const map: Record<string, string> = { create: "bg-green-100 text-green-700", update: "bg-blue-100 text-blue-700", delete: "bg-red-100 text-red-600", approve: "bg-emerald-100 text-emerald-700", reject: "bg-orange-100 text-orange-700" };
+  return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${map[action] ?? "bg-gray-100 text-gray-600"}`}>{action}</span>;
+};
+
+// ── Business Form ─────────────────────────────────────────────────────────────
+const POST_TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
+
+function BizFormPanel({ title, form, setForm, onSubmit, loading, success, onClose, isEdit, ownerUsers, assignOwner, setAssignOwner }: {
   title: string; form: BizForm; setForm: (f: BizForm) => void;
-  onSubmit: (e: React.FormEvent) => void; loading: boolean; success: boolean;
-  onClose: () => void; isEdit: boolean;
+  onSubmit: (e: React.FormEvent) => void; loading: boolean; success: boolean; onClose: () => void; isEdit: boolean;
+  ownerUsers: UserRow[]; assignOwner: string; setAssignOwner: (v: string) => void;
 }) {
   const regions = REGIONS_BY_COUNTRY[form.country] ?? [];
-  const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]";
-
   return (
-    <div className="bg-white rounded-2xl border border-[#1B3A6B]/20 p-6 mb-2 shadow-sm">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="font-bold text-gray-800">{title}</h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
+    <div className="bg-white rounded-2xl border border-[#1B3A6B]/15 shadow-sm mb-2 overflow-hidden">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+        <h3 className="font-bold text-gray-800 text-sm">{title}</h3>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"><X size={16} /></button>
       </div>
-      {success && <p className="text-green-600 text-sm mb-3 font-medium">{isEdit ? "Saved!" : "Business added!"}</p>}
-
-      <form onSubmit={onSubmit} className="space-y-5">
-
-        {/* Basic info */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Business Name (English) *</label>
-            <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inp} required />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Business Name (Persian)</label>
-            <input type="text" value={form.name_fa} onChange={(e) => setForm({ ...form, name_fa: e.target.value })} className={inp} dir="rtl" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
-            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={inp}>
-              {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-            <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value, canton: "" })} className={inp}>
-              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Region / Canton / State</label>
-            {regions.length > 0 ? (
-              <select value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} className={inp}>
-                <option value="">— select —</option>
-                {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+      {success && <div className="px-6 py-3 bg-green-50 border-b border-green-100 text-green-700 text-sm font-medium">{isEdit ? "✓ Changes saved" : "✓ Business added"}</div>}
+      <form onSubmit={onSubmit} className="p-6 space-y-6">
+        {/* Location */}
+        <div>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Location</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+              <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value, canton: "" })} className={inp}>
+                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
-            ) : (
-              <input type="text" value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} placeholder="Region or city" className={inp} />
-            )}
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Region / City</label>
+              {regions.length > 0
+                ? <select value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} className={inp}>
+                    <option value="">— select —</option>
+                    {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                : <input type="text" value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} placeholder="City or region" className={inp} />
+              }
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={inp}>
+                {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Address</label>
-            <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inp} />
+        </div>
+
+        {/* Names */}
+        <div>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Business Info</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Name (English) *</label>
+              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inp} required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Name (Persian)</label>
+              <input type="text" value={form.name_fa} onChange={(e) => setForm({ ...form, name_fa: e.target.value })} className={inp} dir="rtl" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Address</label>
+              <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inp} />
+            </div>
           </div>
         </div>
 
         {/* Contact */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {([["phone", "Phone"], ["email", "Email"], ["website", "Website URL"], ["instagram", "Instagram handle"], ["google_maps_url", "Google Maps URL"]] as const).map(([k, label]) => (
-            <div key={k}>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
-              <input type="text" value={(form as unknown as Record<string, string>)[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className={inp} />
-            </div>
-          ))}
+        <div>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Contact</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {(["phone", "email", "website", "instagram", "google_maps_url"] as const).map((k) => (
+              <div key={k}>
+                <label className="block text-xs font-semibold text-gray-600 mb-1 capitalize">{k.replace("_", " ")}</label>
+                <input type="text" value={(form as any)[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className={inp} />
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Descriptions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Description (English)</label>
-            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className={`${inp} resize-none`} />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Description (Persian)</label>
-            <textarea value={form.description_fa} onChange={(e) => setForm({ ...form, description_fa: e.target.value })} rows={3} dir="rtl" className={`${inp} resize-none`} />
+        <div>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Description</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">English</label>
+              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className={`${inp} resize-none`} />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Persian</label>
+              <textarea value={form.description_fa} onChange={(e) => setForm({ ...form, description_fa: e.target.value })} rows={3} dir="rtl" className={`${inp} resize-none`} />
+            </div>
           </div>
         </div>
 
         {/* Images */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Cover Image URL</label>
-            <input type="text" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." className={inp} />
-            {form.image_url && <img src={form.image_url} alt="" className="mt-2 h-20 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display = "none")} />}
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Logo URL</label>
-            <input type="text" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://..." className={inp} />
-            {form.logo_url && <img src={form.logo_url} alt="" className="mt-2 h-20 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display = "none")} />}
+        <div>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Images</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {(["image_url", "logo_url"] as const).map((k) => (
+              <div key={k}>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">{k === "image_url" ? "Cover Image URL" : "Logo URL"}</label>
+                <input type="text" value={(form as any)[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} placeholder="https://..." className={inp} />
+                {(form as any)[k] && <img src={(form as any)[k]} alt="" className="mt-2 h-16 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display = "none")} />}
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Coordinates */}
         <div>
-          <p className="text-xs font-semibold text-gray-600 mb-2">Coordinates <span className="text-gray-400 font-normal">(used for map pin)</span></p>
-          <div className="grid grid-cols-2 gap-4">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Coordinates</p>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Latitude</label>
-              <input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="e.g. 47.3769" className={inp} />
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Latitude</label>
+              <input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="47.3769" className={inp} />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Longitude</label>
-              <input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="e.g. 8.5417" className={inp} />
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Longitude</label>
+              <input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="8.5417" className={inp} />
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-1">Find coordinates: right-click any location on Google Maps → &quot;What&apos;s here?&quot;</p>
+          <p className="text-xs text-gray-400 mt-1.5">Right-click on Google Maps → &ldquo;What&apos;s here?&rdquo;</p>
         </div>
 
         {/* Flags */}
-        <div className="flex gap-5">
+        <div className="flex flex-wrap gap-4">
           {(["is_featured", "is_verified", "is_approved"] as const).map((k) => (
-            <label key={k} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" checked={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.checked })} className="rounded accent-red-600" />
-              {k.replace("is_", "")}
+            <label key={k} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+              <input type="checkbox" checked={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.checked })} className="rounded accent-[#8B1A1A] w-4 h-4" />
+              <span className="capitalize">{k.replace("is_", "")}</span>
             </label>
           ))}
         </div>
 
-        <button type="submit" disabled={loading || !form.name}
-          className="text-white font-semibold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
-          {loading ? "Saving..." : isEdit ? "Save Changes" : "Add Business"}
-        </button>
+        {/* Business Owner */}
+        {isEdit && ownerUsers.length >= 0 && (
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Business Owner</p>
+            <select value={assignOwner} onChange={(e) => setAssignOwner(e.target.value)} className={inp}>
+              <option value="">— No owner assigned —</option>
+              {ownerUsers.map((u) => (
+                <option key={u.id} value={u.id}>{u.name} ({u.email}) · {u.role}</option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1">Assigning promotes the user to &ldquo;Business Owner&rdquo; role automatically.</p>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 pt-2">
+          <button type="submit" disabled={loading || !form.name}
+            className="flex items-center gap-2 text-white font-semibold px-5 py-2.5 rounded-xl text-sm disabled:opacity-50 transition-opacity"
+            style={{ backgroundColor: "#8B1A1A" }}>
+            <Save size={14} />{loading ? "Saving…" : isEdit ? "Save Changes" : "Add Business"}
+          </button>
+          <button type="button" onClick={onClose} className="text-sm text-gray-500 hover:text-gray-700 font-medium px-3 py-2">Cancel</button>
+        </div>
       </form>
     </div>
   );
 }
 
-const POST_TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
+// ── User Profile Inspector (superadmin) ──────────────────────────────────────
+function UserProfilePanel({ profile, onClose, token, onSaveAdminLocs }: {
+  profile: UserProfile; onClose: () => void; token: string | null;
+  onSaveAdminLocs: (uid: number, locs: Location[]) => void;
+}) {
+  const [adminLocs, setAdminLocs] = useState<Location[]>(profile.admin_locations ?? []);
+  const [locTab, setLocTab] = useState<"info" | "locs" | "activity">("info");
 
-interface BlogPost {
-  id: number;
-  title: string;
-  slug: string;
-  status: string;
-  author_name: string;
-  created_at: string;
-  tags?: string;
-  country?: string;
-  city?: string;
+  const isAdmin = profile.role === "admin" || profile.role === "superadmin";
+  const tabs = [
+    { key: "info" as const, label: "Info" },
+    ...(isAdmin ? [{ key: "locs" as const, label: "Locations" }, { key: "activity" as const, label: "Activity" }] : []),
+  ];
+
+  return (
+    <div className="mt-1 mb-2 bg-[#f8f9ff] border border-[#1B3A6B]/15 rounded-2xl overflow-hidden shadow-sm">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[#1B3A6B]/10 bg-[#1B3A6B]/5">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ backgroundColor: "#1B3A6B" }}>
+            {profile.name[0]?.toUpperCase()}
+          </div>
+          <div>
+            <p className="text-sm font-bold text-gray-900">{profile.name}</p>
+            <p className="text-xs text-gray-500">{profile.email}</p>
+          </div>
+        </div>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-white transition-colors"><X size={15} /></button>
+      </div>
+
+      {/* Sub-tabs */}
+      {tabs.length > 1 && (
+        <div className="flex border-b border-gray-100 bg-white">
+          {tabs.map((t) => (
+            <button key={t.key} onClick={() => setLocTab(t.key)}
+              className={`px-4 py-2 text-xs font-semibold transition-colors ${locTab === t.key ? "text-[#1B3A6B] border-b-2 border-[#1B3A6B]" : "text-gray-500 hover:text-gray-700"}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="p-5">
+        {locTab === "info" && (
+          <div className="space-y-4">
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                ["Blog Posts", profile.blog_posts.length],
+                ["Comments", profile.comments.length],
+                ["Joined", new Date(profile.created_at).toLocaleDateString()],
+              ].map(([label, val]) => (
+                <div key={label as string} className="bg-white rounded-xl border border-gray-100 p-3 text-center">
+                  <p className="text-base font-bold text-gray-900">{val}</p>
+                  <p className="text-xs text-gray-400">{label}</p>
+                </div>
+              ))}
+            </div>
+            {/* Interest locations */}
+            {profile.interest_locations.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-2">Interest Locations</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {profile.interest_locations.map((l, i) => (
+                    <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">{l.city}, {l.country}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Owned business */}
+            {profile.owned_business && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <p className="text-xs font-semibold text-amber-700 mb-1">Assigned Business</p>
+                <p className="text-sm font-bold text-gray-900">{profile.owned_business.name}</p>
+                <p className="text-xs text-gray-500">{profile.owned_business.canton}, {profile.owned_business.country}</p>
+              </div>
+            )}
+            {/* Recent posts */}
+            {profile.blog_posts.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-2">Recent Posts</p>
+                <div className="space-y-1.5">
+                  {profile.blog_posts.slice(0, 5).map((p) => (
+                    <div key={p.id} className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${p.status === "approved" ? "bg-green-100 text-green-700" : p.status === "pending" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-600"}`}>{p.status}</span>
+                      <span className="text-sm text-gray-700 truncate">{p.title}</span>
+                      <span className="text-xs text-gray-400 flex-shrink-0">{new Date(p.created_at).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {locTab === "locs" && isAdmin && (
+          <div className="space-y-4">
+            <p className="text-xs text-gray-500">Cities this admin is allowed to manage businesses in.</p>
+            <LocationSelector selected={adminLocs} onChange={setAdminLocs} label="Add location" />
+            <button onClick={() => onSaveAdminLocs(profile.id, adminLocs)}
+              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white rounded-xl"
+              style={{ backgroundColor: "#1B3A6B" }}>
+              <Save size={12} /> Save Locations
+            </button>
+          </div>
+        )}
+
+        {locTab === "activity" && isAdmin && (
+          <div>
+            {!profile.activity_log?.length
+              ? <p className="text-sm text-gray-400">No actions recorded.</p>
+              : <div className="space-y-2">
+                  {profile.activity_log.map((e, i) => (
+                    <div key={i} className="flex items-center gap-3 py-1.5 border-b border-gray-100 last:border-0">
+                      {actionBadge(e.action)}
+                      <span className="text-xs text-gray-400 capitalize">{e.entity_type}</span>
+                      <span className="text-sm text-gray-800 font-medium flex-1 truncate">{e.entity_name ?? `#${e.entity_id}`}</span>
+                      <span className="text-xs text-gray-400 flex-shrink-0">{new Date(e.created_at).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+            }
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
-interface BusinessRow {
-  id: number;
-  name: string; name_fa?: string; category: string; canton: string; country: string;
-  address?: string; phone?: string; website?: string; email?: string; instagram?: string;
-  description?: string; description_fa?: string; google_maps_url?: string;
-  is_approved: boolean; is_featured: boolean; is_verified: boolean;
-}
-
-interface UserRow {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  created_at: string;
-  blog_count: number;
-  comment_count: number;
-  admin_locations?: Location[];
-}
-
+// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AdminPage() {
   const { user, token, isAdmin, isSuperAdmin, loading } = useAuth();
   const router = useRouter();
@@ -200,31 +378,28 @@ export default function AdminPage() {
   const [users, setUsers]           = useState<UserRow[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
 
-  // Business search/filter
+  // Blog
+  const [editPost, setEditPost]     = useState<BlogPost | null>(null);
+  const [postForm, setPostForm]     = useState<{ tags: string[]; country: string; city: string; status: string }>({ tags: [], country: "", city: "", status: "approved" });
+  const [postSaving, setPostSaving] = useState(false);
+
+  // Business
   const [bizSearch, setBizSearch]     = useState("");
   const [bizCategory, setBizCategory] = useState("");
   const [bizApproved, setBizApproved] = useState<"all" | "approved" | "pending">("all");
+  const [showAddBiz, setShowAddBiz]   = useState(false);
+  const [editBiz, setEditBiz]         = useState<BusinessRow | null>(null);
+  const [bizForm, setBizForm]         = useState<BizForm>(EMPTY_BIZ);
+  const [bizLoading, setBizLoading]   = useState(false);
+  const [bizSuccess, setBizSuccess]   = useState(false);
+  const [assignOwner, setAssignOwner] = useState("");
+  const [ownerUsers, setOwnerUsers]   = useState<UserRow[]>([]);
 
-  // Edit blog post inline
-  const [editPost, setEditPost] = useState<BlogPost | null>(null);
-  const [postForm, setPostForm] = useState<{ tags: string[]; country: string; city: string; status: string }>({ tags: [], country: "", city: "", status: "approved" });
-  const [postSaving, setPostSaving] = useState(false);
-
-  // Admin location editing
-  const [editLocUser, setEditLocUser] = useState<number | null>(null);
-  const [editLocList, setEditLocList] = useState<Location[]>([]);
-
-  // Assign business owner
-  const [assignOwnerBizId, setAssignOwnerBizId] = useState<number | null>(null);
-  const [ownerUsers, setOwnerUsers]             = useState<{ id: number; name: string; email: string; role: string }[]>([]);
-  const [selectedOwnerId, setSelectedOwnerId]   = useState<string>("");
-
-  // Add / Edit business form
-  const [showAddBiz, setShowAddBiz] = useState(false);
-  const [editBiz, setEditBiz]       = useState<BusinessRow | null>(null);
-  const [bizForm, setBizForm]       = useState<BizForm>(EMPTY_BIZ);
-  const [bizLoading, setBizLoading] = useState(false);
-  const [bizSuccess, setBizSuccess] = useState(false);
+  // Users
+  const [inspectUser, setInspectUser]       = useState<number | null>(null);
+  const [inspectProfile, setInspectProfile] = useState<UserProfile | null>(null);
+  const [userSearch, setUserSearch]         = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState("");
 
   useEffect(() => {
     if (!loading && !isAdmin) router.replace("/auth/signin");
@@ -235,10 +410,11 @@ export default function AdminPage() {
     setDataLoading(true);
     try {
       if (tab === "posts") {
-        const r = await fetch(`${API}/blog.php?pending=1`, { headers: authHeaders(token) });
-        const all = await fetch(`${API}/blog.php`, { headers: authHeaders(token) });
-        const pending = await r.json();
-        const approved = await all.json();
+        const [r1, r2] = await Promise.all([
+          fetch(`${API}/blog.php?pending=1`, { headers: authHeaders(token) }),
+          fetch(`${API}/blog.php`, { headers: authHeaders(token) }),
+        ]);
+        const [pending, approved] = await Promise.all([r1.json(), r2.json()]);
         const combined: BlogPost[] = [...(Array.isArray(pending) ? pending : []), ...(Array.isArray(approved) ? approved : [])];
         const seen = new Set<number>();
         setPosts(combined.filter((p) => { if (seen.has(p.id)) return false; seen.add(p.id); return true; }));
@@ -246,118 +422,50 @@ export default function AdminPage() {
       if (tab === "businesses") {
         const r = await fetch(`${API}/businesses.php`, { headers: authHeaders(token) });
         setBusinesses(await r.json());
+        // Pre-fetch users for owner assignment
+        const ur = await fetch(`${API}/users.php`, { headers: authHeaders(token) });
+        const all = await ur.json();
+        setOwnerUsers(Array.isArray(all) ? all.filter((u: UserRow) => u.role === "user" || u.role === "business_owner") : []);
       }
-      if (tab === "users" && isSuperAdmin) {
+      if (tab === "users") {
         const r = await fetch(`${API}/users.php`, { headers: authHeaders(token) });
         setUsers(await r.json());
       }
     } finally {
       setDataLoading(false);
     }
-  }, [tab, token, isAdmin, isSuperAdmin]);
+  }, [tab, token, isAdmin]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // ── Blog actions ───────────────────────────────────────────────────────────
   const updatePostStatus = async (id: number, status: string) => {
-    await fetch(`${API}/blog.php`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeaders(token) },
-      body: JSON.stringify({ id, status }),
-    });
+    await fetch(`${API}/blog.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, status }) });
     loadData();
   };
-
   const deletePost = async (id: number) => {
     if (!confirm("Delete this post?")) return;
     await fetch(`${API}/blog.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
     loadData();
   };
-
   const openEditPost = (p: BlogPost) => {
     setEditPost(p);
-    setPostForm({
-      tags: p.tags ? p.tags.split(",").map((t) => t.trim()) : [],
-      country: p.country ?? "",
-      city: p.city ?? "",
-      status: p.status,
-    });
+    setPostForm({ tags: p.tags ? p.tags.split(",").map((t) => t.trim()) : [], country: p.country ?? "", city: p.city ?? "", status: p.status });
   };
-
   const savePostMeta = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editPost) return;
     setPostSaving(true);
-    await fetch(`${API}/blog.php`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeaders(token) },
-      body: JSON.stringify({ id: editPost.id, tags: postForm.tags, country: postForm.country, city: postForm.city, status: postForm.status }),
-    });
-    setPostSaving(false);
-    setEditPost(null);
-    loadData();
+    await fetch(`${API}/blog.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: editPost.id, ...postForm }) });
+    setPostSaving(false); setEditPost(null); loadData();
   };
 
+  // ── Business actions ───────────────────────────────────────────────────────
   const deleteBusiness = async (id: number) => {
     if (!confirm("Delete this business?")) return;
-    await fetch(`${API}/businesses.php`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", ...authHeaders(token) },
-      body: JSON.stringify({ id }),
-    });
+    await fetch(`${API}/businesses.php`, { method: "DELETE", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id }) });
     loadData();
   };
-
-  const changeUserRole = async (id: number, role: string) => {
-    await fetch(`${API}/users.php`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeaders(token) },
-      body: JSON.stringify({ id, role }),
-    });
-    loadData();
-  };
-
-  const openLocEditor = async (u: UserRow) => {
-    if (editLocUser === u.id) { setEditLocUser(null); return; }
-    const r = await fetch(`${API}/locations.php?user_id=${u.id}`, { headers: authHeaders(token) });
-    const data = await r.json();
-    setEditLocList(data.admin_locations ?? []);
-    setEditLocUser(u.id);
-  };
-
-  const saveAdminLocs = async (userId: number, role: string) => {
-    await fetch(`${API}/locations.php`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeaders(token) },
-      body: JSON.stringify({ user_id: userId, locations: editLocList }),
-    });
-    setEditLocUser(null);
-  };
-
-  const openAssignOwner = async (bizId: number) => {
-    if (assignOwnerBizId === bizId) { setAssignOwnerBizId(null); return; }
-    const r = await fetch(`${API}/users.php`, { headers: authHeaders(token) });
-    const all = await r.json();
-    setOwnerUsers(Array.isArray(all) ? all.filter((u: any) => u.role === "user" || u.role === "business_owner") : []);
-    setSelectedOwnerId("");
-    setAssignOwnerBizId(bizId);
-  };
-
-  const saveAssignOwner = async (bizId: number) => {
-    await fetch(`${API}/businesses.php`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeaders(token) },
-      body: JSON.stringify({ id: bizId, owner_user_id: selectedOwnerId ? parseInt(selectedOwnerId) : null }),
-    });
-    setAssignOwnerBizId(null);
-    loadData();
-  };
-
-  const deleteUser = async (id: number) => {
-    if (!confirm("Delete this user? This cannot be undone.")) return;
-    await fetch(`${API}/users.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
-    loadData();
-  };
-
   const openEdit = (b: BusinessRow) => {
     setEditBiz(b);
     setBizForm({
@@ -370,409 +478,400 @@ export default function AdminPage() {
       lat: (b as any).lat?.toString() ?? "", lng: (b as any).lng?.toString() ?? "",
       is_featured: !!b.is_featured, is_verified: !!b.is_verified, is_approved: !!b.is_approved,
     });
+    setAssignOwner(b.owner_user_id ? String(b.owner_user_id) : "");
     setShowAddBiz(false);
   };
-
   const submitBusiness = async (e: React.FormEvent) => {
     e.preventDefault();
     setBizLoading(true);
     try {
       const isEdit = !!editBiz;
-      const res = await fetch(`${API}/businesses.php`, {
-        method: isEdit ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders(token) },
-        body: JSON.stringify(isEdit ? { id: editBiz.id, ...bizForm } : bizForm),
-      });
+      const body = isEdit
+        ? { id: editBiz!.id, ...bizForm, owner_user_id: assignOwner ? parseInt(assignOwner) : null }
+        : bizForm;
+      const res  = await fetch(`${API}/businesses.php`, { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify(body) });
       const data = await res.json();
       if (data.success) {
         setBizSuccess(true);
-        setBizForm(EMPTY_BIZ);
         setTimeout(() => { setBizSuccess(false); setEditBiz(null); setShowAddBiz(false); loadData(); }, 1200);
       }
-    } finally {
-      setBizLoading(false);
-    }
+    } finally { setBizLoading(false); }
+  };
+
+  // ── User actions ───────────────────────────────────────────────────────────
+  const changeUserRole = async (id: number, role: string) => {
+    await fetch(`${API}/users.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, role }) });
+    loadData();
+  };
+  const deleteUser = async (id: number) => {
+    if (!confirm("Delete this user? Cannot be undone.")) return;
+    await fetch(`${API}/users.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
+    loadData();
+  };
+  const openInspect = async (uid: number) => {
+    if (inspectUser === uid) { setInspectUser(null); setInspectProfile(null); return; }
+    setInspectUser(uid);
+    setInspectProfile(null);
+    const r = await fetch(`${API}/users.php?user_id=${uid}`, { headers: authHeaders(token) });
+    setInspectProfile(await r.json());
+  };
+  const saveAdminLocs = async (uid: number, locs: Location[]) => {
+    await fetch(`${API}/locations.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ user_id: uid, locations: locs }) });
+    setInspectUser(null); setInspectProfile(null);
   };
 
   if (loading || !user) return null;
   if (!isAdmin) return null;
 
-  const TABS: { key: Tab; label: string }[] = [
-    { key: "posts", label: "Blog Posts" },
-    { key: "businesses", label: "Businesses" },
-    ...(isSuperAdmin ? [{ key: "users" as Tab, label: "Users" }] : []),
+  const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: "posts",      label: "Blog Posts",  icon: <FileText size={15} /> },
+    { key: "businesses", label: "Businesses",  icon: <Building2 size={15} /> },
+    { key: "users",      label: "Users",       icon: <Users size={15} /> },
   ];
 
-  const roleBadge = (role: string) => {
-    const colors: Record<string, string> = { user: "bg-gray-100 text-gray-600", admin: "bg-blue-100 text-blue-700", superadmin: "bg-purple-100 text-purple-700" };
-    return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${colors[role] ?? colors.user}`}>{role}</span>;
-  };
+  const filteredBiz = businesses.filter((b) => {
+    if (bizCategory && b.category !== bizCategory) return false;
+    if (bizApproved === "approved" && !b.is_approved) return false;
+    if (bizApproved === "pending" && b.is_approved) return false;
+    if (bizSearch.trim()) {
+      const q = bizSearch.toLowerCase();
+      return b.name.toLowerCase().includes(q) || b.canton?.toLowerCase().includes(q) || b.country?.toLowerCase().includes(q);
+    }
+    return true;
+  });
 
-  const statusBadge = (status: string) => {
-    const colors: Record<string, string> = { pending: "bg-yellow-100 text-yellow-700", approved: "bg-green-100 text-green-700", rejected: "bg-red-100 text-red-600" };
-    return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${colors[status] ?? ""}`}>{status}</span>;
-  };
+  const filteredUsers = users.filter((u) => {
+    if (userRoleFilter && u.role !== userRoleFilter) return false;
+    if (userSearch.trim()) {
+      const q = userSearch.toLowerCase();
+      return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    }
+    return true;
+  });
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Signed in as <span className="font-semibold">{user.name}</span> · {user.role}</p>
-        </div>
-        <Link href="/" className="text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors">← Back to site</Link>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 mb-8 border-b border-gray-100 pb-0">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-5 py-2.5 text-sm font-semibold rounded-t-xl transition-colors ${
-              tab === t.key ? "text-white" : "text-gray-500 hover:text-gray-800 bg-transparent"
-            }`}
-            style={tab === t.key ? { backgroundColor: "#1B3A6B" } : {}}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {dataLoading && <p className="text-gray-400 text-sm">Loading...</p>}
-
-      {/* BLOG POSTS TAB */}
-      {tab === "posts" && !dataLoading && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-gray-800">All Posts ({posts.length})</h2>
-            <Link href="/blog/write" className="text-white text-sm font-semibold px-4 py-2 rounded-xl" style={{ backgroundColor: "#8B1A1A" }}>
-              + New Post
-            </Link>
+    <main className="min-h-screen" style={{ backgroundColor: "#f5f6fa" }}>
+      {/* Top bar */}
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: "#1B3A6B" }}>
+              <Shield size={16} className="text-white" />
+            </div>
+            <div>
+              <span className="font-bold text-gray-900 text-sm">Admin Panel</span>
+              <span className="text-gray-400 text-xs ml-2">{user.name} · {user.role}</span>
+            </div>
           </div>
-          <div className="space-y-3">
-            {posts.length === 0 && <p className="text-gray-400 text-sm">No posts yet.</p>}
-            {posts.map((p) => (
-              <div key={p.id}>
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {statusBadge(p.status)}
-                      <span className="text-xs text-gray-400">by {p.author_name ?? "unknown"} · {new Date(p.created_at).toLocaleDateString()}</span>
-                      {(p.city || p.country) && <span className="text-xs text-gray-400">· {[p.city, p.country].filter(Boolean).join(", ")}</span>}
-                    </div>
-                    <p className="font-semibold text-gray-900 truncate">{p.title}</p>
-                    {p.tags && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {p.tags.split(",").map((t) => (
-                          <span key={t} className="text-xs px-2 py-0.5 rounded-full capitalize" style={{ backgroundColor: "#EEF2FF", color: "#1B3A6B" }}>{t.trim()}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {p.status === "pending" && (
-                      <>
-                        <button onClick={() => updatePostStatus(p.id, "approved")} title="Approve" className="text-green-500 hover:text-green-700 transition-colors">
-                          <CheckCircle size={18} />
-                        </button>
-                        <button onClick={() => updatePostStatus(p.id, "rejected")} title="Reject" className="text-red-400 hover:text-red-600 transition-colors">
-                          <XCircle size={18} />
-                        </button>
-                      </>
-                    )}
-                    {p.status === "rejected" && (
-                      <button onClick={() => updatePostStatus(p.id, "approved")} title="Approve anyway" className="text-green-500 hover:text-green-700 transition-colors">
-                        <CheckCircle size={18} />
-                      </button>
-                    )}
-                    <Link href={`/blog/edit?id=${p.id}`} title="Edit post" className="text-gray-400 hover:text-[#1B3A6B] transition-colors">
-                      <Edit2 size={16} />
-                    </Link>
-                    <Link href={`/blog/post?id=${p.id}`} target="_blank" className="text-xs text-[#1B3A6B] hover:underline font-medium">Preview</Link>
-                    <button onClick={() => deletePost(p.id)} title="Delete" className="text-gray-300 hover:text-red-500 transition-colors">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
+          <Link href="/" className="text-xs text-gray-400 hover:text-[#1B3A6B] transition-colors font-medium flex items-center gap-1">
+            ← Back to site
+          </Link>
+        </div>
+      </div>
 
-                {editPost?.id === p.id && (
-                  <form onSubmit={savePostMeta} className="bg-gray-50 rounded-2xl border border-[#1B3A6B]/10 p-5 mt-2 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-gray-700">Edit tags &amp; location</p>
-                      <button type="button" onClick={() => setEditPost(null)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">Tags</p>
-                      <div className="flex flex-wrap gap-2">
-                        {POST_TAGS.map((tag) => (
-                          <button
-                            key={tag}
-                            type="button"
-                            onClick={() => setPostForm((f) => ({ ...f, tags: f.tags.includes(tag) ? f.tags.filter((t) => t !== tag) : [...f.tags, tag] }))}
-                            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all capitalize ${
-                              postForm.tags.includes(tag) ? "text-white border-transparent" : "text-gray-600 border-gray-200 hover:border-[#1B3A6B]"
-                            }`}
-                            style={postForm.tags.includes(tag) ? { backgroundColor: "#1B3A6B" } : {}}
-                          >
-                            {tag}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-                        <select value={postForm.country} onChange={(e) => setPostForm((f) => ({ ...f, country: e.target.value, city: "" }))}
-                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white">
-                          <option value="">— none —</option>
-                          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">Region / City</label>
-                        {BLOG_REGIONS(postForm.country).length > 0 ? (
-                          <select value={postForm.city} onChange={(e) => setPostForm((f) => ({ ...f, city: e.target.value }))}
-                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white">
-                            <option value="">— none —</option>
-                            {BLOG_REGIONS(postForm.country).map((r) => <option key={r} value={r}>{r}</option>)}
-                          </select>
-                        ) : (
-                          <input type="text" value={postForm.city} onChange={(e) => setPostForm((f) => ({ ...f, city: e.target.value }))}
-                            placeholder="City or region" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]" />
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
-                      <select value={postForm.status} onChange={(e) => setPostForm((f) => ({ ...f, status: e.target.value }))}
-                        className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
-                        <option value="approved">approved</option>
-                        <option value="pending">pending</option>
-                        <option value="rejected">rejected</option>
-                      </select>
-                    </div>
-                    <button type="submit" disabled={postSaving} className="text-white font-semibold px-5 py-2 rounded-xl text-sm disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
-                      {postSaving ? "Saving..." : "Save Changes"}
-                    </button>
-                  </form>
-                )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {[
+            { label: "Posts", value: posts.length || "—", color: "#8B1A1A", icon: <FileText size={18} /> },
+            { label: "Businesses", value: businesses.length || "—", color: "#1B3A6B", icon: <Building2 size={18} /> },
+            { label: "Users", value: users.length || "—", color: "#C9A84C", icon: <Users size={18} /> },
+          ].map((s) => (
+            <div key={s.label} className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-4 shadow-sm">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ backgroundColor: s.color }}>
+                {s.icon}
               </div>
-            ))}
-          </div>
+              <div>
+                <p className="text-xl font-bold text-gray-900">{s.value}</p>
+                <p className="text-xs text-gray-400">{s.label}</p>
+              </div>
+            </div>
+          ))}
         </div>
-      )}
 
-      {/* BUSINESSES TAB */}
-      {tab === "businesses" && !dataLoading && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-gray-800">All Businesses ({businesses.length})</h2>
-            <button
-              onClick={() => { setShowAddBiz((v) => !v); setEditBiz(null); setBizForm(EMPTY_BIZ); }}
-              className="text-white text-sm font-semibold px-4 py-2 rounded-xl flex items-center gap-1"
-              style={{ backgroundColor: "#8B1A1A" }}
-            >
-              + Add Business <ChevronDown size={14} className={showAddBiz ? "rotate-180" : ""} />
+        {/* Tabs */}
+        <div className="flex gap-1 mb-5 bg-white rounded-2xl border border-gray-100 p-1 shadow-sm w-fit">
+          {TABS.map((t) => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
+                tab === t.key ? "text-white shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+              }`}
+              style={tab === t.key ? { backgroundColor: "#1B3A6B" } : {}}>
+              {t.icon}{t.label}
             </button>
-          </div>
-
-          {/* Search & filter */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <input
-              type="text"
-              placeholder="Search by name, city, country…"
-              value={bizSearch}
-              onChange={(e) => setBizSearch(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] flex-1 min-w-48"
-            />
-            <select
-              value={bizCategory}
-              onChange={(e) => setBizCategory(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
-            >
-              <option value="">All categories</option>
-              {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
-            </select>
-            <select
-              value={bizApproved}
-              onChange={(e) => setBizApproved(e.target.value as any)}
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
-            >
-              <option value="all">All statuses</option>
-              <option value="approved">Approved only</option>
-              <option value="pending">Not approved</option>
-            </select>
-          </div>
-
-          {/* Add business form */}
-          {showAddBiz && !editBiz && (
-            <BizForm
-              title="New Business"
-              form={bizForm}
-              setForm={setBizForm}
-              onSubmit={submitBusiness}
-              loading={bizLoading}
-              success={bizSuccess}
-              onClose={() => setShowAddBiz(false)}
-              isEdit={false}
-            />
-          )}
-
-          <div className="space-y-2">
-            {businesses.length === 0 && <p className="text-gray-400 text-sm">No businesses.</p>}
-            {businesses
-              .filter((b) => {
-                if (bizCategory && b.category !== bizCategory) return false;
-                if (bizApproved === "approved" && !b.is_approved) return false;
-                if (bizApproved === "pending" && b.is_approved) return false;
-                if (bizSearch.trim()) {
-                  const q = bizSearch.trim().toLowerCase();
-                  return b.name.toLowerCase().includes(q) || b.canton?.toLowerCase().includes(q) || b.country?.toLowerCase().includes(q);
-                }
-                return true;
-              })
-              .map((b) => (
-              <div key={b.id}>
-                <div className={`bg-white rounded-2xl border px-5 py-4 flex items-center gap-4 ${b.is_approved ? "border-gray-100" : "border-yellow-200 opacity-60"}`}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-gray-900 truncate">{b.name}</p>
-                      {!b.is_approved && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 flex-shrink-0">not approved</span>}
-                    </div>
-                    <p className="text-xs text-gray-400">{b.category} · {b.canton}, {b.country}</p>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <Link href={`/businesses/detail?id=${b.id}`} className="text-xs text-[#1B3A6B] hover:underline font-medium">View</Link>
-                    <button onClick={() => openAssignOwner(b.id)}
-                      className={`transition-colors ${assignOwnerBizId === b.id ? "text-amber-500" : "text-gray-400 hover:text-amber-500"}`}
-                      title="Assign business owner">
-                      <UserPlus size={15} />
-                    </button>
-                    <button onClick={() => { openEdit(b); setShowAddBiz(false); }} className="text-gray-400 hover:text-[#1B3A6B] transition-colors" title="Edit">
-                      <Edit2 size={15} />
-                    </button>
-                    <button onClick={() => deleteBusiness(b.id)} className="text-gray-300 hover:text-red-500 transition-colors" title="Delete">
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                </div>
-
-                {assignOwnerBizId === b.id && (
-                  <div className="mt-1 mb-1 bg-amber-50 border border-amber-200 rounded-2xl p-4">
-                    <p className="text-xs font-semibold text-amber-800 mb-3">Assign business owner for <span className="font-bold">{b.name}</span></p>
-                    <div className="flex gap-2 flex-wrap">
-                      <select value={selectedOwnerId} onChange={(e) => setSelectedOwnerId(e.target.value)}
-                        className="flex-1 min-w-48 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
-                        <option value="">— Remove owner —</option>
-                        {ownerUsers.map((u) => (
-                          <option key={u.id} value={u.id}>{u.name} ({u.email}) · {u.role}</option>
-                        ))}
-                      </select>
-                      <button onClick={() => saveAssignOwner(b.id)}
-                        className="px-4 py-2 text-xs font-semibold text-white rounded-xl"
-                        style={{ backgroundColor: "#C9A84C" }}>
-                        Assign
-                      </button>
-                      <button onClick={() => setAssignOwnerBizId(null)}
-                        className="px-4 py-2 text-xs font-semibold text-gray-500 bg-white border border-gray-200 rounded-xl">
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {editBiz?.id === b.id && (
-                  <div className="mt-2 mb-2">
-                    <BizForm
-                      title={`Editing: ${b.name}`}
-                      form={bizForm}
-                      setForm={setBizForm}
-                      onSubmit={submitBusiness}
-                      loading={bizLoading}
-                      success={bizSuccess}
-                      onClose={() => setEditBiz(null)}
-                      isEdit={true}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
-      )}
 
-      {/* USERS TAB (superadmin only) */}
-      {tab === "users" && isSuperAdmin && !dataLoading && (
-        <div>
-          <h2 className="font-bold text-gray-800 mb-4">All Users ({users.length})</h2>
-          <div className="space-y-2">
-            {users.map((u) => (
-              <div key={u.id}>
-                <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="font-semibold text-gray-900">{u.name}</p>
-                      {roleBadge(u.role)}
-                    </div>
-                    <p className="text-xs text-gray-400">{u.email} · {u.blog_count} posts · {u.comment_count} comments · joined {new Date(u.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {u.id !== user.id && (
-                      <>
-                        <select
-                          value={u.role}
-                          onChange={(e) => changeUserRole(u.id, e.target.value)}
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#1B3A6B]"
-                        >
-                          <option value="user">user</option>
-                          <option value="business_owner">business owner</option>
-                          <option value="admin">admin</option>
-                        </select>
-                        {u.role === "admin" && (
-                          <button
-                            onClick={() => openLocEditor(u)}
-                            title="Edit allowed locations"
-                            className={`transition-colors ${editLocUser === u.id ? "text-[#1B3A6B]" : "text-gray-400 hover:text-[#1B3A6B]"}`}
-                          >
-                            <MapPin size={15} />
-                          </button>
+        {dataLoading && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-400 text-sm">Loading…</p>
+          </div>
+        )}
+
+        {/* ── BLOG POSTS TAB ─────────────────────────────────────────────────── */}
+        {tab === "posts" && !dataLoading && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-900">Blog Posts <span className="text-gray-400 font-normal text-sm">({posts.length})</span></h2>
+              <Link href="/blog/write" className="flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-opacity hover:opacity-90" style={{ backgroundColor: "#8B1A1A" }}>
+                + New Post
+              </Link>
+            </div>
+            {posts.length === 0
+              ? <p className="text-gray-400 text-sm p-6">No posts yet.</p>
+              : <div className="divide-y divide-gray-50">
+                {posts.map((p) => (
+                  <div key={p.id}>
+                    <div className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          {statusBadge(p.status)}
+                          <span className="text-xs text-gray-400">by {p.author_name ?? "unknown"} · {new Date(p.created_at).toLocaleDateString()}</span>
+                          {(p.city || p.country) && <span className="text-xs text-gray-400">· {[p.city, p.country].filter(Boolean).join(", ")}</span>}
+                        </div>
+                        <p className="font-semibold text-gray-900 truncate text-sm">{p.title}</p>
+                        {p.tags && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {p.tags.split(",").map((t) => (
+                              <span key={t} className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#EEF2FF", color: "#1B3A6B" }}>{t.trim()}</span>
+                            ))}
+                          </div>
                         )}
-                        <button onClick={() => deleteUser(u.id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                          <Trash2 size={15} />
-                        </button>
-                      </>
-                    )}
-                    {u.id === user.id && <span className="text-xs text-gray-400 italic">you</span>}
-                  </div>
-                </div>
-
-                {editLocUser === u.id && (
-                  <div className="mt-1 mb-1 bg-blue-50 border border-[#1B3A6B]/20 rounded-2xl p-4">
-                    <p className="text-xs font-semibold text-[#1B3A6B] mb-3">Allowed management locations for <span className="font-bold">{u.name}</span></p>
-                    <LocationSelector selected={editLocList} onChange={setEditLocList} label="Add location" />
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        onClick={() => saveAdminLocs(u.id, u.role)}
-                        className="px-4 py-1.5 text-xs font-semibold text-white rounded-xl"
-                        style={{ backgroundColor: "#1B3A6B" }}
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setEditLocUser(null)}
-                        className="px-4 py-1.5 text-xs font-semibold text-gray-500 bg-white border border-gray-200 rounded-xl"
-                      >
-                        Cancel
-                      </button>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {p.status === "pending" && <>
+                          <button onClick={() => updatePostStatus(p.id, "approved")} title="Approve" className="text-green-500 hover:text-green-700 transition-colors"><CheckCircle size={17} /></button>
+                          <button onClick={() => updatePostStatus(p.id, "rejected")} title="Reject" className="text-red-400 hover:text-red-600 transition-colors"><XCircle size={17} /></button>
+                        </>}
+                        {p.status === "rejected" && <button onClick={() => updatePostStatus(p.id, "approved")} title="Approve" className="text-green-500 hover:text-green-700 transition-colors"><CheckCircle size={17} /></button>}
+                        <button onClick={() => openEditPost(p)} title="Edit meta" className={`transition-colors ${editPost?.id === p.id ? "text-[#1B3A6B]" : "text-gray-300 hover:text-[#1B3A6B]"}`}><Edit2 size={15} /></button>
+                        <Link href={`/blog/edit?id=${p.id}`} title="Full edit" className="text-gray-300 hover:text-[#C9A84C] transition-colors"><Eye size={15} /></Link>
+                        <button onClick={() => deletePost(p.id)} className="text-gray-200 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
+                      </div>
                     </div>
+                    {editPost?.id === p.id && (
+                      <form onSubmit={savePostMeta} className="bg-gray-50 border-t border-gray-100 px-6 py-5 space-y-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-bold text-gray-700">Edit tags &amp; location</p>
+                          <button type="button" onClick={() => setEditPost(null)} className="text-gray-400 hover:text-gray-600"><X size={15} /></button>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 mb-2">Tags</p>
+                          <div className="flex flex-wrap gap-2">
+                            {POST_TAGS.map((tag) => (
+                              <button key={tag} type="button"
+                                onClick={() => setPostForm((f) => ({ ...f, tags: f.tags.includes(tag) ? f.tags.filter((t) => t !== tag) : [...f.tags, tag] }))}
+                                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all capitalize ${postForm.tags.includes(tag) ? "text-white border-transparent" : "text-gray-600 border-gray-200 hover:border-[#1B3A6B]"}`}
+                                style={postForm.tags.includes(tag) ? { backgroundColor: "#1B3A6B" } : {}}>{tag}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+                            <select value={postForm.country} onChange={(e) => setPostForm((f) => ({ ...f, country: e.target.value, city: "" }))} className={inp}>
+                              <option value="">— none —</option>
+                              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">City</label>
+                            {BLOG_REGIONS(postForm.country).length > 0
+                              ? <select value={postForm.city} onChange={(e) => setPostForm((f) => ({ ...f, city: e.target.value }))} className={inp}>
+                                  <option value="">— none —</option>
+                                  {BLOG_REGIONS(postForm.country).map((r) => <option key={r} value={r}>{r}</option>)}
+                                </select>
+                              : <input type="text" value={postForm.city} onChange={(e) => setPostForm((f) => ({ ...f, city: e.target.value }))} placeholder="City" className={inp} />
+                            }
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+                            <select value={postForm.status} onChange={(e) => setPostForm((f) => ({ ...f, status: e.target.value }))} className={inp}>
+                              <option value="approved">approved</option>
+                              <option value="pending">pending</option>
+                              <option value="rejected">rejected</option>
+                            </select>
+                          </div>
+                        </div>
+                        <button type="submit" disabled={postSaving} className="text-white font-semibold px-4 py-2 rounded-xl text-xs disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
+                          {postSaving ? "Saving…" : "Save"}
+                        </button>
+                      </form>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
+            }
           </div>
-        </div>
-      )}
+        )}
+
+        {/* ── BUSINESSES TAB ─────────────────────────────────────────────────── */}
+        {tab === "businesses" && !dataLoading && (
+          <div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-3">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-900">Businesses <span className="text-gray-400 font-normal text-sm">({filteredBiz.length}/{businesses.length})</span></h2>
+                <button onClick={() => { setShowAddBiz((v) => !v); setEditBiz(null); setBizForm(EMPTY_BIZ); setAssignOwner(""); }}
+                  className="flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-2 rounded-xl" style={{ backgroundColor: "#8B1A1A" }}>
+                  + Add <ChevronDown size={13} className={showAddBiz ? "rotate-180" : ""} />
+                </button>
+              </div>
+              <div className="px-6 py-3 border-b border-gray-50 flex flex-wrap gap-2">
+                <input type="text" placeholder="Search…" value={bizSearch} onChange={(e) => setBizSearch(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] flex-1 min-w-40" />
+                <select value={bizCategory} onChange={(e) => setBizCategory(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+                  <option value="">All categories</option>
+                  {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
+                </select>
+                <select value={bizApproved} onChange={(e) => setBizApproved(e.target.value as any)}
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+                  <option value="all">All statuses</option>
+                  <option value="approved">Approved</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+            </div>
+
+            {showAddBiz && !editBiz && (
+              <BizFormPanel title="New Business" form={bizForm} setForm={setBizForm} onSubmit={submitBusiness}
+                loading={bizLoading} success={bizSuccess} onClose={() => setShowAddBiz(false)} isEdit={false}
+                ownerUsers={ownerUsers} assignOwner={assignOwner} setAssignOwner={setAssignOwner} />
+            )}
+
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              {filteredBiz.length === 0
+                ? <p className="text-gray-400 text-sm p-6">No businesses match your filters.</p>
+                : <div className="divide-y divide-gray-50">
+                  {filteredBiz.map((b) => (
+                    <div key={b.id}>
+                      <div className={`px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors ${!b.is_approved ? "opacity-60" : ""}`}>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 bg-gray-50 border border-gray-100">
+                          {CATEGORIES.find((c) => c.slug === b.category)?.icon ?? "🏪"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-gray-900 text-sm truncate">{b.name}</p>
+                            {!b.is_approved && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 flex-shrink-0">pending</span>}
+                            {b.is_featured && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C9A84C]/15 text-[#C9A84C] flex-shrink-0">featured</span>}
+                          </div>
+                          <p className="text-xs text-gray-400">{b.canton}, {b.country}</p>
+                          {b.owner_name && <p className="text-xs text-amber-600 font-medium mt-0.5">👤 {b.owner_name}</p>}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Link href={`/businesses/detail?id=${b.id}`} className="text-xs text-[#1B3A6B] hover:underline font-medium">View</Link>
+                          <button onClick={() => { openEdit(b); setShowAddBiz(false); }}
+                            className={`transition-colors p-1 rounded-lg hover:bg-gray-100 ${editBiz?.id === b.id ? "text-[#1B3A6B]" : "text-gray-400 hover:text-[#1B3A6B]"}`} title="Edit">
+                            <Edit2 size={14} />
+                          </button>
+                          <button onClick={() => deleteBusiness(b.id)} className="text-gray-300 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50" title="Delete">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      {editBiz?.id === b.id && (
+                        <div className="px-3 pb-3">
+                          <BizFormPanel title={`Editing: ${b.name}`} form={bizForm} setForm={setBizForm} onSubmit={submitBusiness}
+                            loading={bizLoading} success={bizSuccess} onClose={() => setEditBiz(null)} isEdit={true}
+                            ownerUsers={ownerUsers} assignOwner={assignOwner} setAssignOwner={setAssignOwner} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              }
+            </div>
+          </div>
+        )}
+
+        {/* ── USERS TAB ──────────────────────────────────────────────────────── */}
+        {tab === "users" && !dataLoading && (
+          <div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-3">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-900">
+                  {isSuperAdmin ? "All Users" : "Users in Your Region"}
+                  <span className="text-gray-400 font-normal text-sm ml-2">({filteredUsers.length})</span>
+                </h2>
+              </div>
+              <div className="px-6 py-3 border-b border-gray-50 flex flex-wrap gap-2">
+                <input type="text" placeholder="Search by name or email…" value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] flex-1 min-w-40" />
+                <select value={userRoleFilter} onChange={(e) => setUserRoleFilter(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+                  <option value="">All roles</option>
+                  <option value="user">User</option>
+                  <option value="business_owner">Business Owner</option>
+                  <option value="admin">Admin</option>
+                  {isSuperAdmin && <option value="superadmin">Super Admin</option>}
+                </select>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              {filteredUsers.length === 0
+                ? <p className="text-gray-400 text-sm p-6">No users found.</p>
+                : <div className="divide-y divide-gray-50">
+                  {filteredUsers.map((u) => (
+                    <div key={u.id}>
+                      <div className="px-5 py-3.5 flex items-center gap-3 hover:bg-gray-50/50 transition-colors">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ backgroundColor: "#1B3A6B" }}>
+                          {u.avatar ? <img src={u.avatar} alt="" className="w-9 h-9 rounded-xl object-cover" /> : u.name[0]?.toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                            <p className="font-semibold text-gray-900 text-sm">{u.name}</p>
+                            {roleBadge(u.role)}
+                          </div>
+                          <p className="text-xs text-gray-400">{u.email} · {u.blog_count} posts · joined {new Date(u.created_at).toLocaleDateString()}</p>
+                          {u.owned_business_name && <p className="text-xs text-amber-600 font-medium mt-0.5">👤 owns: {u.owned_business_name}</p>}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {u.id !== user.id ? (
+                            <>
+                              {isSuperAdmin && (
+                                <select value={u.role} onChange={(e) => changeUserRole(u.id, e.target.value)}
+                                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#1B3A6B]">
+                                  <option value="user">user</option>
+                                  <option value="business_owner">business owner</option>
+                                  <option value="admin">admin</option>
+                                </select>
+                              )}
+                              {isSuperAdmin && (
+                                <button onClick={() => openInspect(u.id)}
+                                  className={`p-1.5 rounded-lg transition-colors ${inspectUser === u.id ? "bg-[#1B3A6B] text-white" : "text-gray-400 hover:text-[#1B3A6B] hover:bg-[#1B3A6B]/10"}`}
+                                  title="View full profile">
+                                  <ChevronRight size={14} className={inspectUser === u.id ? "rotate-90" : ""} />
+                                </button>
+                              )}
+                              {isSuperAdmin && (
+                                <button onClick={() => deleteUser(u.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic px-2">you</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Profile inspector (superadmin) */}
+                      {inspectUser === u.id && (
+                        inspectProfile
+                          ? <div className="px-3 pb-3">
+                              <UserProfilePanel profile={inspectProfile} onClose={() => { setInspectUser(null); setInspectProfile(null); }} token={token} onSaveAdminLocs={saveAdminLocs} />
+                            </div>
+                          : <div className="px-5 pb-4 text-xs text-gray-400">Loading…</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              }
+            </div>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
