@@ -43,3 +43,5 @@ next-env.d.ts
 
 # local database tooling — never push to git or cpanel
 /database/
+_archive/
+_phub_archive/
