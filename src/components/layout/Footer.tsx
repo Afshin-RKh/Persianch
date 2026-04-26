@@ -8,14 +8,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🦁</span>
+              <span className="text-2xl">🗺️</span>
               <div>
-                <span className="font-bold text-xl text-white">Persian</span>
-                <span className="font-bold text-xl" style={{ color: "#C9A84C" }}>Hub</span>
+                <span className="font-bold text-xl text-white">Biruni</span>
+                <span className="font-bold text-xl" style={{ color: "#C9A84C" }}>Map</span>
               </div>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
-              Your guide to Persian &amp; Iranian businesses across Europe — restaurants, doctors, lawyers, and more.
+              The global map of the Iranian diaspora — 3,000+ businesses across 50+ countries, inspired by Al-Biruni, the Persian scholar who mapped the world.
             </p>
           </div>
 
@@ -53,7 +53,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 pt-6 text-center text-xs text-gray-600" style={{ borderTop: "1px solid #1a2e4a" }}>
-          © {new Date().getFullYear()} PersianHub · Connecting the Persian community across Europe
+          © {new Date().getFullYear()} BiruniMap · Mapping the Iranian diaspora worldwide
         </div>
       </div>
     </footer>

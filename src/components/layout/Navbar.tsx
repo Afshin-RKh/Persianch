@@ -49,12 +49,12 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-2xl">🦁</span>
+            <span className="text-2xl">🗺️</span>
             <div>
-              <span className="font-bold text-xl" style={{ color: "#1B3A6B" }}>Persian</span>
-              <span className="font-bold text-xl" style={{ color: "#C9A84C" }}>Hub</span>
+              <span className="font-bold text-xl" style={{ color: "#1B3A6B" }}>Biruni</span>
+              <span className="font-bold text-xl" style={{ color: "#C9A84C" }}>Map</span>
             </div>
-            <span className="hidden lg:inline text-xs text-gray-300 font-medium ml-1">· Europe</span>
+            <span className="hidden lg:inline text-xs text-gray-300 font-medium ml-1">· Global</span>
           </Link>
 
           {/* Desktop nav */}
