@@ -6,7 +6,7 @@ import { getBlogPost, BlogPost } from "@/lib/api";
 import { useAuth, authHeaders } from "@/lib/auth";
 import { ArrowLeft, Trash2, Edit2 } from "lucide-react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://phub.ch/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
 interface Comment {
   id: number;

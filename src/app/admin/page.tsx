@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 const BLOG_REGIONS = (country: string) => REGIONS_BY_COUNTRY[country] ?? [];
-const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white";
 
 type Tab = "posts" | "businesses" | "users";

@@ -6,7 +6,7 @@ import { useAuth, authHeaders } from "@/lib/auth";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 import RichTextEditor from "@/components/RichTextEditor";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://phub.ch/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
 
 export default function WriteBlogPage() {

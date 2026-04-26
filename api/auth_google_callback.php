@@ -1,14 +1,11 @@
 <?php
-$envFile = '/home/afshxhoj/repositories/Persianch1/.env.php';
-if (file_exists($envFile)) require_once $envFile;
-
 require_once 'jwt.php';
 require_once __DIR__ . '/config.php';
 
 $clientId     = defined('GOOGLE_CLIENT_ID') ? GOOGLE_CLIENT_ID : '';
 $clientSecret = defined('GOOGLE_CLIENT_SECRET') ? GOOGLE_CLIENT_SECRET : '';
-$redirectUri  = defined('GOOGLE_REDIRECT_URI') ? GOOGLE_REDIRECT_URI : 'https://afshin.ch/persianch/api/auth_google_callback.php';
-$frontendUrl  = defined('FRONTEND_URL') ? FRONTEND_URL : 'https://phub.ch';
+$redirectUri  = defined('GOOGLE_REDIRECT_URI') ? GOOGLE_REDIRECT_URI : 'https://birunimap.com/api/auth_google_callback.php';
+$frontendUrl  = defined('FRONTEND_URL') ? FRONTEND_URL : 'https://birunimap.com';
 
 function redirect_error(string $msg, string $frontendUrl): void {
     header('Location: ' . $frontendUrl . '/auth/signin?error=' . urlencode($msg));

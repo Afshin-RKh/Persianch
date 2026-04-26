@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
 export interface AuthUser {
   id: number;
@@ -30,12 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const applyToken = useCallback((t: string) => {
-    localStorage.setItem("phub_token", t);
+    localStorage.setItem("biruni_token", t);
     setToken(t);
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("phub_token");
+    localStorage.removeItem("biruni_token");
     setToken(null);
     setUser(null);
   }, []);
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const stored = localStorage.getItem("phub_token");
+      const stored = localStorage.getItem("biruni_token");
       if (stored) {
         setToken(stored);
         await fetchMe(stored);

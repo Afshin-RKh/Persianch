@@ -8,10 +8,10 @@ export default function AboutPage() {
       <div className="text-center mb-14">
         <span className="text-6xl block mb-5">🦁</span>
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          About <span style={{ color: "#1B3A6B" }}>Persian</span><span style={{ color: "#C9A84C" }}>Hub</span>
+          About <span style={{ color: "#1B3A6B" }}>Biruni</span><span style={{ color: "#C9A84C" }}>Map</span>
         </h1>
         <p className="text-gray-500 text-lg leading-relaxed max-w-xl mx-auto">
-          A community-driven directory connecting Persian-speaking businesses with their customers across Europe.
+          The global map of the Iranian diaspora — connecting Persian-speaking businesses with their community worldwide.
         </p>
       </div>
 
@@ -20,7 +20,7 @@ export default function AboutPage() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">Who We Are</h2>
         <p className="text-gray-600 leading-relaxed mb-4">
           We are a group of passionate Persians living in Europe who believe in the strength of our community.
-          PersianHub was built to make it easier for Iranians and anyone who shares our language,
+          BiruniMap was built to make it easier for Iranians and anyone who shares our language,
           food and culture to find businesses that feel like home — wherever they are in the world.
         </p>
         <p className="text-gray-600 leading-relaxed">
@@ -61,14 +61,14 @@ export default function AboutPage() {
       <section className="bg-amber-50 border border-amber-100 rounded-3xl p-8 mb-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">A Note on Our Listings</h2>
         <p className="text-gray-600 leading-relaxed mb-4">
-          PersianHub is a free service and we want to be transparent about how it works. Many of the businesses
+          BiruniMap is a free service and we want to be transparent about how it works. Many of the businesses
           listed here were discovered and added with the help of AI — which means, despite our best efforts,
           some listings may be outdated, inaccurate, or no longer active.
         </p>
         <p className="text-gray-600 leading-relaxed mb-4">
           We review submissions regularly, but we rely on the community to help us keep things accurate.
           If you find a business that has closed, moved, or has incorrect details — please be kind and let us know.
-          It takes two minutes and makes PersianHub better for everyone.
+          It takes two minutes and makes BiruniMap better for everyone.
         </p>
         <Link
           href="/contact"
@@ -83,7 +83,7 @@ export default function AboutPage() {
       <section className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center">
         <h2 className="text-xl font-bold text-gray-900 mb-3">Own a Persian or Iranian Business?</h2>
         <p className="text-gray-500 leading-relaxed mb-2 max-w-lg mx-auto">
-          Listings on PersianHub are completely free. Fill in the form and your business
+          Listings on BiruniMap are completely free. Fill in the form and your business
           will be on the map within a few days.
         </p>
         <p className="text-gray-400 text-sm mb-7">

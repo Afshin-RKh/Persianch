@@ -10,7 +10,7 @@ import {
   FileText, MessageSquare, Building2, Calendar, Mail, ChevronRight
 } from "lucide-react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
 type Tab = "profile" | "locations" | "activity" | "business" | "admin";
 

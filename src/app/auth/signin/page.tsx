@@ -33,7 +33,7 @@ export default function SignInPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-bold" style={{ color: "#1B3A6B" }}>
-            Persian<span style={{ color: "#C9A84C" }}>Hub</span>
+            Biruni<span style={{ color: "#C9A84C" }}>Map</span>
           </Link>
           <p className="text-gray-500 text-sm mt-2">Sign in to your account</p>
         </div>

@@ -8,7 +8,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAuth, authHeaders } from "@/lib/auth";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
 interface Comment {
   id: number;

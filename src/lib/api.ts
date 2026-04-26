@@ -1,6 +1,6 @@
 import { Business, Category } from "@/types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
 export async function getBusinesses(filters?: {
   category?: Category;

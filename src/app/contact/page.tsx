@@ -35,7 +35,7 @@ export default function ContactPage() {
             Get Your Business Listed
           </h1>
           <p className="text-gray-600 leading-relaxed max-w-xl mx-auto">
-            Are you Persian or Iranian — running a business where your language, culture, and cuisine make a real difference for your audience? We'd love to feature you on PersianHub — for free.
+            Are you Persian or Iranian — running a business where your language, culture, and cuisine make a real difference for your audience? We'd love to put you on the map with BiruniMap — for free.
             Click below to fill in our short listing form and we'll add your business within a few days.
           </p>
         </div>

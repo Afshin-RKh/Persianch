@@ -1,10 +1,6 @@
 <?php
-// Load env for Google credentials
-$envFile = '/home/afshxhoj/repositories/Persianch1/.env.php';
-if (file_exists($envFile)) require_once $envFile;
-
 $clientId    = defined('GOOGLE_CLIENT_ID') ? GOOGLE_CLIENT_ID : '';
-$redirectUri = defined('GOOGLE_REDIRECT_URI') ? GOOGLE_REDIRECT_URI : 'https://afshin.ch/persianch/api/auth_google_callback.php';
+$redirectUri = defined('GOOGLE_REDIRECT_URI') ? GOOGLE_REDIRECT_URI : 'https://birunimap.com/api/auth_google_callback.php';
 
 if (!$clientId) {
     http_response_code(500);
