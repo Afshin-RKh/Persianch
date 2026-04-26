@@ -42,14 +42,9 @@ export default function SearchBar({
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const regions = useMemo(() => {
-    if (all.length > 0) {
-      const source = country ? all.filter((b) => b.country === country) : all;
-      const unique = Array.from(new Set(source.map((b) => b.canton).filter(Boolean))) as string[];
-      return unique.sort((a, b) => a.localeCompare(b));
-    }
-    // fallback for standalone (home page) with no business data
-    return country ? (REGIONS_BY_COUNTRY[country] ?? []) : Object.values(REGIONS_BY_COUNTRY).flat();
-  }, [all, country]);
+    if (country) return REGIONS_BY_COUNTRY[country] ?? [];
+    return [];
+  }, [country]);
 
   const suggestions = search.trim().length > 0
     ? all.filter((b) => {
