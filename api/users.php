@@ -28,7 +28,7 @@ if ($method === 'PATCH') {
     $id       = (int)($data['id'] ?? 0);
     $role     = $data['role'] ?? '';
 
-    if (!$id || !in_array($role, ['user', 'admin', 'superadmin'])) {
+    if (!$id || !in_array($role, ['user', 'business_owner', 'admin'])) {
         http_response_code(400);
         echo json_encode(['error' => 'id and valid role required']);
         exit();
