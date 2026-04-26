@@ -219,7 +219,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
 
       // Beating heart on Iran
       const heartIcon = L.divIcon({
-        html: `<div style="font-size:96px;line-height:1;animation:heartbeat 1s ease-in-out infinite;transform-origin:center;filter:drop-shadow(0 0 12px rgba(220,30,30,0.7));">❤️</div>`,
+        html: `<div style="font-size:96px;line-height:1;animation:heartbeat 1s ease-in-out infinite;transform-origin:center;filter:drop-shadow(0 0 10px rgba(80,0,0,0.6)) sepia(0.4) saturate(0.6) brightness(0.55);">❤️</div>`,
         className: "",
         iconSize: [120, 120],
         iconAnchor: [60, 60],
