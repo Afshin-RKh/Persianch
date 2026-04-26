@@ -6,7 +6,7 @@ import { useAuth, authHeaders } from "@/lib/auth";
 import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 
 const BLOG_REGIONS = (country: string) => REGIONS_BY_COUNTRY[country] ?? [];
-import { Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X, MapPin } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X, MapPin, UserPlus } from "lucide-react";
 import LocationSelector, { type Location } from "@/components/LocationSelector";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
@@ -214,6 +214,11 @@ export default function AdminPage() {
   const [editLocUser, setEditLocUser] = useState<number | null>(null);
   const [editLocList, setEditLocList] = useState<Location[]>([]);
 
+  // Assign business owner
+  const [assignOwnerBizId, setAssignOwnerBizId] = useState<number | null>(null);
+  const [ownerUsers, setOwnerUsers]             = useState<{ id: number; name: string; email: string; role: string }[]>([]);
+  const [selectedOwnerId, setSelectedOwnerId]   = useState<string>("");
+
   // Add / Edit business form
   const [showAddBiz, setShowAddBiz] = useState(false);
   const [editBiz, setEditBiz]       = useState<BusinessRow | null>(null);
@@ -326,6 +331,25 @@ export default function AdminPage() {
       body: JSON.stringify({ user_id: userId, locations: editLocList }),
     });
     setEditLocUser(null);
+  };
+
+  const openAssignOwner = async (bizId: number) => {
+    if (assignOwnerBizId === bizId) { setAssignOwnerBizId(null); return; }
+    const r = await fetch(`${API}/users.php`, { headers: authHeaders(token) });
+    const all = await r.json();
+    setOwnerUsers(Array.isArray(all) ? all.filter((u: any) => u.role === "user" || u.role === "business_owner") : []);
+    setSelectedOwnerId("");
+    setAssignOwnerBizId(bizId);
+  };
+
+  const saveAssignOwner = async (bizId: number) => {
+    await fetch(`${API}/businesses.php`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders(token) },
+      body: JSON.stringify({ id: bizId, owner_user_id: selectedOwnerId ? parseInt(selectedOwnerId) : null }),
+    });
+    setAssignOwnerBizId(null);
+    loadData();
   };
 
   const deleteUser = async (id: number) => {
@@ -620,6 +644,11 @@ export default function AdminPage() {
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <Link href={`/businesses/detail?id=${b.id}`} className="text-xs text-[#1B3A6B] hover:underline font-medium">View</Link>
+                    <button onClick={() => openAssignOwner(b.id)}
+                      className={`transition-colors ${assignOwnerBizId === b.id ? "text-amber-500" : "text-gray-400 hover:text-amber-500"}`}
+                      title="Assign business owner">
+                      <UserPlus size={15} />
+                    </button>
                     <button onClick={() => { openEdit(b); setShowAddBiz(false); }} className="text-gray-400 hover:text-[#1B3A6B] transition-colors" title="Edit">
                       <Edit2 size={15} />
                     </button>
@@ -628,6 +657,31 @@ export default function AdminPage() {
                     </button>
                   </div>
                 </div>
+
+                {assignOwnerBizId === b.id && (
+                  <div className="mt-1 mb-1 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                    <p className="text-xs font-semibold text-amber-800 mb-3">Assign business owner for <span className="font-bold">{b.name}</span></p>
+                    <div className="flex gap-2 flex-wrap">
+                      <select value={selectedOwnerId} onChange={(e) => setSelectedOwnerId(e.target.value)}
+                        className="flex-1 min-w-48 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        <option value="">— Remove owner —</option>
+                        {ownerUsers.map((u) => (
+                          <option key={u.id} value={u.id}>{u.name} ({u.email}) · {u.role}</option>
+                        ))}
+                      </select>
+                      <button onClick={() => saveAssignOwner(b.id)}
+                        className="px-4 py-2 text-xs font-semibold text-white rounded-xl"
+                        style={{ backgroundColor: "#C9A84C" }}>
+                        Assign
+                      </button>
+                      <button onClick={() => setAssignOwnerBizId(null)}
+                        className="px-4 py-2 text-xs font-semibold text-gray-500 bg-white border border-gray-200 rounded-xl">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {editBiz?.id === b.id && (
                   <div className="mt-2 mb-2">
                     <BizForm

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, ChevronDown, LogOut, Settings, PenLine } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, Settings, PenLine, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 
@@ -91,6 +91,10 @@ export default function Navbar() {
 
                 {userMenu && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-50">
+                    <Link href="/profile" onClick={() => setUserMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                      <User size={15} /> My Profile
+                    </Link>
                     <Link href="/blog/write" onClick={() => setUserMenu(false)}
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                       <PenLine size={15} /> Write a Post
@@ -141,6 +145,10 @@ export default function Navbar() {
           ))}
           {user && (
             <>
+              <Link href="/profile" onClick={() => setOpen(false)}
+                className="flex items-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                👤 My Profile
+              </Link>
               <Link href="/blog/write" onClick={() => setOpen(false)}
                 className="flex items-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 ✍️ Write a Post

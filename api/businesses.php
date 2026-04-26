@@ -11,6 +11,14 @@ function admin_can_manage(PDO $pdo, int $userId, string $country, string $city):
     return (bool)$stmt->fetch();
 }
 
+// Helper: write to activity_log
+function log_activity(PDO $pdo, int $userId, string $action, string $entityType, int $entityId, ?string $entityName): void {
+    try {
+        $pdo->prepare("INSERT INTO activity_log (user_id, action, entity_type, entity_id, entity_name) VALUES (:uid, :action, :type, :eid, :name)")
+            ->execute([':uid' => $userId, ':action' => $action, ':type' => $entityType, ':eid' => $entityId, ':name' => $entityName]);
+    } catch (PDOException $e) { /* non-fatal */ }
+}
+
 if ($method === 'GET') {
     // Admins can see unapproved businesses
     require_once 'jwt.php';
@@ -130,49 +138,88 @@ if ($method === 'POST') {
         ':is_approved'    => $data['is_approved'] ? 1 : 0,
     ]);
 
-    echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
+    $newId = (int)$pdo->lastInsertId();
+    log_activity($pdo, (int)$authUser['sub'], 'create', 'business', $newId, $data['name']);
+    echo json_encode(['success' => true, 'id' => $newId]);
 }
 
 if ($method === 'PATCH') {
     $token    = bearer_token();
     $authUser = $token ? jwt_verify($token) : null;
-    if (!$authUser || !in_array($authUser['role'] ?? '', ['admin', 'superadmin'])) {
+    if (!$authUser) { http_response_code(401); echo json_encode(['error' => 'Unauthorized']); exit(); }
+
+    $data   = json_decode(file_get_contents('php://input'), true);
+    $id     = (int)($data['id'] ?? 0);
+    $role   = $authUser['role'] ?? '';
+    $userId = (int)$authUser['sub'];
+
+    if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
+
+    // Business owner: edit their own business (limited fields)
+    if ($role === 'business_owner') {
+        $biz = $pdo->prepare("SELECT id, name FROM businesses WHERE id = :id AND owner_user_id = :uid");
+        $biz->execute([':id' => $id, ':uid' => $userId]);
+        $existing = $biz->fetch(PDO::FETCH_ASSOC);
+        if (!$existing) { http_response_code(403); echo json_encode(['error' => 'Not your business']); exit(); }
+
+        $ownerAllowed = ['name','name_fa','description','description_fa','phone','website','email','instagram','address','google_maps_url','image_url','logo_url'];
+        $fields = []; $params = [':id' => $id];
+        foreach ($ownerAllowed as $f) {
+            if (array_key_exists($f, $data)) { $fields[] = "$f = :$f"; $params[":$f"] = $data[$f]; }
+        }
+        if (empty($fields)) { echo json_encode(['success' => false]); exit(); }
+        $pdo->prepare("UPDATE businesses SET " . implode(', ', $fields) . " WHERE id = :id")->execute($params);
+        log_activity($pdo, $userId, 'update', 'business', $id, $existing['name']);
+        echo json_encode(['success' => true]);
+        exit();
+    }
+
+    if (!in_array($role, ['admin', 'superadmin'])) {
         http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit();
     }
 
-    $data = json_decode(file_get_contents('php://input'), true);
-    $id = $data['id'] ?? null;
-    if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
-
-    // Non-superadmin: check current business location AND new location (if being changed)
-    if ($authUser['role'] === 'admin') {
+    // Non-superadmin: check location
+    if ($role === 'admin') {
         $biz = $pdo->prepare("SELECT country, canton FROM businesses WHERE id = :id");
         $biz->execute([':id' => $id]);
         $existing = $biz->fetch(PDO::FETCH_ASSOC);
         if (!$existing) { http_response_code(404); echo json_encode(['error' => 'Not found']); exit(); }
-
         $checkCountry = $data['country'] ?? $existing['country'];
         $checkCity    = $data['canton']  ?? $existing['canton'];
-        if (!admin_can_manage($pdo, (int)$authUser['sub'], $checkCountry, $checkCity)) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Not allowed to manage businesses in this location']);
-            exit();
+        if (!admin_can_manage($pdo, $userId, $checkCountry, $checkCity)) {
+            http_response_code(403); echo json_encode(['error' => 'Not allowed to manage businesses in this location']); exit();
         }
     }
 
-    $fields = [];
-    $params = [':id' => $id];
-    $allowed = ['name','name_fa','category','lat','lng','image_url','country','canton','address','phone','website','email','instagram','description','description_fa','google_maps_url','is_featured','is_verified','is_approved'];
+    $fields = []; $params = [':id' => $id];
+    $allowed = ['name','name_fa','category','lat','lng','image_url','logo_url','country','canton','address','phone','website','email','instagram','description','description_fa','google_maps_url','is_featured','is_verified','is_approved','owner_user_id'];
     foreach ($allowed as $f) {
-        if (array_key_exists($f, $data)) {
-            $fields[] = "$f = :$f";
-            $params[":$f"] = $data[$f];
-        }
+        if (array_key_exists($f, $data)) { $fields[] = "$f = :$f"; $params[":$f"] = $data[$f]; }
     }
     if (empty($fields)) { echo json_encode(['success' => false]); exit(); }
 
-    $stmt = $pdo->prepare("UPDATE businesses SET " . implode(', ', $fields) . " WHERE id = :id");
-    $stmt->execute($params);
+    // If assigning an owner, promote that user to business_owner role
+    if (array_key_exists('owner_user_id', $data) && $data['owner_user_id']) {
+        $pdo->prepare("UPDATE users SET role = 'business_owner' WHERE id = :uid AND role = 'user'")
+            ->execute([':uid' => (int)$data['owner_user_id']]);
+    }
+    // If removing owner, demote user back to 'user'
+    if (array_key_exists('owner_user_id', $data) && !$data['owner_user_id']) {
+        $prev = $pdo->prepare("SELECT owner_user_id FROM businesses WHERE id = :id");
+        $prev->execute([':id' => $id]);
+        $prevOwner = (int)$prev->fetchColumn();
+        if ($prevOwner) {
+            $pdo->prepare("UPDATE users SET role = 'user' WHERE id = :uid AND role = 'business_owner'")
+                ->execute([':uid' => $prevOwner]);
+        }
+    }
+
+    $pdo->prepare("UPDATE businesses SET " . implode(', ', $fields) . " WHERE id = :id")->execute($params);
+
+    $bizName = $pdo->prepare("SELECT name FROM businesses WHERE id = :id");
+    $bizName->execute([':id' => $id]);
+    log_activity($pdo, $userId, 'update', 'business', $id, $bizName->fetchColumn() ?: null);
+
     echo json_encode(['success' => true]);
 }
 
@@ -184,22 +231,27 @@ if ($method === 'DELETE') {
     }
 
     $data = json_decode(file_get_contents('php://input'), true);
-    $id = $data['id'] ?? null;
+    $id   = (int)($data['id'] ?? 0);
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
 
+    $biz = $pdo->prepare("SELECT country, canton, name, owner_user_id FROM businesses WHERE id = :id");
+    $biz->execute([':id' => $id]);
+    $existing = $biz->fetch(PDO::FETCH_ASSOC);
+    if (!$existing) { http_response_code(404); echo json_encode(['error' => 'Not found']); exit(); }
+
     if ($authUser['role'] === 'admin') {
-        $biz = $pdo->prepare("SELECT country, canton FROM businesses WHERE id = :id");
-        $biz->execute([':id' => $id]);
-        $existing = $biz->fetch(PDO::FETCH_ASSOC);
-        if (!$existing) { http_response_code(404); echo json_encode(['error' => 'Not found']); exit(); }
         if (!admin_can_manage($pdo, (int)$authUser['sub'], $existing['country'], $existing['canton'])) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Not allowed to manage businesses in this location']);
-            exit();
+            http_response_code(403); echo json_encode(['error' => 'Not allowed to manage businesses in this location']); exit();
         }
     }
 
-    $stmt = $pdo->prepare("DELETE FROM businesses WHERE id = :id");
-    $stmt->execute([':id' => $id]);
+    // Demote business_owner if one is assigned
+    if ($existing['owner_user_id']) {
+        $pdo->prepare("UPDATE users SET role = 'user' WHERE id = :uid AND role = 'business_owner'")
+            ->execute([':uid' => (int)$existing['owner_user_id']]);
+    }
+
+    log_activity($pdo, (int)$authUser['sub'], 'delete', 'business', $id, $existing['name']);
+    $pdo->prepare("DELETE FROM businesses WHERE id = :id")->execute([':id' => $id]);
     echo json_encode(['success' => true, 'deleted' => $id]);
 }

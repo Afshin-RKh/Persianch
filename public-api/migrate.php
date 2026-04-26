@@ -140,4 +140,42 @@ try {
     $results[] = "admin_locations table error: " . $e->getMessage();
 }
 
+// 10. Add business_owner to users role enum
+try {
+    $pdo->exec("ALTER TABLE users MODIFY COLUMN role ENUM('user','business_owner','admin','superadmin') DEFAULT 'user'");
+    $results[] = "users role: added business_owner";
+} catch (PDOException $e) {
+    $results[] = "users role error: " . $e->getMessage();
+}
+
+// 11. Add owner_user_id to businesses
+try {
+    $cols = $pdo->query("SHOW COLUMNS FROM businesses LIKE 'owner_user_id'")->fetchAll();
+    if (count($cols) === 0) {
+        $pdo->exec("ALTER TABLE businesses ADD COLUMN owner_user_id INT NULL");
+        $results[] = "businesses: added owner_user_id";
+    } else {
+        $results[] = "businesses.owner_user_id: already exists";
+    }
+} catch (PDOException $e) {
+    $results[] = "businesses owner_user_id error: " . $e->getMessage();
+}
+
+// 12. Create activity_log table
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS activity_log (
+        id          INT AUTO_INCREMENT PRIMARY KEY,
+        user_id     INT NOT NULL,
+        action      ENUM('create','update','delete','approve','reject') NOT NULL,
+        entity_type ENUM('business','blog_post') NOT NULL,
+        entity_id   INT NOT NULL,
+        entity_name VARCHAR(255),
+        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $results[] = "activity_log table: ready";
+} catch (PDOException $e) {
+    $results[] = "activity_log table error: " . $e->getMessage();
+}
+
 echo json_encode(['done' => true, 'results' => $results]);
