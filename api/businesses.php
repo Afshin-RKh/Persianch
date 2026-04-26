@@ -65,7 +65,10 @@ if ($method === 'GET') {
     }
 
     $whereClause = count($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-    $sql = "SELECT * FROM businesses b $whereClause ORDER BY b.is_featured DESC, b.created_at DESC";
+    $sql = "SELECT b.*, u.name AS owner_name, u.email AS owner_email
+            FROM businesses b
+            LEFT JOIN users u ON u.id = b.owner_user_id
+            $whereClause ORDER BY b.is_featured DESC, b.created_at DESC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -155,12 +158,18 @@ if ($method === 'PATCH') {
 
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
 
-    // Business owner: edit their own business (limited fields)
-    if ($role === 'business_owner') {
-        $biz = $pdo->prepare("SELECT id, name FROM businesses WHERE id = :id AND owner_user_id = :uid");
-        $biz->execute([':id' => $id, ':uid' => $userId]);
-        $existing = $biz->fetch(PDO::FETCH_ASSOC);
-        if (!$existing) { http_response_code(403); echo json_encode(['error' => 'Not your business']); exit(); }
+    // Fetch actual role from DB (JWT role may be stale after promotion)
+    $dbUser = $pdo->prepare("SELECT role FROM users WHERE id = :id");
+    $dbUser->execute([':id' => $userId]);
+    $dbRole = $dbUser->fetchColumn() ?: $role;
+
+    // Business owner (by DB role OR by ownership): edit their own business (limited fields)
+    $bizOwnerCheck = $pdo->prepare("SELECT id, name FROM businesses WHERE id = :id AND owner_user_id = :uid");
+    $bizOwnerCheck->execute([':id' => $id, ':uid' => $userId]);
+    $ownedBiz = $bizOwnerCheck->fetch(PDO::FETCH_ASSOC);
+
+    if ($dbRole === 'business_owner' || $ownedBiz) {
+        if (!$ownedBiz) { http_response_code(403); echo json_encode(['error' => 'Not your business']); exit(); }
 
         $ownerAllowed = ['name','name_fa','description','description_fa','phone','website','email','instagram','address','google_maps_url','image_url','logo_url'];
         $fields = []; $params = [':id' => $id];
@@ -169,12 +178,12 @@ if ($method === 'PATCH') {
         }
         if (empty($fields)) { echo json_encode(['success' => false]); exit(); }
         $pdo->prepare("UPDATE businesses SET " . implode(', ', $fields) . " WHERE id = :id")->execute($params);
-        log_activity($pdo, $userId, 'update', 'business', $id, $existing['name']);
+        log_activity($pdo, $userId, 'update', 'business', $id, $ownedBiz['name']);
         echo json_encode(['success' => true]);
         exit();
     }
 
-    if (!in_array($role, ['admin', 'superadmin'])) {
+    if (!in_array($dbRole, ['admin', 'superadmin'])) {
         http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit();
     }
 

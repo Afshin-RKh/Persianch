@@ -31,8 +31,11 @@ if ($method === 'GET') {
     $s->execute([':uid' => $userId]);
     $user['comments'] = $s->fetchAll();
 
+    // Use DB role (always current) rather than JWT role (may be stale after promotion)
+    $dbRole = $user['role'];
+
     // Admin: admin_locations + activity log
-    if (in_array($authUser['role'], ['admin', 'superadmin'])) {
+    if (in_array($dbRole, ['admin', 'superadmin'])) {
         $s = $pdo->prepare("SELECT country, city FROM admin_locations WHERE user_id = :uid ORDER BY country, city");
         $s->execute([':uid' => $userId]);
         $user['admin_locations'] = $s->fetchAll();
@@ -43,7 +46,7 @@ if ($method === 'GET') {
     }
 
     // Business owner: their assigned business
-    if ($authUser['role'] === 'business_owner') {
+    if ($dbRole === 'business_owner') {
         $s = $pdo->prepare("SELECT id, name, name_fa, category, country, canton, address, phone, website, email, instagram, description, description_fa, google_maps_url, image_url, logo_url, is_approved FROM businesses WHERE owner_user_id = :uid LIMIT 1");
         $s->execute([':uid' => $userId]);
         $user['owned_business'] = $s->fetch() ?: null;
