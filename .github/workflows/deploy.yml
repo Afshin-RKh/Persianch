@@ -1,4 +1,4 @@
-name: Build & Deploy to Namecheap (FTP)
+name: Build & Deploy to BiruniMap (FTP)
 
 on:
   push:
@@ -25,47 +25,22 @@ jobs:
       - name: Build Next.js static export
         run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ""
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
-          NEXT_PUBLIC_ADMIN_PASSWORD: ${{ secrets.NEXT_PUBLIC_ADMIN_PASSWORD }}
-          NEXT_PUBLIC_API_URL: "https://phub.ch/api"
+          NEXT_PUBLIC_API_URL: "https://birunimap.com/api"
 
-      - name: Generate PHP env file with DB credentials
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASS: ${{ secrets.DB_PASSWORD }}
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET }}
-        run: |
-          printf '<?php\ndefine("DB_HOST", "%s");\ndefine("DB_NAME", "%s");\ndefine("DB_USER", "%s");\ndefine("DB_PASS", "%s");\ndefine("JWT_SECRET_KEY", "%s");\n' \
-            "$DB_HOST" "$DB_NAME" "$DB_USER" "$DB_PASS" "$JWT_SECRET_KEY" > api/.env.php
-
-      - name: Deploy static site to phub.ch
+      - name: Deploy frontend to /app/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./out/
-          server-dir: /public_html/phub/
+          server-dir: /app/
 
-      - name: Deploy PHP API to secure location (outside web root)
+      - name: Deploy PHP API to /api/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
-          server-dir: /repositories/Persianch1/
-          # .env.php is git-ignored but generated above — force-include it
-          include: "**"
-
-      - name: Deploy public API proxy to phub.ch/api
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./public-api/
-          server-dir: /public_html/phub/api/
+          server-dir: /api/

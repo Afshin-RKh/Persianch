@@ -9,15 +9,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Credentials live outside public_html for security
-$envFile = '/home/afshxhoj/repositories/Persianch1/.env.php';
+// .env.php sits at public_html/.env.php (one level up from public_html/api/)
+$envFile = dirname(__DIR__) . '/.env.php';
 if (file_exists($envFile)) {
     require_once $envFile;
 }
 
 $hostRaw = trim(defined('DB_HOST') ? DB_HOST : 'localhost');
-$db      = defined('DB_NAME') ? DB_NAME : 'afshxhoj_persianhub';
-$user    = defined('DB_USER') ? DB_USER : 'afshxhoj_afshin';
+$db      = defined('DB_NAME') ? DB_NAME : 'voltkvgj_birunimap';
+$user    = defined('DB_USER') ? DB_USER : 'voltkvgj_afshin';
 $pass    = defined('DB_PASS') ? DB_PASS : '';
 
 // Namecheap shared hosting requires 127.0.0.1 instead of localhost

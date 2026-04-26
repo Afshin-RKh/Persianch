@@ -1,0 +1,4 @@
+FTP Username: c86e5530@apextech.ch
+FTP server: ftp.afshin.ch
+FTP & explicit FTPS port:  21
+ftp pass: rsB9dWVwhfyhb7G
