@@ -1,8 +1,0 @@
----
-deployment:
-  tasks:
-    - export DEPLOYPATH=/home/$USER/public_html/persianch/
-    - /bin/mkdir -p $DEPLOYPATH
-    - /bin/cp -rf $CPANEL_BASE_INSTALL_PATH/out/. $DEPLOYPATH
-    - /bin/mkdir -p $DEPLOYPATH/api
-    - /bin/cp -rf $CPANEL_BASE_INSTALL_PATH/api/. $DEPLOYPATH/api
