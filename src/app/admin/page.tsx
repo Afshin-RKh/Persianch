@@ -814,7 +814,9 @@ export default function AdminPage() {
                 : <div className="divide-y divide-gray-50">
                   {filteredUsers.map((u) => (
                     <div key={u.id}>
-                      <div className="px-5 py-3.5 flex items-center gap-3 hover:bg-gray-50/50 transition-colors">
+                      <div
+                        className={`px-5 py-3.5 flex items-center gap-3 transition-colors ${isSuperAdmin && u.id !== user.id ? "cursor-pointer hover:bg-[#1B3A6B]/5" : "hover:bg-gray-50/50"} ${inspectUser === u.id ? "bg-[#1B3A6B]/5" : ""}`}
+                        onClick={() => { if (isSuperAdmin && u.id !== user.id) openInspect(u.id); }}>
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ backgroundColor: "#1B3A6B" }}>
                           {u.avatar ? <img src={u.avatar} alt="" className="w-9 h-9 rounded-xl object-cover" /> : u.name[0]?.toUpperCase()}
                         </div>
@@ -822,11 +824,14 @@ export default function AdminPage() {
                           <div className="flex items-center gap-2 flex-wrap mb-0.5">
                             <p className="font-semibold text-gray-900 text-sm">{u.name}</p>
                             {roleBadge(u.role)}
+                            {isSuperAdmin && u.id !== user.id && (
+                              <ChevronRight size={13} className={`text-gray-300 transition-transform ${inspectUser === u.id ? "rotate-90 text-[#1B3A6B]" : ""}`} />
+                            )}
                           </div>
                           <p className="text-xs text-gray-400">{u.email} · {u.blog_count} posts · joined {new Date(u.created_at).toLocaleDateString()}</p>
                           {u.owned_business_name && <p className="text-xs text-amber-600 font-medium mt-0.5">👤 owns: {u.owned_business_name}</p>}
                         </div>
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                           {u.id !== user.id ? (
                             <>
                               {isSuperAdmin && (
@@ -836,13 +841,6 @@ export default function AdminPage() {
                                   <option value="business_owner">business owner</option>
                                   <option value="admin">admin</option>
                                 </select>
-                              )}
-                              {isSuperAdmin && (
-                                <button onClick={() => openInspect(u.id)}
-                                  className={`p-1.5 rounded-lg transition-colors ${inspectUser === u.id ? "bg-[#1B3A6B] text-white" : "text-gray-400 hover:text-[#1B3A6B] hover:bg-[#1B3A6B]/10"}`}
-                                  title="View full profile">
-                                  <ChevronRight size={14} className={inspectUser === u.id ? "rotate-90" : ""} />
-                                </button>
                               )}
                               {isSuperAdmin && (
                                 <button onClick={() => deleteUser(u.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
