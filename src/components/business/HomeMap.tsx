@@ -52,7 +52,13 @@ export default function HomeMap() {
 
       mapInstanceRef.current = map;
 
-      // Beating heart on Iran
+      // Beating heart on Iran — inject keyframes globally then add marker
+      if (!document.getElementById("heartbeat-style")) {
+        const s = document.createElement("style");
+        s.id = "heartbeat-style";
+        s.textContent = `@keyframes heartbeat{0%,100%{transform:scale(1)}14%{transform:scale(1.3)}28%{transform:scale(1)}42%{transform:scale(1.2)}70%{transform:scale(1)}}`;
+        document.head.appendChild(s);
+      }
       const heartIcon = L.divIcon({
         html: `<div style="font-size:96px;line-height:1;animation:heartbeat 1s ease-in-out infinite;transform-origin:center;filter:drop-shadow(0 0 10px rgba(80,0,0,0.6)) sepia(0.4) saturate(0.6) brightness(0.55);">❤️</div>`,
         className: "",
