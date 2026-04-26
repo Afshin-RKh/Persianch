@@ -84,18 +84,41 @@ export const SWISS_CANTONS = [
 export const SWISS_CITIES = SWISS_CANTONS;
 
 export const COUNTRIES = [
-  "Switzerland",
-  "Germany",
-  "Austria",
-  "France",
-  "United Kingdom",
-  "Netherlands",
-  "Sweden",
-  "Norway",
-  "Denmark",
-  "Belgium",
-  "Italy",
-  "Spain",
+  // Europe
+  "Albania","Andorra","Austria","Belarus","Belgium","Bosnia and Herzegovina",
+  "Bulgaria","Croatia","Cyprus","Czech Republic","Denmark","Estonia","Finland",
+  "France","Germany","Greece","Hungary","Iceland","Ireland","Italy","Kosovo",
+  "Latvia","Liechtenstein","Lithuania","Luxembourg","Malta","Moldova","Monaco",
+  "Montenegro","Netherlands","North Macedonia","Norway","Poland","Portugal",
+  "Romania","San Marino","Serbia","Slovakia","Slovenia","Spain","Sweden",
+  "Switzerland","Ukraine","United Kingdom","Vatican City",
+  // Middle East & Central Asia (excl. Iran)
+  "Afghanistan","Armenia","Azerbaijan","Bahrain","Georgia","Iraq","Israel",
+  "Jordan","Kazakhstan","Kuwait","Kyrgyzstan","Lebanon","Oman","Pakistan",
+  "Palestine","Qatar","Saudi Arabia","Syria","Tajikistan","Turkey",
+  "Turkmenistan","United Arab Emirates","Uzbekistan","Yemen",
+  // North America
+  "Canada","Mexico","United States",
+  // Central America & Caribbean
+  "Belize","Costa Rica","Cuba","Dominican Republic","El Salvador","Guatemala",
+  "Haiti","Honduras","Jamaica","Nicaragua","Panama","Puerto Rico","Trinidad and Tobago",
+  // South America
+  "Argentina","Bolivia","Brazil","Chile","Colombia","Ecuador","Guyana",
+  "Paraguay","Peru","Suriname","Uruguay","Venezuela",
+  // Africa
+  "Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cameroon",
+  "Cape Verde","Central African Republic","Chad","Comoros","Congo",
+  "Democratic Republic of Congo","Djibouti","Egypt","Equatorial Guinea","Eritrea",
+  "Eswatini","Ethiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau",
+  "Ivory Coast","Kenya","Lesotho","Liberia","Libya","Madagascar","Malawi","Mali",
+  "Mauritania","Mauritius","Morocco","Mozambique","Namibia","Niger","Nigeria",
+  "Rwanda","Senegal","Sierra Leone","Somalia","South Africa","South Sudan","Sudan",
+  "Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe",
+  // Asia & Pacific
+  "Australia","Bangladesh","Bhutan","Brunei","Cambodia","China","East Timor",
+  "Fiji","India","Indonesia","Japan","Laos","Malaysia","Maldives","Mongolia",
+  "Myanmar","Nepal","New Zealand","North Korea","Papua New Guinea","Philippines",
+  "Singapore","South Korea","Sri Lanka","Taiwan","Thailand","Vietnam",
 ];
 
 export const REGIONS_BY_COUNTRY: Record<string, string[]> = {
@@ -150,5 +173,30 @@ export const REGIONS_BY_COUNTRY: Record<string, string[]> = {
   Spain: [
     "Madrid","Catalonia","Andalusia","Valencia","Galicia",
     "Castile and León","Basque Country","Canary Islands","Murcia","Aragon",
+  ],
+  "United States": [
+    "California","Texas","New York","Florida","Illinois","Pennsylvania",
+    "Ohio","Georgia","North Carolina","Michigan","New Jersey","Virginia",
+    "Washington","Arizona","Massachusetts","Tennessee","Indiana","Missouri",
+    "Maryland","Wisconsin","Colorado","Minnesota","South Carolina","Alabama",
+    "Louisiana","Kentucky","Oregon","Oklahoma","Connecticut","Utah","Nevada",
+    "Iowa","Arkansas","Mississippi","Kansas","New Mexico","Nebraska","Idaho",
+    "Hawaii","New Hampshire","Maine","Montana","Rhode Island","Delaware",
+    "South Dakota","North Dakota","Alaska","Vermont","Wyoming",
+  ],
+  Canada: [
+    "Ontario","Quebec","British Columbia","Alberta","Manitoba",
+    "Saskatchewan","Nova Scotia","New Brunswick","Newfoundland and Labrador",
+    "Prince Edward Island","Northwest Territories","Yukon","Nunavut",
+  ],
+  Australia: [
+    "New South Wales","Victoria","Queensland","Western Australia",
+    "South Australia","Tasmania","Australian Capital Territory","Northern Territory",
+  ],
+  "United Arab Emirates": [
+    "Abu Dhabi","Dubai","Sharjah","Ajman","Umm Al Quwain","Ras Al Khaimah","Fujairah",
+  ],
+  Turkey: [
+    "Istanbul","Ankara","Izmir","Antalya","Bursa","Adana","Gaziantep","Konya","Mersin","Kayseri",
   ],
 };
