@@ -35,7 +35,7 @@ export default function LocationSelector({ selected, onChange, label = "Location
 
       <div className="flex flex-wrap gap-2 mb-2">
         <select value={country} onChange={(e) => { setCountry(e.target.value); setCity(""); }} className={inp}>
-          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
 
         {cities.length > 0 ? (

@@ -201,7 +201,7 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
             <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value, canton: "" })} className={inp}>
-              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>

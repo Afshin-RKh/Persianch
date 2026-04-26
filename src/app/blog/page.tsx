@@ -76,7 +76,7 @@ export default function BlogPage() {
               className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white"
             >
               <option value="">All countries</option>
-              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
 
             {regions.length > 0 && (

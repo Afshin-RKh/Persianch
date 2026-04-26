@@ -189,7 +189,7 @@ function EditForm() {
             <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value, city: "" })}
               className={`${inp} bg-white`}>
               <option value="">— none —</option>
-              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>

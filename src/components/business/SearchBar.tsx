@@ -117,7 +117,7 @@ export default function SearchBar({
           className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
         >
           <option value="">All Countries</option>
-          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
