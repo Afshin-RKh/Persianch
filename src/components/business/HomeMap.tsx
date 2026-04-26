@@ -52,6 +52,15 @@ export default function HomeMap() {
 
       mapInstanceRef.current = map;
 
+      // Beating heart on Iran
+      const heartIcon = L.divIcon({
+        html: `<div style="font-size:32px;line-height:1;animation:heartbeat 1s ease-in-out infinite;transform-origin:center;filter:drop-shadow(0 0 6px rgba(220,30,30,0.7));">❤️</div>`,
+        className: "",
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+      });
+      L.marker([32.4279, 53.6880], { icon: heartIcon, interactive: false, zIndexOffset: -1000 }).addTo(map);
+
       // Detect user location via IP
       fetch("https://ipapi.co/json/")
         .then((r) => r.json())
@@ -140,6 +149,13 @@ export default function HomeMap() {
           box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
         }
         .persian-hub-tooltip::before { border-top-color: #e8d5b0 !important; }
+        @keyframes heartbeat {
+          0%, 100% { transform: scale(1); }
+          14% { transform: scale(1.3); }
+          28% { transform: scale(1); }
+          42% { transform: scale(1.2); }
+          70% { transform: scale(1); }
+        }
       `}</style>
       <div className="relative w-full" style={{ height: "480px" }}>
         {loading && (
