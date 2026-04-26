@@ -246,7 +246,6 @@ const CANTON_COORDS: Record<string, [number, number]> = {
   Avignon: [43.9493, 4.8055],
   Poitiers: [46.5802, 0.3404],
   // UK cities
-  London: [51.5074, -0.1278],
   Birmingham: [52.4862, -1.8904],
   Manchester: [53.4808, -2.2426],
   Glasgow: [55.8642, -4.2518],
@@ -725,7 +724,7 @@ const CANTON_COORDS: Record<string, [number, number]> = {
   Fremont: [37.5485, -121.9886],
   Gilbert: [33.3528, -111.7890],
   "San Bernardino": [34.1083, -117.2898],
-  Birmingham: [33.5186, -86.8104],
+  "Birmingham AL": [33.5186, -86.8104],
   Boise: [43.6150, -116.2023],
   Rochester: [43.1566, -77.6088],
   Spokane: [47.6588, -117.4260],
@@ -820,7 +819,7 @@ const CANTON_COORDS: Record<string, [number, number]> = {
   Auckland: [-36.8485, 174.7633],
   Wellington: [-41.2865, 174.7762],
   Christchurch: [-43.5321, 172.6362],
-  Hamilton: [-37.7870, 175.2793],
+  "Hamilton NZ": [-37.7870, 175.2793],
   Tauranga: [-37.6878, 176.1651],
   Dunedin: [-45.8788, 170.5028],
   "Palmerston North": [-40.3523, 175.6082],
@@ -1149,10 +1148,8 @@ const CANTON_COORDS: Record<string, [number, number]> = {
   Lusaka: [-15.4167, 28.2833],
   Harare: [-17.8252, 31.0335],
   // Central Asian cities
-  Samarkand: [39.6542, 66.9597],
   Namangan: [40.9983, 71.6726],
   Fergana: [40.3864, 71.7864],
-  Dushanbe: [38.5598, 68.7870],
   Khujand: [40.2833, 69.6333],
   Osh: [40.5283, 72.7985],
   Mary: [37.6000, 61.8333],
@@ -1160,7 +1157,6 @@ const CANTON_COORDS: Record<string, [number, number]> = {
   // Caucasus cities
   Kutaisi: [42.2679, 42.7078],
   Rustavi: [41.5500, 45.0167],
-  Gyumri: [40.7942, 43.8453],
   Sumqayit: [40.5892, 49.6322],
   // South America cities
   "São Paulo": [-23.5505, -46.6333],
@@ -1181,7 +1177,7 @@ const CANTON_COORDS: Record<string, [number, number]> = {
   Natal: [-5.7945, -35.2110],
   "João Pessoa": [-7.1153, -34.8641],
   "Buenos Aires": [-34.6037, -58.3816],
-  "Córdoba": [-31.4201, -64.1888],
+  "Córdoba AR": [-31.4201, -64.1888],
   Rosario: [-32.9587, -60.6931],
   Mendoza: [-32.8908, -68.8272],
   Tucumán: [-26.8241, -65.2226],
@@ -1192,7 +1188,7 @@ const CANTON_COORDS: Record<string, [number, number]> = {
   "Medellín": [6.2518, -75.5636],
   Cali: [3.4516, -76.5320],
   Barranquilla: [10.9685, -74.7813],
-  Cartagena: [10.3910, -75.4794],
+  "Cartagena CO": [10.3910, -75.4794],
   Caracas: [10.4806, -66.9036],
   Maracaibo: [10.6544, -71.6130],
   Lima: [-12.0464, -77.0428],
@@ -1271,7 +1267,6 @@ const CANTON_COORDS: Record<string, [number, number]> = {
   Pristina: [42.6629, 21.1655],
   Podgorica: [42.4304, 19.2594],
   Bratislava: [48.1486, 17.1077],
-  Budapest: [47.4979, 19.0402],
   // Ireland cities
   Dublin: [53.3498, -6.2603],
   Cork: [51.8985, -8.4756],
@@ -1357,7 +1352,6 @@ const CANTON_COORDS: Record<string, [number, number]> = {
   Nunavut: [70.2998, -83.1076],
   // Australia
   "New South Wales": [-33.8688, 151.2093],
-  Victoria: [-37.4713, 144.7852],
   Queensland: [-22.5752, 144.0850],
   "Western Australia": [-27.6728, 121.6283],
   "South Australia": [-30.0002, 136.2092],
