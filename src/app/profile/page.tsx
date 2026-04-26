@@ -21,12 +21,12 @@ interface ProfileData {
   comments: { id: number; content: string; entity_type: string; entity_id: number; created_at: string }[];
   admin_locations?: Location[];
   activity_log?: { action: string; entity_type: string; entity_id: number; entity_name: string; created_at: string }[];
-  owned_business?: {
+  owned_businesses?: {
     id: number; name: string; name_fa?: string; category: string; country: string; canton: string;
     address?: string; phone?: string; website?: string; email?: string; instagram?: string;
     description?: string; description_fa?: string; google_maps_url?: string;
     image_url?: string; logo_url?: string; is_approved: boolean;
-  } | null;
+  }[];
 }
 
 const inp = "w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30 focus:border-[#1B3A6B] transition-colors bg-white";
@@ -68,6 +68,7 @@ export default function ProfilePage() {
   const [bizForm, setBizForm] = useState<Record<string, string>>({});
   const [bizSaving, setBizSaving] = useState(false);
   const [bizSaved, setBizSaved] = useState(false);
+  const [selectedBizId, setSelectedBizId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth/signin");
@@ -81,8 +82,9 @@ export default function ProfilePage() {
     setProfile(data);
     setName(data.name);
     setLocations(data.interest_locations ?? []);
-    if (data.owned_business) {
-      const b = data.owned_business;
+    if (data.owned_businesses && data.owned_businesses.length > 0) {
+      const b = data.owned_businesses[0];
+      setSelectedBizId(b.id);
       setBizForm({
         name: b.name ?? "", name_fa: b.name_fa ?? "",
         description: b.description ?? "", description_fa: b.description_fa ?? "",
@@ -119,12 +121,12 @@ export default function ProfilePage() {
 
   const saveBusiness = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !profile?.owned_business) return;
+    if (!token || !selectedBizId) return;
     setBizSaving(true);
     await fetch(`${API}/businesses.php`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...authHeaders(token) },
-      body: JSON.stringify({ id: profile.owned_business.id, ...bizForm }),
+      body: JSON.stringify({ id: selectedBizId, ...bizForm }),
     });
     setBizSaved(true);
     setTimeout(() => setBizSaved(false), 2500);
@@ -335,15 +337,42 @@ export default function ProfilePage() {
         )}
 
         {/* MY BUSINESS TAB */}
-        {tab === "business" && isBizOwner && (
+        {tab === "business" && isBizOwner && (() => {
+          const bizList = profile.owned_businesses ?? [];
+          const activeBiz = bizList.find(b => b.id === selectedBizId) ?? null;
+          const switchBiz = (b: typeof bizList[0]) => {
+            setSelectedBizId(b.id);
+            setBizForm({
+              name: b.name ?? "", name_fa: b.name_fa ?? "",
+              description: b.description ?? "", description_fa: b.description_fa ?? "",
+              phone: b.phone ?? "", website: b.website ?? "", email: b.email ?? "",
+              instagram: b.instagram ?? "", address: b.address ?? "",
+              google_maps_url: b.google_maps_url ?? "",
+              image_url: b.image_url ?? "", logo_url: b.logo_url ?? "",
+            });
+          };
+          return (
           <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8 shadow-sm">
-            {!profile.owned_business
+            {bizList.length === 0
               ? <div className="text-center py-12">
                   <Building2 size={40} className="mx-auto text-gray-200 mb-3" />
                   <p className="text-gray-600 font-semibold">No business assigned yet</p>
                   <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">Contact your regional admin to get a business assigned to your account.</p>
                 </div>
               : <>
+                  {/* Business selector (multiple) */}
+                  {bizList.length > 1 && (
+                    <div className="flex gap-2 flex-wrap mb-5 pb-4 border-b border-gray-100">
+                      {bizList.map(b => (
+                        <button key={b.id} type="button" onClick={() => switchBiz(b)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${selectedBizId === b.id ? "border-[#1B3A6B] bg-[#1B3A6B] text-white" : "border-gray-200 text-gray-600 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"}`}>
+                          {b.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {activeBiz && <>
                   {/* Business header */}
                   <div className="flex items-start gap-3 mb-6 pb-5 border-b border-gray-100">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -351,18 +380,18 @@ export default function ProfilePage() {
                       <Building2 size={18} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h2 className="font-bold text-gray-900">{profile.owned_business.name}</h2>
+                      <h2 className="font-bold text-gray-900">{activeBiz.name}</h2>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        {CATEGORIES.find((c) => c.slug === profile.owned_business!.category)?.label_en} ·{" "}
-                        {profile.owned_business.canton}, {profile.owned_business.country}
+                        {CATEGORIES.find((c) => c.slug === activeBiz.category)?.label_en} ·{" "}
+                        {activeBiz.canton}, {activeBiz.country}
                       </p>
                     </div>
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 border ${
-                      profile.owned_business.is_approved
+                      activeBiz.is_approved
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : "bg-amber-50 text-amber-700 border-amber-200"
                     }`}>
-                      {profile.owned_business.is_approved ? "✓ Approved" : "⏳ Pending"}
+                      {activeBiz.is_approved ? "✓ Approved" : "⏳ Pending"}
                     </span>
                   </div>
 
@@ -436,10 +465,12 @@ export default function ProfilePage() {
                       {bizSaved && <span className="text-emerald-600 text-sm font-semibold">✓ Saved!</span>}
                     </div>
                   </form>
+                  </>}
                 </>
             }
           </div>
-        )}
+          );
+        })()}
 
         {/* ADMIN INFO TAB */}
         {tab === "admin" && isAdmin && (
