@@ -49,10 +49,21 @@ if ($method === 'POST') {
         $hash = password_hash($pass, PASSWORD_DEFAULT);
         $stmt = $pdo->prepare("INSERT INTO users (name, email, password_hash) VALUES (:name, :email, :hash)");
         $stmt->execute([':name' => $name, ':email' => $email, ':hash' => $hash]);
-        $id = $pdo->lastInsertId();
+        $id = (int)$pdo->lastInsertId();
 
-        $token = jwt_sign(['sub' => (int)$id, 'role' => 'user', 'name' => $name, 'exp' => time() + JWT_TTL]);
-        echo json_encode(['token' => $token, 'user' => ['id' => (int)$id, 'name' => $name, 'email' => $email, 'role' => 'user']]);
+        // Save interest locations if provided
+        $locations = $data['locations'] ?? [];
+        if (is_array($locations) && count($locations) > 0) {
+            $ins = $pdo->prepare("INSERT IGNORE INTO user_locations (user_id, country, city) VALUES (:uid, :country, :city)");
+            foreach ($locations as $loc) {
+                if (!empty($loc['country']) && !empty($loc['city'])) {
+                    $ins->execute([':uid' => $id, ':country' => $loc['country'], ':city' => $loc['city']]);
+                }
+            }
+        }
+
+        $token = jwt_sign(['sub' => $id, 'role' => 'user', 'name' => $name, 'exp' => time() + JWT_TTL]);
+        echo json_encode(['token' => $token, 'user' => ['id' => $id, 'name' => $name, 'email' => $email, 'role' => 'user']]);
         exit();
     }
 

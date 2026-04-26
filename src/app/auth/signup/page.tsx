@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import LocationSelector, { type Location } from "@/components/LocationSelector";
 
 export default function SignUpPage() {
   const { register, user } = useAuth();
@@ -10,6 +11,7 @@ export default function SignUpPage() {
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
+  const [locations, setLocations] = useState<Location[]>([]);
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
 
@@ -21,7 +23,7 @@ export default function SignUpPage() {
     if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
     setLoading(true);
     try {
-      await register(name, email, password);
+      await register(name, email, password, locations);
       router.replace("/");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -73,6 +75,14 @@ export default function SignUpPage() {
                 required
                 placeholder="Min. 8 characters"
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
+              />
+            </div>
+
+            <div>
+              <LocationSelector
+                selected={locations}
+                onChange={setLocations}
+                label="Where are you based? (optional — for future updates)"
               />
             </div>
 

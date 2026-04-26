@@ -40,6 +40,18 @@ if ($method === 'PATCH') {
     }
 
     $pdo->prepare("UPDATE users SET role = :role WHERE id = :id")->execute([':role' => $role, ':id' => $id]);
+
+    // If admin_locations provided, replace them
+    if (isset($data['admin_locations']) && is_array($data['admin_locations'])) {
+        $pdo->prepare("DELETE FROM admin_locations WHERE user_id = :uid")->execute([':uid' => $id]);
+        $ins = $pdo->prepare("INSERT IGNORE INTO admin_locations (user_id, country, city) VALUES (:uid, :country, :city)");
+        foreach ($data['admin_locations'] as $loc) {
+            if (!empty($loc['country']) && !empty($loc['city'])) {
+                $ins->execute([':uid' => $id, ':country' => $loc['country'], ':city' => $loc['city']]);
+            }
+        }
+    }
+
     echo json_encode(['success' => true]);
     exit();
 }

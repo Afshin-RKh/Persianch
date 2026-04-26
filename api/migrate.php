@@ -110,4 +110,34 @@ foreach (['tags' => 'VARCHAR(500)', 'country' => 'VARCHAR(100)', 'city' => 'VARC
     }
 }
 
+// 8. Create user_locations table (user's interest areas — user-editable)
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS user_locations (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        user_id    INT NOT NULL,
+        country    VARCHAR(100) NOT NULL,
+        city       VARCHAR(100) NOT NULL,
+        UNIQUE KEY uq_user_location (user_id, country, city),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $results[] = "user_locations table: ready";
+} catch (PDOException $e) {
+    $results[] = "user_locations table error: " . $e->getMessage();
+}
+
+// 9. Create admin_locations table (admin's allowed management areas — superadmin-set)
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS admin_locations (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        user_id    INT NOT NULL,
+        country    VARCHAR(100) NOT NULL,
+        city       VARCHAR(100) NOT NULL,
+        UNIQUE KEY uq_admin_location (user_id, country, city),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $results[] = "admin_locations table: ready";
+} catch (PDOException $e) {
+    $results[] = "admin_locations table error: " . $e->getMessage();
+}
+
 echo json_encode(['done' => true, 'results' => $results]);

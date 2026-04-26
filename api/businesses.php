@@ -1,7 +1,15 @@
 <?php
 require_once 'config.php';
+require_once 'jwt.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+// Helper: check if an admin is allowed to manage a given country+city
+function admin_can_manage(PDO $pdo, int $userId, string $country, string $city): bool {
+    $stmt = $pdo->prepare("SELECT 1 FROM admin_locations WHERE user_id = :uid AND country = :country AND city = :city LIMIT 1");
+    $stmt->execute([':uid' => $userId, ':country' => $country, ':city' => $city]);
+    return (bool)$stmt->fetch();
+}
 
 if ($method === 'GET') {
     // Admins can see unapproved businesses
@@ -71,6 +79,12 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
+    $token    = bearer_token();
+    $authUser = $token ? jwt_verify($token) : null;
+    if (!$authUser || !in_array($authUser['role'] ?? '', ['admin', 'superadmin'])) {
+        http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit();
+    }
+
     $data = json_decode(file_get_contents('php://input'), true);
 
     // Reject if name is missing or empty
@@ -78,6 +92,17 @@ if ($method === 'POST') {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'name is required']);
         exit();
+    }
+
+    // Non-superadmin admins must manage within their assigned locations
+    if ($authUser['role'] === 'admin') {
+        $country = $data['country'] ?? 'Switzerland';
+        $city    = $data['canton'] ?? ($data['city'] ?? '');
+        if (!admin_can_manage($pdo, (int)$authUser['sub'], $country, $city)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Not allowed to manage businesses in this location']);
+            exit();
+        }
     }
 
     $sql = "INSERT INTO businesses (name, name_fa, category, country, canton, address, phone, website, email, instagram, description, description_fa, google_maps_url, lat, lng, is_featured, is_verified, is_approved)
@@ -109,9 +134,31 @@ if ($method === 'POST') {
 }
 
 if ($method === 'PATCH') {
+    $token    = bearer_token();
+    $authUser = $token ? jwt_verify($token) : null;
+    if (!$authUser || !in_array($authUser['role'] ?? '', ['admin', 'superadmin'])) {
+        http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit();
+    }
+
     $data = json_decode(file_get_contents('php://input'), true);
     $id = $data['id'] ?? null;
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
+
+    // Non-superadmin: check current business location AND new location (if being changed)
+    if ($authUser['role'] === 'admin') {
+        $biz = $pdo->prepare("SELECT country, canton FROM businesses WHERE id = :id");
+        $biz->execute([':id' => $id]);
+        $existing = $biz->fetch(PDO::FETCH_ASSOC);
+        if (!$existing) { http_response_code(404); echo json_encode(['error' => 'Not found']); exit(); }
+
+        $checkCountry = $data['country'] ?? $existing['country'];
+        $checkCity    = $data['canton']  ?? $existing['canton'];
+        if (!admin_can_manage($pdo, (int)$authUser['sub'], $checkCountry, $checkCity)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Not allowed to manage businesses in this location']);
+            exit();
+        }
+    }
 
     $fields = [];
     $params = [':id' => $id];
@@ -130,9 +177,27 @@ if ($method === 'PATCH') {
 }
 
 if ($method === 'DELETE') {
+    $token    = bearer_token();
+    $authUser = $token ? jwt_verify($token) : null;
+    if (!$authUser || !in_array($authUser['role'] ?? '', ['admin', 'superadmin'])) {
+        http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit();
+    }
+
     $data = json_decode(file_get_contents('php://input'), true);
     $id = $data['id'] ?? null;
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
+
+    if ($authUser['role'] === 'admin') {
+        $biz = $pdo->prepare("SELECT country, canton FROM businesses WHERE id = :id");
+        $biz->execute([':id' => $id]);
+        $existing = $biz->fetch(PDO::FETCH_ASSOC);
+        if (!$existing) { http_response_code(404); echo json_encode(['error' => 'Not found']); exit(); }
+        if (!admin_can_manage($pdo, (int)$authUser['sub'], $existing['country'], $existing['canton'])) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Not allowed to manage businesses in this location']);
+            exit();
+        }
+    }
 
     $stmt = $pdo->prepare("DELETE FROM businesses WHERE id = :id");
     $stmt->execute([':id' => $id]);

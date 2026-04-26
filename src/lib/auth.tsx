@@ -16,7 +16,7 @@ interface AuthCtx {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, locations?: { country: string; city: string }[]) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
   isSuperAdmin: boolean;
@@ -92,11 +92,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(data.user);
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, locations?: { country: string; city: string }[]) => {
     const res = await fetch(`${API}/auth.php`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "register", name, email, password }),
+      body: JSON.stringify({ action: "register", name, email, password, locations: locations ?? [] }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Registration failed");

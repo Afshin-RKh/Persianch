@@ -6,7 +6,8 @@ import { useAuth, authHeaders } from "@/lib/auth";
 import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 
 const BLOG_REGIONS = (country: string) => REGIONS_BY_COUNTRY[country] ?? [];
-import { Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X, MapPin } from "lucide-react";
+import LocationSelector, { type Location } from "@/components/LocationSelector";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://afshin.ch/persianch/api";
 
@@ -186,6 +187,7 @@ interface UserRow {
   created_at: string;
   blog_count: number;
   comment_count: number;
+  admin_locations?: Location[];
 }
 
 export default function AdminPage() {
@@ -207,6 +209,10 @@ export default function AdminPage() {
   const [editPost, setEditPost] = useState<BlogPost | null>(null);
   const [postForm, setPostForm] = useState<{ tags: string[]; country: string; city: string; status: string }>({ tags: [], country: "", city: "", status: "approved" });
   const [postSaving, setPostSaving] = useState(false);
+
+  // Admin location editing
+  const [editLocUser, setEditLocUser] = useState<number | null>(null);
+  const [editLocList, setEditLocList] = useState<Location[]>([]);
 
   // Add / Edit business form
   const [showAddBiz, setShowAddBiz] = useState(false);
@@ -303,6 +309,23 @@ export default function AdminPage() {
       body: JSON.stringify({ id, role }),
     });
     loadData();
+  };
+
+  const openLocEditor = async (u: UserRow) => {
+    if (editLocUser === u.id) { setEditLocUser(null); return; }
+    const r = await fetch(`${API}/locations.php?user_id=${u.id}`, { headers: authHeaders(token) });
+    const data = await r.json();
+    setEditLocList(data.admin_locations ?? []);
+    setEditLocUser(u.id);
+  };
+
+  const saveAdminLocs = async (userId: number, role: string) => {
+    await fetch(`${API}/locations.php`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders(token) },
+      body: JSON.stringify({ user_id: userId, locations: editLocList }),
+    });
+    setEditLocUser(null);
   };
 
   const deleteUser = async (id: number) => {
@@ -631,33 +654,66 @@ export default function AdminPage() {
           <h2 className="font-bold text-gray-800 mb-4">All Users ({users.length})</h2>
           <div className="space-y-2">
             {users.map((u) => (
-              <div key={u.id} className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="font-semibold text-gray-900">{u.name}</p>
-                    {roleBadge(u.role)}
+              <div key={u.id}>
+                <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="font-semibold text-gray-900">{u.name}</p>
+                      {roleBadge(u.role)}
+                    </div>
+                    <p className="text-xs text-gray-400">{u.email} · {u.blog_count} posts · {u.comment_count} comments · joined {new Date(u.created_at).toLocaleDateString()}</p>
                   </div>
-                  <p className="text-xs text-gray-400">{u.email} · {u.blog_count} posts · {u.comment_count} comments · joined {new Date(u.created_at).toLocaleDateString()}</p>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {u.id !== user.id && (
+                      <>
+                        <select
+                          value={u.role}
+                          onChange={(e) => changeUserRole(u.id, e.target.value)}
+                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#1B3A6B]"
+                        >
+                          <option value="user">user</option>
+                          <option value="admin">admin</option>
+                          <option value="superadmin">superadmin</option>
+                        </select>
+                        {u.role === "admin" && (
+                          <button
+                            onClick={() => openLocEditor(u)}
+                            title="Edit allowed locations"
+                            className={`transition-colors ${editLocUser === u.id ? "text-[#1B3A6B]" : "text-gray-400 hover:text-[#1B3A6B]"}`}
+                          >
+                            <MapPin size={15} />
+                          </button>
+                        )}
+                        <button onClick={() => deleteUser(u.id)} className="text-gray-300 hover:text-red-500 transition-colors">
+                          <Trash2 size={15} />
+                        </button>
+                      </>
+                    )}
+                    {u.id === user.id && <span className="text-xs text-gray-400 italic">you</span>}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {u.id !== user.id && (
-                    <>
-                      <select
-                        value={u.role}
-                        onChange={(e) => changeUserRole(u.id, e.target.value)}
-                        className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#1B3A6B]"
+
+                {editLocUser === u.id && (
+                  <div className="mt-1 mb-1 bg-blue-50 border border-[#1B3A6B]/20 rounded-2xl p-4">
+                    <p className="text-xs font-semibold text-[#1B3A6B] mb-3">Allowed management locations for <span className="font-bold">{u.name}</span></p>
+                    <LocationSelector selected={editLocList} onChange={setEditLocList} label="Add location" />
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => saveAdminLocs(u.id, u.role)}
+                        className="px-4 py-1.5 text-xs font-semibold text-white rounded-xl"
+                        style={{ backgroundColor: "#1B3A6B" }}
                       >
-                        <option value="user">user</option>
-                        <option value="admin">admin</option>
-                        <option value="superadmin">superadmin</option>
-                      </select>
-                      <button onClick={() => deleteUser(u.id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                        <Trash2 size={15} />
+                        Save
                       </button>
-                    </>
-                  )}
-                  {u.id === user.id && <span className="text-xs text-gray-400 italic">you</span>}
-                </div>
+                      <button
+                        onClick={() => setEditLocUser(null)}
+                        className="px-4 py-1.5 text-xs font-semibold text-gray-500 bg-white border border-gray-200 rounded-xl"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
