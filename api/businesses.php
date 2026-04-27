@@ -32,7 +32,8 @@ if ($method === 'GET') {
         header("Cache-Control: public, max-age=300");
     }
 
-    $where = $isAdmin ? [] : ['b.is_approved = 1'];
+    $pendingOnly = $isAdmin && !empty($_GET['pending']);
+    $where = $isAdmin ? ($pendingOnly ? ['b.is_approved = 0'] : []) : ['b.is_approved = 1'];
     $params = [];
 
     if (!empty($_GET['category'])) {
@@ -90,29 +91,31 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
-    $token    = bearer_token();
-    $authUser = $token ? jwt_verify($token) : null;
-    if (!$authUser || !in_array($authUser['role'] ?? '', ['admin', 'superadmin'])) {
-        http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit();
-    }
-
     $data = json_decode(file_get_contents('php://input'), true);
 
-    // Reject if name is missing or empty
     if (empty(trim($data['name'] ?? ''))) {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'name is required']);
         exit();
     }
 
-    // Non-superadmin admins must manage within their assigned locations
-    if ($authUser['role'] === 'admin') {
-        $country = $data['country'] ?? 'Switzerland';
-        $city    = $data['canton'] ?? ($data['city'] ?? '');
-        if (!admin_can_manage($pdo, (int)$authUser['sub'], $country, $city)) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Not allowed to manage businesses in this location']);
-            exit();
+    $token    = bearer_token();
+    $authUser = $token ? jwt_verify($token) : null;
+    $isAdmin  = $authUser && in_array($authUser['role'] ?? '', ['admin', 'superadmin']);
+
+    // Public submissions: always unapproved, no auth required
+    $isPublicSubmission = !$isAdmin;
+
+    if (!$isPublicSubmission) {
+        // Non-superadmin admins must manage within their assigned locations
+        if ($authUser['role'] === 'admin') {
+            $country = $data['country'] ?? 'Switzerland';
+            $city    = $data['canton'] ?? ($data['city'] ?? '');
+            if (!admin_can_manage($pdo, (int)$authUser['sub'], $country, $city)) {
+                http_response_code(403);
+                echo json_encode(['error' => 'Not allowed to manage businesses in this location']);
+                exit();
+            }
         }
     }
 
@@ -136,13 +139,15 @@ if ($method === 'POST') {
         ':google_maps_url'=> $data['google_maps_url'] ?? null,
         ':lat'            => $data['lat'] ?? null,
         ':lng'            => $data['lng'] ?? null,
-        ':is_featured'    => $data['is_featured'] ? 1 : 0,
-        ':is_verified'    => $data['is_verified'] ? 1 : 0,
-        ':is_approved'    => $data['is_approved'] ? 1 : 0,
+        ':is_featured'    => 0,
+        ':is_verified'    => 0,
+        ':is_approved'    => $isPublicSubmission ? 0 : ($data['is_approved'] ? 1 : 0),
     ]);
 
     $newId = (int)$pdo->lastInsertId();
-    log_activity($pdo, (int)$authUser['sub'], 'create', 'business', $newId, $data['name']);
+    if ($isAdmin) {
+        log_activity($pdo, (int)$authUser['sub'], 'create', 'business', $newId, $data['name']);
+    }
     echo json_encode(['success' => true, 'id' => $newId]);
 }
 
