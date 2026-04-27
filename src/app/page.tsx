@@ -38,12 +38,11 @@ export default function HomePage() {
       {/* Map — visible immediately on load */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 gold-underline inline-block">Explore the Map</h2>
-            <p className="text-gray-400 text-sm mt-1">Find Iranian-owned businesses near you — anywhere in the world</p>
-          </div>
           <Link href="/businesses" className="text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
             Explore Businesses →
+          </Link>
+          <Link href="/events" className="text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
+            Explore Events →
           </Link>
         </div>
         <Suspense fallback={<div className="w-full rounded-2xl bg-gray-100" style={{ height: 520 }} />}>
