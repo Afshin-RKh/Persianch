@@ -15,8 +15,9 @@ interface AuthCtx {
   user: AuthUser | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, locations?: { country: string; city: string }[]) => Promise<void>;
+  login: (email: string, password: string, phone?: string) => Promise<void>;
+  register: (name: string, email: string, password: string, locations?: { country: string; city: string }[], phone?: string) => Promise<{ pending: boolean; user_id: number; message: string }>;
+  applyAuth: (token: string, user: AuthUser) => void;
   logout: () => void;
   isAdmin: boolean;
   isSuperAdmin: boolean;
@@ -80,33 +81,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, phone?: string) => {
     const res = await fetch(`${API}/auth.php`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "login", email, password }),
+      body: JSON.stringify({ action: "login", email: email || undefined, phone: phone || undefined, password }),
     });
     const data = await res.json();
+    if (res.status === 403 && data.needs_verification) {
+      // Throw a special error that includes user_id so the signin page can redirect to verify
+      const err = new Error(data.error || "Please verify your email");
+      (err as Error & { user_id?: number }).user_id = data.user_id;
+      throw err;
+    }
     if (!res.ok) throw new Error(data.error || "Login failed");
     applyToken(data.token);
     setUser(data.user);
   };
 
-  const register = async (name: string, email: string, password: string, locations?: { country: string; city: string }[]) => {
+  const applyAuth = useCallback((token: string, userData: AuthUser) => {
+    applyToken(token);
+    setUser(userData);
+  }, [applyToken]);
+
+  const register = async (name: string, email: string, password: string, locations?: { country: string; city: string }[], phone?: string) => {
     const res = await fetch(`${API}/auth.php`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "register", name, email, password, locations: locations ?? [] }),
+      body: JSON.stringify({ action: "register", name, email: email || undefined, phone: phone || undefined, password, locations: locations ?? [] }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Registration failed");
-    applyToken(data.token);
-    setUser(data.user);
+    // Registration now returns {pending: true, user_id} — caller handles OTP step
+    return data as { pending: boolean; user_id: number; message: string };
   };
 
   return (
     <Ctx.Provider value={{
-      user, token, loading, login, register, logout,
+      user, token, loading, login, register, logout, applyAuth,
       isAdmin: user?.role === "admin" || user?.role === "superadmin",
       isSuperAdmin: user?.role === "superadmin",
     }}>
