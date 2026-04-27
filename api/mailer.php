@@ -32,7 +32,10 @@ function _smtp_send(string $toEmail, string $toName, string $subject, string $bo
         $ssl    = ($port === 465);
         $target = ($ssl ? 'ssl://' : '') . $host;
         $sock   = @fsockopen($target, $port, $errno, $errstr, 10);
-        if (!$sock) return false;
+        if (!$sock) {
+            error_log("[BiruniMap mailer] fsockopen failed: $errstr ($errno) — host=$target port=$port");
+            return false;
+        }
 
         $read = function() use ($sock) {
             $buf = '';
@@ -60,7 +63,11 @@ function _smtp_send(string $toEmail, string $toName, string $subject, string $bo
         $cmd('AUTH LOGIN');
         $cmd(base64_encode($user));
         $resp = $cmd(base64_encode($pass));
-        if (substr(trim($resp), 0, 3) !== '235') { fclose($sock); return false; }
+        if (substr(trim($resp), 0, 3) !== '235') {
+            error_log("[BiruniMap mailer] SMTP AUTH failed: $resp");
+            fclose($sock);
+            return false;
+        }
 
         $cmd("MAIL FROM:<$fromAddr>");
         $cmd("RCPT TO:<$toEmail>");

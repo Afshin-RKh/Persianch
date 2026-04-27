@@ -125,16 +125,22 @@ if ($method === 'POST') {
         // Generate & send OTP
         $otp = generate_otp();
         save_otp($pdo, $id, $otp, 'email');
+        $emailSent = false;
         if ($email) {
-            send_verification_email($email, $name, $otp);
+            $emailSent = send_verification_email($email, $name, $otp);
+            if (!$emailSent) {
+                // Log OTP to file so admin can retrieve it during debugging
+                error_log("[BiruniMap OTP] user_id=$id email=$email code=$otp");
+            }
         }
 
         echo json_encode([
-            'pending' => true,
-            'user_id' => $id,
-            'message' => $email
+            'pending'      => true,
+            'user_id'      => $id,
+            'email_sent'   => $emailSent,
+            'message'      => $emailSent
                 ? "We sent a 6-digit code to $email. Enter it below to verify your account."
-                : "Enter the 6-digit verification code.",
+                : "We could not send the email. Please contact support or try again.",
         ]);
         exit();
     }
