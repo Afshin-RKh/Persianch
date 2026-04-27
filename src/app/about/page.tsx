@@ -203,7 +203,6 @@ export default function AboutPage() {
             <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3"
               style={{ backgroundColor: navy }}>AK</div>
             <p className="text-sm font-semibold text-gray-900 group-hover:text-[#1B3A6B]">Afshin Khosroshahi</p>
-            <p className="text-xs font-medium mt-0.5" style={{ color: navy }}>Founder & CEO</p>
             <p className="text-xs text-gray-400 mt-0.5">afshin.ch ↗</p>
           </a>
 
@@ -211,8 +210,6 @@ export default function AboutPage() {
             <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3"
               style={{ backgroundColor: "#5B7FA6" }}>AT</div>
             <p className="text-sm font-semibold text-gray-900">Atefeh</p>
-            <p className="text-xs font-medium mt-0.5" style={{ color: navy }}>Co-founder</p>
-            <p className="text-xs text-gray-400 mt-0.5">Community & Operations</p>
           </div>
 
           <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-dashed border-gray-200">
