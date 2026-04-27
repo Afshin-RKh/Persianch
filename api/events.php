@@ -108,7 +108,7 @@ if ($method === 'GET') {
         $params[':city'] = $_GET['city'];
     }
 
-    $sql  = "SELECT * FROM events WHERE " . implode(' AND ', $where) . " ORDER BY start_date ASC";
+    $sql  = "SELECT * FROM events" . ($where ? " WHERE " . implode(' AND ', $where) : "") . " ORDER BY start_date ASC";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $rows = $stmt->fetchAll();
