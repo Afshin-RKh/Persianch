@@ -6,19 +6,16 @@ import { useAuth } from "@/lib/auth";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
-type Method = "email" | "phone";
-type Step   = "form" | "forgot" | "reset";
+type Step = "form" | "forgot" | "reset";
 
 export default function SignInPage() {
   const { login, user, applyAuth } = useAuth();
   const router = useRouter();
 
-  const [method, setMethod]         = useState<Method>("email");
   const [step, setStep]             = useState<Step>("form");
   const [resetPendingId, setResetPendingId] = useState<number>(0);
 
   const [email, setEmail]           = useState("");
-  const [phone, setPhone]           = useState("");
   const [password, setPassword]     = useState("");
   const [forgotEmail, setForgotEmail] = useState("");
   const [resetCode, setResetCode]   = useState("");
@@ -35,7 +32,7 @@ export default function SignInPage() {
     setError("");
     setLoading(true);
     try {
-      await login(method === "email" ? email : "", password, method === "phone" ? phone : undefined);
+      await login(email, password);
       router.replace("/");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -178,30 +175,11 @@ export default function SignInPage() {
           <p className="text-gray-500 text-sm mt-2">Sign in to your account</p>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <div className="flex rounded-xl border border-gray-200 mb-6 overflow-hidden">
-            {(["email", "phone"] as Method[]).map((m) => (
-              <button key={m} type="button"
-                onClick={() => { setMethod(m); setError(""); }}
-                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${method === m ? "text-white" : "text-gray-500 hover:text-gray-700"}`}
-                style={method === m ? { backgroundColor: "#1B3A6B" } : {}}
-              >
-                {m === "email" ? "📧 Email" : "📱 Phone"}
-              </button>
-            ))}
-          </div>
-
           <form onSubmit={handleLogin} className="space-y-4">
-            {method === "email" ? (
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com" className={inputCls} />
-              </div>
-            ) : (
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Phone Number</label>
-                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} required placeholder="+49 176 12345678" className={inputCls} />
-              </div>
-            )}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com" className={inputCls} />
+            </div>
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
