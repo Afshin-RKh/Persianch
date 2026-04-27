@@ -154,15 +154,15 @@ export default function AboutPage() {
               </p>
               <p className="font-semibold mt-5" style={{ color: navy }}>مأموریت</p>
               <ul className="space-y-3 mt-1">
-                <li className="flex gap-3 flex-row-reverse text-right">
+                <li className="flex gap-3">
                   <span className="shrink-0 font-bold" style={{ color: gold }}>①</span>
                   <span>دیده‌شدن کسب‌وکارهای ایرانی — تا جامعه جهانی ایرانیان بتواند آن‌ها را پیدا، حمایت و تحسین کند.</span>
                 </li>
-                <li className="flex gap-3 flex-row-reverse text-right">
+                <li className="flex gap-3">
                   <span className="shrink-0 font-bold" style={{ color: gold }}>②</span>
                   <span>زنده نگه داشتن جامعه از طریق رویدادها — تشویق ایرانیان به دیدار، جشن و ارتباط، هر جا که زندگی می‌کنند.</span>
                 </li>
-                <li className="flex gap-3 flex-row-reverse text-right">
+                <li className="flex gap-3">
                   <span className="shrink-0 font-bold" style={{ color: gold }}>③</span>
                   <span>کمک به تازه‌واردها برای شروعی آسان‌تر — با جمع‌آوری اطلاعات محلی، خدمات مفید و دانش جامعه در یک مکان.</span>
                 </li>
@@ -203,14 +203,16 @@ export default function AboutPage() {
             <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3"
               style={{ backgroundColor: navy }}>AK</div>
             <p className="text-sm font-semibold text-gray-900 group-hover:text-[#1B3A6B]">Afshin Khosroshahi</p>
-            <p className="text-xs text-gray-400 mt-0.5">Founder · afshin.ch ↗</p>
+            <p className="text-xs font-medium mt-0.5" style={{ color: navy }}>Founder & CEO</p>
+            <p className="text-xs text-gray-400 mt-0.5">afshin.ch ↗</p>
           </a>
 
           <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-gray-100">
             <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3"
               style={{ backgroundColor: "#5B7FA6" }}>AT</div>
             <p className="text-sm font-semibold text-gray-900">Atefeh</p>
-            <p className="text-xs text-gray-400 mt-0.5">Co-founder</p>
+            <p className="text-xs font-medium mt-0.5" style={{ color: navy }}>Co-founder</p>
+            <p className="text-xs text-gray-400 mt-0.5">Community & Operations</p>
           </div>
 
           <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-dashed border-gray-200">
