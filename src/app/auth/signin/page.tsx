@@ -7,28 +7,30 @@ import { useAuth } from "@/lib/auth";
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
 type Method = "email" | "phone";
-type Step   = "form" | "verify";
+type Step   = "form" | "forgot" | "reset";
 
 export default function SignInPage() {
   const { login, user, applyAuth } = useAuth();
   const router = useRouter();
 
-  const [method, setMethod]       = useState<Method>("email");
-  const [step, setStep]           = useState<Step>("form");
-  const [pendingId, setPendingId] = useState<number | null>(null);
+  const [method, setMethod]         = useState<Method>("email");
+  const [step, setStep]             = useState<Step>("form");
+  const [resetPendingId, setResetPendingId] = useState<number>(0);
 
-  const [email, setEmail]         = useState("");
-  const [phone, setPhone]         = useState("");
-  const [password, setPassword]   = useState("");
-  const [otp, setOtp]             = useState("");
+  const [email, setEmail]           = useState("");
+  const [phone, setPhone]           = useState("");
+  const [password, setPassword]     = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [resetCode, setResetCode]   = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
-  const [error, setError]         = useState("");
-  const [loading, setLoading]     = useState(false);
-  const [resent, setResent]       = useState(false);
+  const [error, setError]           = useState("");
+  const [info, setInfo]             = useState("");
+  const [loading, setLoading]       = useState(false);
 
   if (user) { router.replace("/"); return null; }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -36,19 +38,13 @@ export default function SignInPage() {
       await login(method === "email" ? email : "", password, method === "phone" ? phone : undefined);
       router.replace("/");
     } catch (err: unknown) {
-      const e2 = err as Error & { user_id?: number };
-      if (e2.user_id) {
-        setPendingId(e2.user_id);
-        setStep("verify");
-      } else {
-        setError(e2.message || "Login failed");
-      }
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerify = async (e: React.FormEvent) => {
+  const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -56,35 +52,45 @@ export default function SignInPage() {
       const res = await fetch(`${API}/auth.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "verify_otp", user_id: pendingId, code: otp }),
+        body: JSON.stringify({ action: "forgot_password", email: forgotEmail }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Verification failed");
-      applyAuth(data.token, data.user);
-      router.replace("/");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Verification failed");
+      setResetPendingId(data.pending_id || 0);
+      setInfo(data.message || "If that email exists, we sent a reset code.");
+      setStep("reset");
+    } catch {
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResend = async () => {
-    setResent(false);
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (newPassword.length < 8) { setError("Password must be at least 8 characters"); return; }
+    setLoading(true);
     try {
-      await fetch(`${API}/auth.php`, {
+      const res = await fetch(`${API}/auth.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "resend_otp", user_id: pendingId }),
+        body: JSON.stringify({ action: "reset_password", pending_id: resetPendingId, code: resetCode, password: newPassword }),
       });
-      setResent(true);
-    } catch { /* non-fatal */ }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Reset failed");
+      setStep("form");
+      setInfo("Password updated! You can now sign in.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Reset failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputCls = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]";
 
-  // ── OTP verification step ──────────────────────────────────────────────
-  if (step === "verify") {
+  // ── Forgot password step ───────────────────────────────────────────────
+  if (step === "forgot") {
     return (
       <main className="min-h-screen flex items-center justify-center px-4 py-16 bg-gray-50">
         <div className="w-full max-w-sm">
@@ -92,45 +98,69 @@ export default function SignInPage() {
             <Link href="/" className="text-2xl font-bold" style={{ color: "#1B3A6B" }}>
               Biruni<span style={{ color: "#C9A84C" }}>Map</span>
             </Link>
-            <p className="text-gray-500 text-sm mt-2">Verify your account</p>
+            <p className="text-gray-500 text-sm mt-2">Reset your password</p>
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <div className="text-center mb-6">
-              <span className="text-4xl">📬</span>
-              <p className="text-sm text-gray-600 mt-3">
-                We sent a 6-digit code to your email. Enter it below to sign in.
-              </p>
-            </div>
-            <form onSubmit={handleVerify} className="space-y-4">
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                value={otp}
-                onChange={e => setOtp(e.target.value.replace(/\D/g, ""))}
-                required
-                placeholder="6-digit code"
-                className={inputCls + " text-center tracking-widest text-xl font-bold"}
-                autoFocus
-              />
+            <form onSubmit={handleForgot} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Your Email</label>
+                <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} required placeholder="you@example.com" className={inputCls} autoFocus />
+              </div>
               {error && <p className="text-red-600 text-sm">{error}</p>}
-              {resent && <p className="text-green-600 text-sm">Code resent!</p>}
-              <button
-                type="submit"
-                disabled={loading || otp.length < 6}
+              <button type="submit" disabled={loading}
                 className="w-full text-white font-semibold py-3 rounded-xl text-sm disabled:opacity-50"
                 style={{ backgroundColor: "#8B1A1A" }}
               >
-                {loading ? "Verifying..." : "Verify & Sign In"}
+                {loading ? "Sending..." : "Send Reset Code →"}
               </button>
             </form>
             <p className="text-center text-sm text-gray-500 mt-5">
-              {"Didn't receive it? "}
-              <button onClick={handleResend} className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
-                Resend code
+              <button onClick={() => { setStep("form"); setError(""); }} className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
+                ← Back to sign in
               </button>
             </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Reset code + new password step ────────────────────────────────────
+  if (step === "reset") {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-4 py-16 bg-gray-50">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <Link href="/" className="text-2xl font-bold" style={{ color: "#1B3A6B" }}>
+              Biruni<span style={{ color: "#C9A84C" }}>Map</span>
+            </Link>
+            <p className="text-gray-500 text-sm mt-2">Enter your reset code</p>
+          </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            {info && <p className="text-sm text-gray-600 mb-4 text-center">{info}</p>}
+            <form onSubmit={handleReset} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">6-digit Code</label>
+                <input
+                  type="text" inputMode="numeric" pattern="[0-9]{6}" maxLength={6}
+                  value={resetCode} onChange={e => setResetCode(e.target.value.replace(/\D/g, ""))}
+                  required placeholder="000000"
+                  className={inputCls + " text-center tracking-widest text-2xl font-bold"}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">New Password</label>
+                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required placeholder="Min. 8 characters" className={inputCls} />
+              </div>
+              {error && <p className="text-red-600 text-sm">{error}</p>}
+              <button type="submit" disabled={loading || resetCode.length < 6}
+                className="w-full text-white font-semibold py-3 rounded-xl text-sm disabled:opacity-50"
+                style={{ backgroundColor: "#8B1A1A" }}
+              >
+                {loading ? "Updating..." : "Set New Password →"}
+              </button>
+            </form>
           </div>
         </div>
       </main>
@@ -147,18 +177,12 @@ export default function SignInPage() {
           </Link>
           <p className="text-gray-500 text-sm mt-2">Sign in to your account</p>
         </div>
-
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          {/* Method toggle */}
           <div className="flex rounded-xl border border-gray-200 mb-6 overflow-hidden">
             {(["email", "phone"] as Method[]).map((m) => (
-              <button
-                key={m}
-                type="button"
+              <button key={m} type="button"
                 onClick={() => { setMethod(m); setError(""); }}
-                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
-                  method === m ? "text-white" : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${method === m ? "text-white" : "text-gray-500 hover:text-gray-700"}`}
                 style={method === m ? { backgroundColor: "#1B3A6B" } : {}}
               >
                 {m === "email" ? "📧 Email" : "📱 Phone"}
@@ -166,51 +190,35 @@ export default function SignInPage() {
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
             {method === "email" ? (
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  placeholder="you@example.com"
-                  className={inputCls}
-                />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com" className={inputCls} />
               </div>
             ) : (
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">Phone Number</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  required
-                  placeholder="+49 176 12345678"
-                  className={inputCls}
-                />
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} required placeholder="+49 176 12345678" className={inputCls} />
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                className={inputCls}
-              />
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-xs font-semibold text-gray-600">Password</label>
+                <button type="button" onClick={() => { setStep("forgot"); setForgotEmail(email); setError(""); }}
+                  className="text-xs hover:underline" style={{ color: "#1B3A6B" }}>
+                  Forgot password?
+                </button>
+              </div>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" className={inputCls} />
             </div>
 
+            {info && <p className="text-green-600 text-sm">{info}</p>}
             {error && <p className="text-red-600 text-sm">{error}</p>}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full text-white font-semibold py-3 rounded-xl transition-colors text-sm disabled:opacity-50"
+            <button type="submit" disabled={loading}
+              className="w-full text-white font-semibold py-3 rounded-xl text-sm disabled:opacity-50"
               style={{ backgroundColor: "#8B1A1A" }}
             >
               {loading ? "Signing in..." : "Sign In"}
@@ -219,9 +227,7 @@ export default function SignInPage() {
 
           <p className="text-center text-sm text-gray-500 mt-6">
             No account?{" "}
-            <Link href="/auth/signup" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
-              Create one
-            </Link>
+            <Link href="/auth/signup" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>Create one</Link>
           </p>
         </div>
       </div>

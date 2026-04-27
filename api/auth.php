@@ -13,17 +13,15 @@ function generate_otp(): string {
     return str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 }
 
-function save_otp(PDO $pdo, int $userId, string $code, string $type = 'email'): void {
-    // Invalidate any existing unused codes for this user+type
-    $pdo->prepare("UPDATE verification_codes SET used_at = NOW() WHERE user_id = :uid AND type = :type AND used_at IS NULL")
-        ->execute([':uid' => $userId, ':type' => $type]);
-    $pdo->prepare("INSERT INTO verification_codes (user_id, code, type, expires_at) VALUES (:uid, :code, :type, DATE_ADD(NOW(), INTERVAL 15 MINUTE))")
-        ->execute([':uid' => $userId, ':code' => $code, ':type' => $type]);
-}
-
 function send_verification_email(string $toEmail, string $toName, string $code): bool {
     $subject = "Your BiruniMap verification code: $code";
     $body    = "Hi $toName,\n\nYour BiruniMap verification code is:\n\n    $code\n\nThis code expires in 15 minutes.\n\nIf you did not request this, ignore this email.\n\n— BiruniMap Team";
+    return send_email($toEmail, $toName, $subject, $body);
+}
+
+function send_reset_email(string $toEmail, string $toName, string $code): bool {
+    $subject = "Reset your BiruniMap password";
+    $body    = "Hi $toName,\n\nYour password reset code is:\n\n    $code\n\nThis code expires in 15 minutes.\n\nIf you did not request a password reset, ignore this email.\n\n— BiruniMap Team";
     return send_email($toEmail, $toName, $subject, $body);
 }
 
@@ -41,7 +39,7 @@ if ($method === 'GET') {
 }
 
 // ---------------------------------------------------------------------------
-// POST — register / login / verify_otp / resend_otp
+// POST
 // ---------------------------------------------------------------------------
 
 if ($method === 'POST') {
@@ -49,7 +47,7 @@ if ($method === 'POST') {
     $action = $data['action'] ?? '';
 
     // -----------------------------------------------------------------------
-    // REGISTER
+    // REGISTER — store pending, send OTP (user NOT inserted yet)
     // -----------------------------------------------------------------------
     if ($action === 'register') {
         $name  = trim($data['name'] ?? '');
@@ -57,158 +55,99 @@ if ($method === 'POST') {
         $phone = trim($data['phone'] ?? '');
         $pass  = $data['password'] ?? '';
 
-        if (!$name) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Name is required']);
-            exit();
-        }
-        if (!$email && !$phone) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Email or phone is required']);
-            exit();
-        }
-        if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid email address']);
-            exit();
-        }
-        if (!$pass || strlen($pass) < 8) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Password must be at least 8 characters']);
-            exit();
-        }
+        if (!$name) { http_response_code(400); echo json_encode(['error' => 'Name is required']); exit(); }
+        if (!$email && !$phone) { http_response_code(400); echo json_encode(['error' => 'Email or phone is required']); exit(); }
+        if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) { http_response_code(400); echo json_encode(['error' => 'Invalid email address']); exit(); }
+        if (strlen($pass) < 8) { http_response_code(400); echo json_encode(['error' => 'Password must be at least 8 characters']); exit(); }
 
-        // Check duplicate email
+        // Check if already a verified user
         if ($email) {
             $check = $pdo->prepare("SELECT id FROM users WHERE email = :email");
             $check->execute([':email' => $email]);
-            if ($check->fetch()) {
-                http_response_code(409);
-                echo json_encode(['error' => 'Email already registered']);
-                exit();
-            }
+            if ($check->fetch()) { http_response_code(409); echo json_encode(['error' => 'Email already registered']); exit(); }
         }
-        // Check duplicate phone
         if ($phone) {
-            $checkP = $pdo->prepare("SELECT id FROM users WHERE phone = :phone");
-            $checkP->execute([':phone' => $phone]);
-            if ($checkP->fetch()) {
-                http_response_code(409);
-                echo json_encode(['error' => 'Phone number already registered']);
-                exit();
-            }
+            $check = $pdo->prepare("SELECT id FROM users WHERE phone = :phone");
+            $check->execute([':phone' => $phone]);
+            if ($check->fetch()) { http_response_code(409); echo json_encode(['error' => 'Phone already registered']); exit(); }
         }
 
+        $otp  = generate_otp();
         $hash = password_hash($pass, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare(
-            "INSERT INTO users (name, email, phone, password_hash, is_verified) VALUES (:name, :email, :phone, :hash, 0)"
-        );
-        $stmt->execute([
-            ':name'  => $name,
-            ':email' => $email ?: null,
-            ':phone' => $phone ?: null,
-            ':hash'  => $hash,
-        ]);
-        $id = (int)$pdo->lastInsertId();
 
-        // Save interest locations if provided
-        $locations = $data['locations'] ?? [];
-        if (is_array($locations) && count($locations) > 0) {
-            $ins = $pdo->prepare("INSERT IGNORE INTO user_locations (user_id, country, city) VALUES (:uid, :country, :city)");
-            foreach ($locations as $loc) {
-                if (!empty($loc['country']) && !empty($loc['city'])) {
-                    $ins->execute([':uid' => $id, ':country' => $loc['country'], ':city' => $loc['city']]);
-                }
-            }
-        }
+        // Remove any previous pending registration for this email/phone
+        if ($email) $pdo->prepare("DELETE FROM pending_registrations WHERE email = :e")->execute([':e' => $email]);
+        if ($phone) $pdo->prepare("DELETE FROM pending_registrations WHERE phone = :p")->execute([':p' => $phone]);
 
-        // Generate & send OTP
-        $otp = generate_otp();
-        save_otp($pdo, $id, $otp, 'email');
-        $emailSent = false;
-        if ($email) {
-            $emailSent = send_verification_email($email, $name, $otp);
-            if (!$emailSent) {
-                error_log("[BiruniMap OTP] user_id=$id email=$email code=$otp");
-            }
-        }
+        $pdo->prepare("INSERT INTO pending_registrations (name, email, phone, pass_hash, otp, expires_at) VALUES (:name, :email, :phone, :hash, :otp, DATE_ADD(NOW(), INTERVAL 15 MINUTE))")
+            ->execute([':name' => $name, ':email' => $email ?: null, ':phone' => $phone ?: null, ':hash' => $hash, ':otp' => $otp]);
+        $pendingId = (int)$pdo->lastInsertId();
+
+        $emailSent = $email ? send_verification_email($email, $name, $otp) : false;
 
         echo json_encode([
             'pending'    => true,
-            'user_id'    => $id,
+            'pending_id' => $pendingId,
             'email_sent' => $emailSent,
             'message'    => $emailSent
-                ? "We sent a 6-digit code to $email. Enter it below to verify your account."
-                : "We could not send the verification email. Please try again or contact support.",
+                ? "We sent a 6-digit code to $email. Enter it below to create your account."
+                : "Could not send verification email. Please try again.",
         ]);
         exit();
     }
 
     // -----------------------------------------------------------------------
-    // VERIFY OTP
+    // VERIFY OTP (registration) — NOW insert user
     // -----------------------------------------------------------------------
     if ($action === 'verify_otp') {
-        $userId = (int)($data['user_id'] ?? 0);
-        $code   = trim($data['code'] ?? '');
+        $pendingId = (int)($data['pending_id'] ?? 0);
+        $code      = trim($data['code'] ?? '');
 
-        if (!$userId || !$code) {
-            http_response_code(400);
-            echo json_encode(['error' => 'user_id and code are required']);
-            exit();
+        if (!$pendingId || !$code) { http_response_code(400); echo json_encode(['error' => 'pending_id and code are required']); exit(); }
+
+        $stmt = $pdo->prepare("SELECT * FROM pending_registrations WHERE id = :id AND otp = :otp AND expires_at > NOW()");
+        $stmt->execute([':id' => $pendingId, ':otp' => $code]);
+        $pending = $stmt->fetch();
+
+        if (!$pending) { http_response_code(400); echo json_encode(['error' => 'Invalid or expired code. Please request a new one.']); exit(); }
+
+        // Double-check email not taken in the time since OTP was sent
+        if ($pending['email']) {
+            $check = $pdo->prepare("SELECT id FROM users WHERE email = :email");
+            $check->execute([':email' => $pending['email']]);
+            if ($check->fetch()) { http_response_code(409); echo json_encode(['error' => 'Email already registered']); exit(); }
         }
 
-        $stmt = $pdo->prepare(
-            "SELECT id FROM verification_codes
-             WHERE user_id = :uid AND code = :code AND used_at IS NULL AND expires_at > NOW()
-             ORDER BY id DESC LIMIT 1"
-        );
-        $stmt->execute([':uid' => $userId, ':code' => $code]);
-        $row = $stmt->fetch();
+        // Insert verified user
+        $pdo->prepare("INSERT INTO users (name, email, phone, password_hash, is_verified) VALUES (:name, :email, :phone, :hash, 1)")
+            ->execute([':name' => $pending['name'], ':email' => $pending['email'], ':phone' => $pending['phone'], ':hash' => $pending['pass_hash']]);
+        $userId = (int)$pdo->lastInsertId();
 
-        if (!$row) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid or expired code. Please request a new one.']);
-            exit();
-        }
+        // Clean up pending row
+        $pdo->prepare("DELETE FROM pending_registrations WHERE id = :id")->execute([':id' => $pendingId]);
 
-        // Mark code used, verify user
-        $pdo->prepare("UPDATE verification_codes SET used_at = NOW() WHERE id = :id")
-            ->execute([':id' => $row['id']]);
-        $pdo->prepare("UPDATE users SET is_verified = 1 WHERE id = :id")
-            ->execute([':id' => $userId]);
-
-        $u = $pdo->prepare("SELECT id, name, email, phone, role, avatar FROM users WHERE id = :id");
-        $u->execute([':id' => $userId]);
-        $user = $u->fetch();
-
-        $token = jwt_sign(['sub' => $user['id'], 'role' => $user['role'], 'name' => $user['name'], 'exp' => time() + JWT_TTL]);
-        echo json_encode(['token' => $token, 'user' => $user]);
+        $token = jwt_sign(['sub' => $userId, 'role' => 'user', 'name' => $pending['name'], 'exp' => time() + JWT_TTL]);
+        echo json_encode(['token' => $token, 'user' => ['id' => $userId, 'name' => $pending['name'], 'email' => $pending['email'], 'phone' => $pending['phone'], 'role' => 'user']]);
         exit();
     }
 
     // -----------------------------------------------------------------------
-    // RESEND OTP
+    // RESEND OTP (registration)
     // -----------------------------------------------------------------------
     if ($action === 'resend_otp') {
-        $userId = (int)($data['user_id'] ?? 0);
-        if (!$userId) {
-            http_response_code(400);
-            echo json_encode(['error' => 'user_id is required']);
-            exit();
-        }
+        $pendingId = (int)($data['pending_id'] ?? 0);
+        if (!$pendingId) { http_response_code(400); echo json_encode(['error' => 'pending_id is required']); exit(); }
 
-        $u = $pdo->prepare("SELECT id, name, email, is_verified FROM users WHERE id = :id");
-        $u->execute([':id' => $userId]);
-        $user = $u->fetch();
-
-        if (!$user) { http_response_code(404); echo json_encode(['error' => 'User not found']); exit(); }
-        if ($user['is_verified']) { echo json_encode(['message' => 'Already verified']); exit(); }
+        $stmt = $pdo->prepare("SELECT * FROM pending_registrations WHERE id = :id");
+        $stmt->execute([':id' => $pendingId]);
+        $pending = $stmt->fetch();
+        if (!$pending) { http_response_code(404); echo json_encode(['error' => 'Registration not found']); exit(); }
 
         $otp = generate_otp();
-        save_otp($pdo, $userId, $otp, 'email');
-        if ($user['email']) {
-            send_verification_email($user['email'], $user['name'], $otp);
-        }
+        $pdo->prepare("UPDATE pending_registrations SET otp = :otp, expires_at = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id = :id")
+            ->execute([':otp' => $otp, ':id' => $pendingId]);
+
+        if ($pending['email']) send_verification_email($pending['email'], $pending['name'], $otp);
         echo json_encode(['message' => 'Code resent']);
         exit();
     }
@@ -221,11 +160,7 @@ if ($method === 'POST') {
         $phone = trim($data['phone'] ?? '');
         $pass  = $data['password'] ?? '';
 
-        if ((!$email && !$phone) || !$pass) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Email/phone and password are required']);
-            exit();
-        }
+        if ((!$email && !$phone) || !$pass) { http_response_code(400); echo json_encode(['error' => 'Email/phone and password are required']); exit(); }
 
         if ($email) {
             $stmt = $pdo->prepare("SELECT id, name, email, phone, role, password_hash, avatar, is_verified FROM users WHERE email = :email");
@@ -238,28 +173,74 @@ if ($method === 'POST') {
 
         if (!$row || !$row['password_hash'] || !password_verify($pass, $row['password_hash'])) {
             http_response_code(401);
-            echo json_encode(['error' => 'Invalid credentials']);
+            echo json_encode(['error' => 'Invalid email or password']);
             exit();
         }
 
         if (!$row['is_verified']) {
-            // Resend OTP so they can verify
-            $otp = generate_otp();
-            save_otp($pdo, (int)$row['id'], $otp, 'email');
-            if ($row['email']) send_verification_email($row['email'], $row['name'], $otp);
-
             http_response_code(403);
-            echo json_encode([
-                'error'            => 'Please verify your email first.',
-                'needs_verification' => true,
-                'user_id'          => (int)$row['id'],
-            ]);
+            echo json_encode(['error' => 'Account not verified. Please sign up again.', 'needs_signup' => true]);
             exit();
         }
 
         $token = jwt_sign(['sub' => (int)$row['id'], 'role' => $row['role'], 'name' => $row['name'], 'exp' => time() + JWT_TTL]);
         unset($row['password_hash'], $row['is_verified']);
         echo json_encode(['token' => $token, 'user' => $row]);
+        exit();
+    }
+
+    // -----------------------------------------------------------------------
+    // FORGOT PASSWORD — send reset OTP
+    // -----------------------------------------------------------------------
+    if ($action === 'forgot_password') {
+        $email = strtolower(trim($data['email'] ?? ''));
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400); echo json_encode(['error' => 'Valid email is required']); exit();
+        }
+
+        $stmt = $pdo->prepare("SELECT id, name FROM users WHERE email = :email AND is_verified = 1");
+        $stmt->execute([':email' => $email]);
+        $user = $stmt->fetch();
+
+        // Always return success to prevent email enumeration
+        if ($user) {
+            $otp = generate_otp();
+            $pdo->prepare("DELETE FROM pending_registrations WHERE email = :e AND name = '__reset__'")->execute([':e' => $email]);
+            $pdo->prepare("INSERT INTO pending_registrations (name, email, phone, pass_hash, otp, expires_at) VALUES ('__reset__', :email, NULL, '', :otp, DATE_ADD(NOW(), INTERVAL 15 MINUTE))")
+                ->execute([':email' => $email, ':otp' => $otp]);
+            $resetId = (int)$pdo->lastInsertId();
+            send_reset_email($email, $user['name'], $otp);
+            echo json_encode(['pending_id' => $resetId, 'message' => "We sent a reset code to $email."]);
+        } else {
+            echo json_encode(['pending_id' => 0, 'message' => "If that email exists, we sent a reset code."]);
+        }
+        exit();
+    }
+
+    // -----------------------------------------------------------------------
+    // RESET PASSWORD — verify OTP then set new password
+    // -----------------------------------------------------------------------
+    if ($action === 'reset_password') {
+        $pendingId = (int)($data['pending_id'] ?? 0);
+        $code      = trim($data['code'] ?? '');
+        $newPass   = $data['password'] ?? '';
+
+        if (!$pendingId || !$code || strlen($newPass) < 8) {
+            http_response_code(400); echo json_encode(['error' => 'pending_id, code and new password (min 8 chars) are required']); exit();
+        }
+
+        $stmt = $pdo->prepare("SELECT * FROM pending_registrations WHERE id = :id AND name = '__reset__' AND otp = :otp AND expires_at > NOW()");
+        $stmt->execute([':id' => $pendingId, ':otp' => $code]);
+        $pending = $stmt->fetch();
+
+        if (!$pending) { http_response_code(400); echo json_encode(['error' => 'Invalid or expired code.']); exit(); }
+
+        $hash = password_hash($newPass, PASSWORD_DEFAULT);
+        $pdo->prepare("UPDATE users SET password_hash = :hash WHERE email = :email")
+            ->execute([':hash' => $hash, ':email' => $pending['email']]);
+        $pdo->prepare("DELETE FROM pending_registrations WHERE id = :id")->execute([':id' => $pendingId]);
+
+        echo json_encode(['success' => true, 'message' => 'Password updated. You can now sign in.']);
         exit();
     }
 
