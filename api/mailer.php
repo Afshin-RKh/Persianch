@@ -38,7 +38,7 @@ function _smtp_send(string $toEmail, string $toName, string $subject, string $bo
     try {
         $ssl    = ($port === 465);
         $target = ($ssl ? 'ssl://' : '') . $host;
-        $sock   = @fsockopen($target, $port, $errno, $errstr, 10);
+        $sock   = @fsockopen($target, $port, $errno, $errstr, 5);
         if (!$sock) {
             error_log("[BiruniMap mailer] fsockopen failed: $errstr ($errno) — host=$target port=$port");
             return false;
