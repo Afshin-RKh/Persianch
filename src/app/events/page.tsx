@@ -94,15 +94,6 @@ export default function EventsPage() {
               <h1 className="text-lg font-bold" style={{ color: "#1B3A6B" }}>Community Events</h1>
               <p className="text-gray-400 text-xs mt-0.5">Persian & Iranian events around the world</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Link
-                href="/events/submit"
-                className="text-white text-xs font-semibold px-4 py-1.5 rounded-full hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: "#8B1A1A" }}
-              >
-                + Submit Event
-              </Link>
-            </div>
           </div>
 
           {/* Search bar */}
@@ -189,6 +180,19 @@ export default function EventsPage() {
             <EventsMap events={events} userLocation={userLocation} onSelectEvent={() => {}} />
           </Suspense>
         </div>
+      </div>
+
+      {/* Submit event banner */}
+      <div className="border-t border-gray-100 bg-[#FDF8F3] px-6 py-6 flex flex-col items-center gap-3 text-center">
+        <p className="text-sm font-medium text-gray-700">Know about an Iranian or Persian event happening near you?</p>
+        <p className="text-xs text-gray-400">Share it with the community — concerts, classes, gatherings and more.</p>
+        <Link
+          href="/events/submit"
+          className="text-sm font-bold px-6 py-2.5 rounded-xl text-white transition-all hover:opacity-90 hover:scale-105 shadow-sm"
+          style={{ backgroundColor: "#8B1A1A" }}
+        >
+          + Submit Event
+        </Link>
       </div>
     </div>
   );
