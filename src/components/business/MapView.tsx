@@ -1762,7 +1762,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
             width: 16px; height: 16px;
             border-radius: 50%;
             background: #4A90D9;
-            border: 3px solid white;
+            border: 3px solid #1B3A6B;
             box-shadow: 0 0 6px 2px rgba(74,144,217,0.8);
             animation: user-glow 1.8s ease-in-out infinite;
             position: relative;
