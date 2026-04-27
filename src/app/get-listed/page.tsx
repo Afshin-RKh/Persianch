@@ -25,11 +25,12 @@ export default function GetListedPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await fetch("https://formspree.io/f/xvzdqpoq", {
+      const res = await fetch("/api/submit-business", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+      if (!res.ok) throw new Error("Failed");
       setSent(true);
     } catch {
       setSent(true);
