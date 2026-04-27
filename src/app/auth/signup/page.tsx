@@ -145,7 +145,7 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1.5">Full Name</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Ali Hosseini" className={inputCls} />
+              <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Helma Omrani" className={inputCls} />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
