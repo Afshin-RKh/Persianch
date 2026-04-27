@@ -18,7 +18,10 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    Promise.all([import("leaflet"), import("leaflet.markercluster")]).then(([L]) => {
+    (async () => {
+      const L = await import("leaflet");
+      await import("leaflet.markercluster");
+
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -33,7 +36,6 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
 
       mapInstanceRef.current = map;
 
-      // Beating heart on Iran
       if (!document.getElementById("heartbeat-style")) {
         const s = document.createElement("style");
         s.id = "heartbeat-style";
@@ -46,7 +48,6 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
       });
       L.marker([32.4279, 53.6880], { icon: heartIcon, interactive: false, zIndexOffset: -1000 }).addTo(map);
 
-      // Auto-zoom via IP
       fetch("https://ipapi.co/json/").then((r) => r.json())
         .then((d) => { if (d.latitude && d.longitude) map.flyTo([d.latitude, d.longitude], 10, { duration: 1.5 }); })
         .catch(() => {});
@@ -55,7 +56,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
       const onResize = () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => map.invalidateSize(), 150); };
       window.addEventListener("resize", onResize);
       (map as any)._onResize = onResize;
-    });
+    })();
 
     return () => {
       if (mapInstanceRef.current) {
@@ -69,8 +70,11 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
   // Update event markers with clustering
   useEffect(() => {
     if (!mapInstanceRef.current) return;
-    Promise.all([import("leaflet"), import("leaflet.markercluster")]).then(([L]) => {
-      // Remove old cluster group
+
+    (async () => {
+      const L = await import("leaflet");
+      await import("leaflet.markercluster");
+
       if (clusterRef.current) {
         mapInstanceRef.current!.removeLayer(clusterRef.current);
       }
@@ -79,16 +83,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
         showCoverageOnHover: false,
         maxClusterRadius: 50,
         iconCreateFunction: (c: any) => L.divIcon({
-          html: `<div style="
-            background: #1B3A6B;
-            color: white;
-            border-radius: 50%;
-            width: 38px; height: 38px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 13px; font-weight: 700;
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          ">${c.getChildCount()}</div>`,
+          html: `<div style="background:#1B3A6B;color:white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">${c.getChildCount()}</div>`,
           className: "", iconSize: [38, 38], iconAnchor: [19, 19],
         }),
       });
@@ -111,7 +106,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
 
       mapInstanceRef.current!.addLayer(cluster);
       clusterRef.current = cluster;
-    });
+    })();
   }, [events, onSelectEvent]);
 
   // User location pulsing marker
@@ -134,16 +129,14 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
             50%       { box-shadow: 0 0 18px 6px rgba(74,144,217,1); }
           }
           .user-location-dot {
-            width: 16px; height: 16px; border-radius: 50%;
-            background: #4A90D9; border: 3px solid #1B3A6B;
-            box-shadow: 0 0 6px 2px rgba(74,144,217,0.8);
-            animation: user-glow 1.8s ease-in-out infinite; position: relative;
+            width:16px;height:16px;border-radius:50%;background:#4A90D9;
+            border:3px solid #1B3A6B;box-shadow:0 0 6px 2px rgba(74,144,217,0.8);
+            animation:user-glow 1.8s ease-in-out infinite;position:relative;
           }
           .user-location-dot::after {
-            content: ''; position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; border-radius: 50%;
-            background: rgba(74,144,217,0.5);
-            animation: user-pulse 1.8s ease-out infinite;
+            content:'';position:absolute;top:0;left:0;width:100%;height:100%;
+            border-radius:50%;background:rgba(74,144,217,0.5);
+            animation:user-pulse 1.8s ease-out infinite;
           }
         `;
         document.head.appendChild(s);
