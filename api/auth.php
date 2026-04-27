@@ -129,18 +129,19 @@ if ($method === 'POST') {
         if ($email) {
             $emailSent = send_verification_email($email, $name, $otp);
             if (!$emailSent) {
-                // Log OTP to file so admin can retrieve it during debugging
                 error_log("[BiruniMap OTP] user_id=$id email=$email code=$otp");
             }
         }
 
+        // DEBUG: include code in response until SMTP is confirmed working
         echo json_encode([
             'pending'      => true,
             'user_id'      => $id,
             'email_sent'   => $emailSent,
+            'debug_code'   => $emailSent ? null : $otp,
             'message'      => $emailSent
                 ? "We sent a 6-digit code to $email. Enter it below to verify your account."
-                : "We could not send the email. Please contact support or try again.",
+                : "Email delivery failed. Use the code shown below to verify (temporary).",
         ]);
         exit();
     }

@@ -41,8 +41,8 @@ export default function SignUpPage() {
       const result = await register(name, email, password, [], phone);
       setPendingId(result.user_id);
       setOtpMsg(result.message);
-      if (!result.email_sent) {
-        setError("Email could not be sent. Please check your email address or try again later.");
+      if (result.debug_code) {
+        setOtp(result.debug_code);
       }
       setStep("verify");
     } catch (err: unknown) {

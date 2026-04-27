@@ -16,7 +16,7 @@ interface AuthCtx {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string, phone?: string) => Promise<void>;
-  register: (name: string, email: string, password: string, locations?: { country: string; city: string }[], phone?: string) => Promise<{ pending: boolean; user_id: number; message: string; email_sent: boolean }>;
+  register: (name: string, email: string, password: string, locations?: { country: string; city: string }[], phone?: string) => Promise<{ pending: boolean; user_id: number; message: string; email_sent: boolean; debug_code?: string }>;
   applyAuth: (token: string, user: AuthUser) => void;
   logout: () => void;
   isAdmin: boolean;
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Registration failed");
     // Registration now returns {pending: true, user_id} — caller handles OTP step
-    return data as { pending: boolean; user_id: number; message: string; email_sent: boolean };
+    return data as { pending: boolean; user_id: number; message: string; email_sent: boolean; debug_code?: string };
   };
 
   return (
