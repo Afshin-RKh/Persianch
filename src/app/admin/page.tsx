@@ -393,6 +393,7 @@ export default function AdminPage() {
   const [bizCountry, setBizCountry]   = useState("");
   const [bizCategory, setBizCategory] = useState("");
   const [bizApproved, setBizApproved] = useState<"all" | "approved" | "pending">("all");
+  const [bizPage, setBizPage] = useState(0);
   const [showAddBiz, setShowAddBiz]   = useState(false);
   const [editBiz, setEditBiz]         = useState<BusinessRow | null>(null);
   const [bizForm, setBizForm]         = useState<BizForm>(EMPTY_BIZ);
@@ -430,8 +431,14 @@ export default function AdminPage() {
         setPosts(combined.filter((p) => { if (seen.has(p.id)) return false; seen.add(p.id); return true; }));
       }
       if (tab === "businesses") {
-        const r = await fetch(`${API}/businesses.php`, { headers: authHeaders(token) });
-        setBusinesses(await r.json());
+        const [r1, r2] = await Promise.all([
+          fetch(`${API}/businesses.php?pending=1`, { headers: authHeaders(token) }),
+          fetch(`${API}/businesses.php`, { headers: authHeaders(token) }),
+        ]);
+        const [pending, approved] = await Promise.all([r1.json(), r2.json()]);
+        const combined: BusinessRow[] = [...(Array.isArray(pending) ? pending : []), ...(Array.isArray(approved) ? approved : [])];
+        const seen = new Set<number>();
+        setBusinesses(combined.filter((b) => { if (seen.has(b.id)) return false; seen.add(b.id); return true; }));
         // Pre-fetch users for owner assignment
         const ur = await fetch(`${API}/users.php`, { headers: authHeaders(token) });
         const all = await ur.json();
@@ -580,6 +587,10 @@ export default function AdminPage() {
     }
     return true;
   });
+
+  const BIZ_PAGE_SIZE = 10;
+  const bizTotalPages = Math.ceil(filteredBiz.length / BIZ_PAGE_SIZE);
+  const pagedBiz = filteredBiz.slice(bizPage * BIZ_PAGE_SIZE, (bizPage + 1) * BIZ_PAGE_SIZE);
 
   const userCountries = [...new Set(
     businesses.filter((b) => b.owner_user_id).map((b) => b.country).filter(Boolean)
@@ -731,19 +742,19 @@ export default function AdminPage() {
                 </button>
               </div>
               <div className="px-6 py-3 border-b border-gray-50 flex flex-wrap gap-2">
-                <input type="text" placeholder="Search…" value={bizSearch} onChange={(e) => setBizSearch(e.target.value)}
+                <input type="text" placeholder="Search…" value={bizSearch} onChange={(e) => { setBizSearch(e.target.value); setBizPage(0); }}
                   className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] flex-1 min-w-40" />
-                <select value={bizCategory} onChange={(e) => setBizCategory(e.target.value)}
+                <select value={bizCategory} onChange={(e) => { setBizCategory(e.target.value); setBizPage(0); }}
                   className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
                   <option value="">All categories</option>
-                  {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
+                  {[...CATEGORIES].sort((a, b) => a.slug === "other" ? 1 : b.slug === "other" ? -1 : a.label_en.localeCompare(b.label_en)).map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.label_en}</option>)}
                 </select>
-                <select value={bizCountry} onChange={(e) => setBizCountry(e.target.value)}
+                <select value={bizCountry} onChange={(e) => { setBizCountry(e.target.value); setBizPage(0); }}
                   className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
                   <option value="">All countries</option>
                   {bizCountries.sort().map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
-                <select value={bizApproved} onChange={(e) => setBizApproved(e.target.value as any)}
+                <select value={bizApproved} onChange={(e) => { setBizApproved(e.target.value as any); setBizPage(0); }}
                   className="border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
                   <option value="all">All statuses</option>
                   <option value="approved">Approved</option>
@@ -759,10 +770,21 @@ export default function AdminPage() {
             )}
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              {bizTotalPages > 1 && (
+                <div className="px-6 py-3 border-b border-gray-50 flex items-center justify-between text-xs text-gray-500">
+                  <span>{filteredBiz.length} businesses · page {bizPage + 1} of {bizTotalPages}</span>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setBizPage((p) => Math.max(0, p - 1))} disabled={bizPage === 0}
+                      className="px-3 py-1 rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50 font-medium transition-colors">← Prev</button>
+                    <button onClick={() => setBizPage((p) => Math.min(bizTotalPages - 1, p + 1))} disabled={bizPage >= bizTotalPages - 1}
+                      className="px-3 py-1 rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50 font-medium transition-colors">Next →</button>
+                  </div>
+                </div>
+              )}
               {filteredBiz.length === 0
                 ? <p className="text-gray-400 text-sm p-6">No businesses match your filters.</p>
                 : <div className="divide-y divide-gray-50">
-                  {filteredBiz.map((b) => (
+                  {pagedBiz.map((b) => (
                     <div key={b.id}>
                       <div className={`px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors ${!b.is_approved ? "opacity-60" : ""}`}>
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 bg-gray-50 border border-gray-100">
