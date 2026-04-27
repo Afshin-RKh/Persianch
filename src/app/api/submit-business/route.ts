@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const PHP_API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
-const ADMIN_TOKEN = process.env.ADMIN_API_TOKEN || "";
 
 async function geocode(address: string, city: string, country: string): Promise<{ lat: number; lng: number } | null> {
   const query = [address, city, country].filter(Boolean).join(", ");
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
-      {
-        headers: {
-          "User-Agent": "BiruniMap/1.0 (contact@birunimap.com)",
-          "Accept-Language": "en",
-        },
-      }
+      { headers: { "User-Agent": "BiruniMap/1.0 (contact@birunimap.com)", "Accept-Language": "en" } }
     );
     const data = await res.json();
     if (data.length > 0) {
@@ -43,10 +37,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Geocode server-side
     const coords = await geocode(address, city, country);
 
-    // Build business payload — unapproved until reviewed
     const payload = {
       name: businessName,
       category,
@@ -64,16 +56,12 @@ export async function POST(req: NextRequest) {
       is_featured: false,
       is_verified: false,
       is_approved: false,
-      // Store submitter connection in description as note
-      ...(connection ? { _submission_note: `Connection: ${connection} | Submitter email: ${email}` } : {}),
+      connection: connection || null,
     };
 
     const phpRes = await fetch(`${PHP_API}/businesses.php`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${ADMIN_TOKEN}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
