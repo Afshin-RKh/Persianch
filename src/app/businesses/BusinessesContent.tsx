@@ -14,22 +14,21 @@ export default function BusinessesContent() {
   const searchParams = useSearchParams();
   const { token, isAdmin } = useAuth();
 
-  // All businesses fetched once
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<Business | null>(null);
   const [showMap, setShowMap] = useState(true);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [locating, setLocating] = useState(false);
 
-  // Filter state — initialised from URL params
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [country, setCountry] = useState(searchParams.get("country") ?? "");
   const [canton, setCanton] = useState(searchParams.get("canton") ?? "");
   const [category, setCategory] = useState(searchParams.get("category") ?? "");
 
-  // Fetch businesses — admins get all including unapproved
   useEffect(() => {
-    if (token === undefined) return; // wait for auth to resolve
+    if (token === undefined) return;
     setLoading(true);
     getBusinesses({ token: token ?? undefined })
       .then(setAllBusinesses)
@@ -37,7 +36,6 @@ export default function BusinessesContent() {
       .finally(() => setLoading(false));
   }, [token]);
 
-  // Client-side filtering — updates map live as filters change
   const businesses = useMemo(() => {
     return allBusinesses.filter((b) => {
       if (category && b.category !== category) return false;
@@ -59,6 +57,20 @@ export default function BusinessesContent() {
   }, [allBusinesses, search, country, canton, category]);
 
   const handleSelect = useCallback((b: Business) => setSelected(b), []);
+
+  const handleFindLocation = useCallback(() => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+        setShowMap(true);
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { timeout: 10000 }
+    );
+  }, []);
 
   const activePill = "text-white font-medium text-xs px-3 py-1.5 rounded-full";
   const inactivePill = "bg-white border border-gray-200 text-gray-600 hover:border-amber-300 font-medium text-xs px-3 py-1.5 rounded-full transition-colors";
@@ -101,17 +113,15 @@ export default function BusinessesContent() {
             ))}
           </div>
 
-          {/* Map toggle */}
+          {/* Find My Location button */}
           <div className="flex items-center justify-end">
             <button
-              onClick={() => setShowMap((v) => !v)}
-              className="text-xs font-semibold px-4 py-1.5 rounded-full border transition-colors"
-              style={showMap
-                ? { backgroundColor: "#8B1A1A", color: "white", borderColor: "#1B3A6B" }
-                : { backgroundColor: "white", color: "#1B3A6B", borderColor: "#1B3A6B" }
-              }
+              onClick={handleFindLocation}
+              disabled={locating}
+              className="text-xs font-semibold px-4 py-1.5 rounded-full border transition-colors disabled:opacity-60"
+              style={{ backgroundColor: userLocation ? "#1B3A6B" : "white", color: userLocation ? "white" : "#1B3A6B", borderColor: "#1B3A6B" }}
             >
-              {showMap ? "🗺️ Hide Map" : "🗺️ Show Map"}
+              {locating ? "⏳ Locating..." : "📍 Find My Location"}
             </button>
           </div>
         </div>
@@ -171,6 +181,7 @@ export default function BusinessesContent() {
                 selected={selected}
                 focusCountry={country}
                 focusCanton={canton}
+                userLocation={userLocation}
               />
             </Suspense>
 

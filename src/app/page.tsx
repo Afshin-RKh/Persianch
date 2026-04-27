@@ -43,7 +43,7 @@ export default function HomePage() {
             <p className="text-gray-400 text-sm mt-1">Find Iranian-owned businesses near you — anywhere in the world</p>
           </div>
           <Link href="/businesses" className="text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
-            List view →
+            Explore Businesses →
           </Link>
         </div>
         <Suspense fallback={<div className="w-full rounded-2xl bg-gray-100" style={{ height: 520 }} />}>

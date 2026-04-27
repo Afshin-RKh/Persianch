@@ -1573,12 +1573,14 @@ interface Props {
   selected: Business | null;
   focusCountry?: string;
   focusCanton?: string;
+  userLocation?: [number, number] | null;
 }
 
-export default function MapView({ businesses, onSelect, selected, focusCountry, focusCanton }: Props) {
+export default function MapView({ businesses, onSelect, selected, focusCountry, focusCanton, userLocation }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const markersRef = useRef<import("leaflet").Marker[]>([]);
+  const userMarkerRef = useRef<import("leaflet").CircleMarker | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -1736,6 +1738,26 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
       mapInstanceRef.current.flyTo(center, zoom, { duration: 1.2 });
     }
   }, [focusCountry, focusCanton]);
+
+  // User location — fly to and show a blue dot marker
+  useEffect(() => {
+    if (!userLocation || !mapInstanceRef.current) return;
+    import("leaflet").then((L) => {
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+      }
+      userMarkerRef.current = L.circleMarker(userLocation, {
+        radius: 10,
+        color: "#1B3A6B",
+        fillColor: "#4A90D9",
+        fillOpacity: 0.9,
+        weight: 2,
+      })
+        .bindTooltip("📍 You are here", { permanent: false, direction: "top" })
+        .addTo(mapInstanceRef.current!);
+      mapInstanceRef.current!.flyTo(userLocation, 13, { duration: 1.2 });
+    });
+  }, [userLocation]);
 
   return (
     <>
