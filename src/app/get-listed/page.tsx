@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 
 export default function GetListedPage() {
   const [sent, setSent] = useState(false);
@@ -14,8 +15,11 @@ export default function GetListedPage() {
     instagram: "",
     email: "",
     description: "",
+    connection: "",
   });
   const [submitting, setSubmitting] = useState(false);
+
+  const cities = form.country ? (REGIONS_BY_COUNTRY[form.country] ?? []) : [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +37,8 @@ export default function GetListedPage() {
       setSubmitting(false);
     }
   };
+
+  const inputCls = "w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent bg-white";
 
   return (
     <main className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
@@ -81,7 +87,7 @@ export default function GetListedPage() {
                 value={form.businessName}
                 onChange={e => setForm(f => ({ ...f, businessName: e.target.value }))}
                 placeholder="e.g. Café Shiraz"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
+                className={inputCls}
               />
             </div>
             <div>
@@ -90,42 +96,58 @@ export default function GetListedPage() {
                 required
                 value={form.category}
                 onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent bg-white"
+                className={inputCls}
               >
                 <option value="">Select category</option>
-                <option value="restaurant">🍽️ Restaurant</option>
-                <option value="cafe">☕ Café</option>
-                <option value="hairdresser">✂️ Hairdresser</option>
-                <option value="doctor">🩺 Doctor</option>
-                <option value="dentist">🦷 Dentist</option>
-                <option value="lawyer">⚖️ Lawyer</option>
-                <option value="grocery">🛒 Grocery</option>
-                <option value="other">🔍 Other</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.slug} value={cat.slug}>
+                    {cat.icon} {cat.label_en}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Country *</label>
-              <input
-                type="text"
+              <select
                 required
                 value={form.country}
-                onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
-                placeholder="e.g. Germany"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
-              />
+                onChange={e => setForm(f => ({ ...f, country: e.target.value, city: "" }))}
+                className={inputCls}
+              >
+                <option value="">Select country</option>
+                {COUNTRIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">City *</label>
-              <input
-                type="text"
-                required
-                value={form.city}
-                onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
-                placeholder="e.g. Berlin"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
-              />
+              {cities.length > 0 ? (
+                <select
+                  required
+                  value={form.city}
+                  onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+                  className={inputCls}
+                >
+                  <option value="">Select city</option>
+                  {cities.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  required
+                  value={form.city}
+                  onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+                  placeholder={form.country ? "Enter city" : "Select country first"}
+                  disabled={!form.country}
+                  className={inputCls + (!form.country ? " opacity-50 cursor-not-allowed" : "")}
+                />
+              )}
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Address *</label>
             <input
@@ -134,9 +156,10 @@ export default function GetListedPage() {
               value={form.address}
               onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
               placeholder="Street address"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
+              className={inputCls}
             />
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone *</label>
@@ -146,7 +169,7 @@ export default function GetListedPage() {
                 value={form.phone}
                 onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                 placeholder="+49 30 123456"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
+                className={inputCls}
               />
             </div>
             <div>
@@ -156,10 +179,11 @@ export default function GetListedPage() {
                 value={form.website}
                 onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
                 placeholder="https://..."
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
+                className={inputCls}
               />
             </div>
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Instagram</label>
@@ -168,7 +192,7 @@ export default function GetListedPage() {
                 value={form.instagram}
                 onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))}
                 placeholder="@yourbusiness"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
+                className={inputCls}
               />
             </div>
             <div>
@@ -179,10 +203,11 @@ export default function GetListedPage() {
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 placeholder="your@email.com"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent"
+                className={inputCls}
               />
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Short Description *</label>
             <textarea
@@ -191,9 +216,42 @@ export default function GetListedPage() {
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               placeholder="Tell us a bit about your business..."
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-transparent resize-none"
+              className={inputCls + " resize-none"}
             />
           </div>
+
+          {/* Connection section */}
+          <div className="rounded-xl border border-gray-200 p-4">
+            <label className="block text-sm font-medium text-gray-700 mb-3">Your connection to this business *</label>
+            <div className="flex flex-col gap-3">
+              {[
+                { value: "owner", label: "I am the business owner" },
+                { value: "employee", label: "I work here" },
+                { value: "referral", label: "I know them" },
+              ].map(({ value, label }) => (
+                <label
+                  key={value}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-colors ${
+                    form.connection === value
+                      ? "border-[#1B3A6B] bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="connection"
+                    value={value}
+                    required
+                    checked={form.connection === value}
+                    onChange={e => setForm(f => ({ ...f, connection: e.target.value }))}
+                    className="accent-[#1B3A6B]"
+                  />
+                  <span className="text-sm text-gray-700">{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={submitting}
