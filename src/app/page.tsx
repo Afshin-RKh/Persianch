@@ -51,21 +51,6 @@ export default function HomePage() {
         </Suspense>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-4" style={{ background: "linear-gradient(135deg, #0D1B2E 0%, #1B3A6B 100%)" }}>
-        <div className="max-w-2xl mx-auto text-center text-white">
-          <span className="text-5xl block mb-6">🏪</span>
-          <h2 className="text-3xl font-bold mb-3">Own an Iranian Business?</h2>
-          <p className="text-blue-200 mb-8 text-lg">Add it to the map for free and get discovered by the global Iranian community.</p>
-          <Link
-            href="/get-listed"
-            className="inline-block font-bold px-10 py-4 rounded-2xl transition-all hover:opacity-90 hover:scale-105 text-base shadow-lg"
-            style={{ backgroundColor: "#8B1A1A", color: "white" }}
-          >
-            Add to the Map — Free
-          </Link>
-        </div>
-      </section>
     </main>
   );
 }

@@ -208,6 +208,20 @@ export default function BusinessesContent() {
           </div>
         )}
       </div>
+
+      {/* Add to map banner */}
+      <div className="border-t border-gray-100 bg-[#FDF8F3] px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p className="text-sm text-gray-600 text-center sm:text-left">
+          Know an Iranian business that's not on the map yet?
+        </p>
+        <Link
+          href="/get-listed"
+          className="shrink-0 text-sm font-semibold px-5 py-2 rounded-xl text-white transition-all hover:opacity-90"
+          style={{ backgroundColor: "#8B1A1A" }}
+        >
+          Add to Map →
+        </Link>
+      </div>
     </div>
   );
 }
