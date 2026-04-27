@@ -11,7 +11,7 @@ interface Props {
 export default function EventsMap({ events, userLocation, onSelectEvent }: Props) {
   const mapRef         = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
-  const clusterRef     = useRef<any>(null);
+  const markersRef     = useRef<import("leaflet").Marker[]>([]);
   const userMarkerRef  = useRef<import("leaflet").Marker | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
@@ -19,10 +19,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    (async () => {
-      const L = await import("leaflet");
-      await import("leaflet.markercluster");
-
+    import("leaflet").then((L) => {
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -58,7 +55,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
       const onResize = () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => map.invalidateSize(), 150); };
       window.addEventListener("resize", onResize);
       (map as any)._onResize = onResize;
-    })();
+    });
 
     return () => {
       if (mapInstanceRef.current) {
@@ -69,26 +66,12 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
     };
   }, []);
 
-  // Update event markers with clustering
+  // Update event markers
   useEffect(() => {
     if (!mapReady || !mapInstanceRef.current) return;
-
-    (async () => {
-      const L = await import("leaflet");
-      await import("leaflet.markercluster");
-
-      if (clusterRef.current) {
-        mapInstanceRef.current!.removeLayer(clusterRef.current);
-      }
-
-      const cluster = (L as any).markerClusterGroup({
-        showCoverageOnHover: false,
-        maxClusterRadius: 50,
-        iconCreateFunction: (c: any) => L.divIcon({
-          html: `<div style="background:#1B3A6B;color:white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">${c.getChildCount()}</div>`,
-          className: "", iconSize: [38, 38], iconAnchor: [19, 19],
-        }),
-      });
+    import("leaflet").then((L) => {
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
 
       events.forEach((ev) => {
         if (ev.lat == null || ev.lng == null) return;
@@ -98,17 +81,15 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
           className: "", iconSize: [36, 36], iconAnchor: [18, 18],
         });
         const marker = L.marker([ev.lat, ev.lng], { icon })
+          .addTo(mapInstanceRef.current!)
           .bindTooltip(
             `<strong>${ev.title}</strong><br/>${[ev.venue, ev.city, ev.country].filter(Boolean).join(", ")}`,
             { className: "persian-hub-tooltip", direction: "top" }
           )
           .on("click", () => onSelectEvent(ev));
-        cluster.addLayer(marker);
+        markersRef.current.push(marker);
       });
-
-      mapInstanceRef.current!.addLayer(cluster);
-      clusterRef.current = cluster;
-    })();
+    });
   }, [events, onSelectEvent, mapReady]);
 
   // User location pulsing marker
@@ -157,8 +138,6 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
   return (
     <>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-      <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-      <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
       <style>{`
         .persian-hub-tooltip {
           background: white !important;
