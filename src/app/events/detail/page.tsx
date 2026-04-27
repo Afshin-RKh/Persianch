@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Calendar, MapPin, ExternalLink, ArrowLeft, Pencil, X } from "lucide-react";
+import { Calendar, MapPin, ExternalLink, ArrowLeft, Pencil, X, Trash2 } from "lucide-react";
 import { useAuth, authHeaders } from "@/lib/auth";
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
@@ -157,9 +157,10 @@ function EventDetailContent() {
   const { isAdmin, token } = useAuth();
   const id = searchParams.get("id");
 
-  const [event, setEvent]     = useState<EventRow | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
+  const [event, setEvent]       = useState<EventRow | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [editing, setEditing]   = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
@@ -170,6 +171,16 @@ function EventDetailContent() {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [id, token]);
+
+  const handleDelete = async () => {
+    if (!event || !confirm(`Delete "${event.title}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    await fetch(`${API}/events.php?id=${event.id}`, {
+      method: "DELETE",
+      headers: authHeaders(token),
+    });
+    router.push("/events");
+  };
 
   if (loading) return (
     <div className="text-center py-24 text-gray-400">
@@ -190,10 +201,26 @@ function EventDetailContent() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      {/* Back */}
-      <Link href="/events" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-6 transition-colors">
-        <ArrowLeft size={15} /> Back to Events
-      </Link>
+      {/* Back + admin actions */}
+      <div className="flex items-center justify-between mb-6">
+        <Link href="/events" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors font-medium">
+          <ArrowLeft size={15} /> Back to Events
+        </Link>
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            <button onClick={() => setEditing((v) => !v)}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+              style={editing ? { backgroundColor: "#f3f4f6", color: "#374151" } : { backgroundColor: "#1B3A6B", color: "#fff" }}>
+              {editing ? <><X size={14} /> Close Editor</> : <><Pencil size={14} /> Edit</>}
+            </button>
+            <button onClick={handleDelete} disabled={deleting}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+              style={{ backgroundColor: "#8B1A1A", color: "#fff" }}>
+              <Trash2 size={14} /> {deleting ? "Deleting…" : "Delete"}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Admin edit panel */}
       {isAdmin && editing && (
@@ -202,25 +229,15 @@ function EventDetailContent() {
 
       {/* Header */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <span className="text-5xl">{meta.icon}</span>
-            <div>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: meta.color + "20", color: meta.color }}>
-                {meta.label}
-              </span>
-              <h1 className="text-2xl font-bold text-gray-900 mt-2">{event.title}</h1>
-              {event.title_fa && <p className="text-gray-400 mt-1" dir="rtl">{event.title_fa}</p>}
-            </div>
+        <div className="flex items-start gap-4">
+          <span className="text-5xl">{meta.icon}</span>
+          <div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: meta.color + "20", color: meta.color }}>
+              {meta.label}
+            </span>
+            <h1 className="text-2xl font-bold text-gray-900 mt-2">{event.title}</h1>
+            {event.title_fa && <p className="text-gray-400 mt-1" dir="rtl">{event.title_fa}</p>}
           </div>
-          {isAdmin && (
-            <button onClick={() => setEditing((v) => !v)}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-colors"
-              style={{ borderColor: "#1B3A6B", color: editing ? "white" : "#1B3A6B", backgroundColor: editing ? "#1B3A6B" : "transparent" }}>
-              {editing ? <X size={13} /> : <Pencil size={13} />}
-              {editing ? "Cancel" : "Edit"}
-            </button>
-          )}
         </div>
 
         {/* Info rows */}
