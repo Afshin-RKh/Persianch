@@ -16,8 +16,8 @@ if (file_exists($envFile)) {
 }
 
 $hostRaw = trim(defined('DB_HOST') ? DB_HOST : 'localhost');
-$db      = defined('DB_NAME') ? DB_NAME : 'voltkvgj_birunimap';
-$user    = defined('DB_USER') ? DB_USER : 'voltkvgj_afshin';
+$db      = defined('DB_NAME') ? DB_NAME : '';
+$user    = defined('DB_USER') ? DB_USER : '';
 $pass    = defined('DB_PASS') ? DB_PASS : '';
 
 // Namecheap shared hosting requires 127.0.0.1 instead of localhost
@@ -38,6 +38,6 @@ try {
     ]);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Database connection failed', 'detail' => $e->getMessage()]);
+    echo json_encode(['error' => 'Database connection failed']);
     exit();
 }

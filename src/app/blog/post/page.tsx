@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getBlogPost, BlogPost } from "@/lib/api";
 import { useAuth, authHeaders } from "@/lib/auth";
+import DOMPurify from "isomorphic-dompurify";
 import { ArrowLeft, Trash2, Edit2 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
@@ -204,7 +205,7 @@ function BlogPostContent() {
 
       <div
         className="prose prose-gray max-w-none text-gray-700 leading-relaxed mt-8"
-        dangerouslySetInnerHTML={{ __html: post.content ?? "" }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content ?? "") }}
       />
 
       <Comments postId={post.id} />

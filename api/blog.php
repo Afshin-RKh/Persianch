@@ -89,6 +89,11 @@ if ($method === 'POST') {
     $title = trim($data['title'] ?? '');
     if (!$title) { http_response_code(400); echo json_encode(['error' => 'Title required']); exit(); }
 
+    // Strip any tags not produced by the TipTap editor to prevent stored XSS
+    $allowedTags = '<p><br><b><strong><i><em><u><s><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><pre><code><a><img><figure><figcaption><mark><span><div><hr><table><thead><tbody><tr><th><td>';
+    $data['content']    = $data['content']    ? strip_tags($data['content'],    $allowedTags) : '';
+    $data['content_fa'] = $data['content_fa'] ? strip_tags($data['content_fa'], $allowedTags) : null;
+
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
     $existing = $pdo->prepare("SELECT id FROM blog_posts WHERE slug = :slug");
     $existing->execute([':slug' => $slug]);
@@ -122,7 +127,7 @@ if ($method === 'POST') {
         ]);
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(['error' => 'Failed to save post: ' . $e->getMessage()]);
+        echo json_encode(['error' => 'Failed to save post']);
         exit();
     }
 
@@ -162,6 +167,10 @@ if ($method === 'PATCH') {
         }
     }
 
+    $allowedTags = '<p><br><b><strong><i><em><u><s><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><pre><code><a><img><figure><figcaption><mark><span><div><hr><table><thead><tbody><tr><th><td>';
+    if (isset($data['content']))    $data['content']    = strip_tags($data['content'],    $allowedTags);
+    if (isset($data['content_fa'])) $data['content_fa'] = strip_tags($data['content_fa'], $allowedTags);
+
     $allowed = ['title', 'title_fa', 'content', 'content_fa', 'cover_image', 'status', 'country', 'city'];
     $sets    = [];
     $params  = [':id' => $id];
@@ -192,7 +201,7 @@ if ($method === 'PATCH') {
         $pdo->prepare("UPDATE blog_posts SET " . implode(', ', $sets) . " WHERE id = :id")->execute($params);
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(['error' => 'Failed to update post: ' . $e->getMessage()]);
+        echo json_encode(['error' => 'Failed to update post']);
         exit();
     }
 

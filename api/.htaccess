@@ -1,8 +1,8 @@
-# Protect config file from direct access
-<Files "config.php">
+# Protect sensitive files from direct web access
+<FilesMatch "^(config|env|\.env)\.php$">
     Order allow,deny
     Deny from all
-</Files>
+</FilesMatch>
 
 <Files "*.php">
     Order allow,deny
