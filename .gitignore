@@ -51,3 +51,4 @@ api/.env.php
 # Claude Code local config and AI memory — dev machine only
 .claude/
 memory/
+events/database/.env
