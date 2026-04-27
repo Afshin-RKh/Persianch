@@ -4,18 +4,17 @@
 
 INSERT INTO events
   (title, title_fa, event_type, country, city, venue, address, lat, lng,
-   start_date, end_date, is_recurring, description, external_link,
+   start_date, end_date, is_recurring, recurrence_type, description, external_link,
    organizer_name, organizer_email, status)
 VALUES
 
--- Zurich
 ('Shab-e Yalda Celebration Zurich 2026',
  'جشن شب یلدا زوریخ ۲۰۲۶',
  'religious_cultural', 'Switzerland', 'Zurich',
  'Kaufleuten', 'Pelikanplatz 18, 8001 Zürich',
  47.3727, 8.5389,
  '2026-12-21 19:00:00', '2026-12-21 23:59:00',
- 0,
+ 0, NULL,
  'Join the Iranian community in Zurich for the longest night of the year. Poetry, music, pomegranate and watermelon, and a warm Persian atmosphere.',
  'https://volek.events', NULL, NULL, 'approved'),
 
@@ -25,7 +24,7 @@ VALUES
  'Hiltl Club', 'Sihlstrasse 28, 8001 Zürich',
  47.3751, 8.5357,
  '2027-03-21 20:00:00', '2027-03-22 03:00:00',
- 0,
+ 0, NULL,
  'Celebrate Persian New Year with DJ, live music, traditional food and the full Haft-Seen table. Dress code: festive.',
  'https://volek.events', NULL, NULL, 'approved'),
 
@@ -35,7 +34,7 @@ VALUES
  'Theater am Hechtplatz', 'Hechtplatz 7, 8001 Zürich',
  47.3772, 8.5424,
  '2026-09-26 20:00:00', '2026-09-26 23:00:00',
- 0,
+ 0, NULL,
  'Legendary Iranian singer Dariush performs his greatest hits live in Zurich.',
  'https://volek.events', NULL, NULL, 'approved'),
 
@@ -45,7 +44,7 @@ VALUES
  'Tanzhaus Zürich', 'Limmatstrasse 65, 8005 Zürich',
  47.3877, 8.5287,
  '2026-05-09 14:00:00', '2026-05-09 17:00:00',
- 0,
+ 0, NULL,
  'Introduction to classical Persian dance. Open to all levels. Taught in Farsi and German.',
  'https://volek.events', NULL, NULL, 'approved'),
 
@@ -55,18 +54,17 @@ VALUES
  'Altes Krematorium', 'Hermann-Greulich-Strasse 70, 8004 Zürich',
  47.3772, 8.5222,
  '2026-11-07 12:00:00', '2026-11-07 20:00:00',
- 0,
+ 0, NULL,
  'Taste authentic Persian cuisine, browse art, and enjoy live traditional music. Admission free.',
  'https://volek.events', NULL, NULL, 'approved'),
 
--- Geneva
 ('Googoosh Tribute Night Geneva',
  'شب گوگوش جنیو',
  'concert', 'Switzerland', 'Geneva',
  'Alhambra', 'Rue de la Rôtisserie 10, 1204 Genève',
  46.2017, 6.1480,
  '2026-10-17 20:00:00', '2026-10-17 23:30:00',
- 0,
+ 0, NULL,
  'A tribute evening celebrating the music of Googoosh, performed by top Swiss-Iranian artists.',
  'https://volek.events', NULL, NULL, 'approved'),
 
@@ -76,7 +74,7 @@ VALUES
  'Beau-Rivage Hotel', 'Quai du Mont-Blanc 13, 1201 Genève',
  46.2093, 6.1480,
  '2027-03-20 19:00:00', '2027-03-20 23:59:00',
- 0,
+ 0, NULL,
  'Elegant Persian New Year gala dinner with live orchestra, traditional music and dance performances.',
  'https://volek.events', NULL, NULL, 'approved'),
 
@@ -90,14 +88,13 @@ VALUES
  'Learn to read and write Persian script from scratch. Classes held every Saturday morning.',
  'https://volek.events', NULL, NULL, 'approved'),
 
--- Basel
 ('EBI Live in Basel',
  'کنسرت ابی در بازل',
  'concert', 'Switzerland', 'Basel',
  'Volkshaus Basel', 'Rebgasse 12-14, 4058 Basel',
  47.5605, 7.5997,
  '2026-11-14 20:00:00', '2026-11-14 23:00:00',
- 0,
+ 0, NULL,
  'Iranian pop legend EBI brings his timeless voice to Basel for one unforgettable night.',
  'https://volek.events', NULL, NULL, 'approved'),
 
@@ -107,29 +104,27 @@ VALUES
  'Culturescapes', 'Claragraben 45, 4057 Basel',
  47.5634, 7.5988,
  '2026-10-24 10:00:00', '2026-10-31 18:00:00',
- 0,
+ 0, NULL,
  'A week-long exhibition of Iranian calligraphy, miniature painting and contemporary art by Swiss-based Iranian artists.',
  'https://volek.events', NULL, NULL, 'approved'),
 
--- Bern
 ('Solidarity with Iran — Gathering Bern',
  'همبستگی با ایران — گردهمایی برن',
  'protest', 'Switzerland', 'Bern',
  'Bundesplatz', 'Bundesplatz, 3005 Bern',
  46.9470, 7.4442,
  '2026-05-30 14:00:00', '2026-05-30 17:00:00',
- 0,
+ 0, NULL,
  'Community solidarity gathering for human rights in Iran. All welcome.',
  'https://volek.events', NULL, NULL, 'approved'),
 
--- Lausanne
 ('Siavash Ghomayshi Live in Lausanne',
  'کنسرت سیاوش قمیشی در لوزان',
  'concert', 'Switzerland', 'Lausanne',
  'Les Docks', 'Av. de Sévelin 34, 1004 Lausanne',
  46.5168, 6.6295,
  '2026-12-05 20:00:00', '2026-12-05 23:00:00',
- 0,
+ 0, NULL,
  'Siavash Ghomayshi performs his classic Persian songs live in Lausanne.',
  'https://volek.events', NULL, NULL, 'approved'),
 
@@ -139,6 +134,6 @@ VALUES
  'Cinématheque suisse', 'Place de la Gare 5, 1003 Lausanne',
  46.5168, 6.6293,
  '2026-10-30 19:00:00', '2026-10-30 22:00:00',
- 0,
+ 0, NULL,
  'Screening of award-winning Iranian films with English and French subtitles, followed by a Q&A discussion.',
  'https://volek.events', NULL, NULL, 'approved');
