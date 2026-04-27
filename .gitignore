@@ -47,3 +47,7 @@ _archive/
 _phub_archive/
 api/env.php
 api/.env.php
+
+# Claude Code local config and AI memory — dev machine only
+.claude/
+memory/

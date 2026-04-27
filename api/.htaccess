@@ -8,3 +8,9 @@
     Order allow,deny
     Allow from all
 </Files>
+
+# Block direct access to SQL migration files — schema must not be public
+<FilesMatch "\.sql$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
