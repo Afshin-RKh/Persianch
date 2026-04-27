@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState, useCallback, useMemo, Suspense } from "react";
+import { useEffect, useState, useCallback, useMemo, Suspense, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { Search, X } from "lucide-react";
 
 const EventsMap = dynamic(() => import("@/components/events/EventsMap"), { ssr: false });
 
@@ -15,15 +16,20 @@ const DATE_FILTERS = [
   { value: "6months", label: "Next 6 months" },
 ];
 
-function formatDate(dt: string) {
-  return new Date(dt).toLocaleDateString("en-GB", {
-    weekday: "short", day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
-
 const activePill   = "text-white font-medium text-xs px-3 py-1.5 rounded-full";
 const inactivePill = "bg-white border border-gray-200 text-gray-600 hover:border-amber-300 font-medium text-xs px-3 py-1.5 rounded-full transition-colors";
+
+function matchesSearch(ev: EventRow, q: string): boolean {
+  const s = q.toLowerCase();
+  return (
+    ev.title?.toLowerCase().includes(s) ||
+    (ev.title_fa ?? "").includes(q) ||
+    (ev.description ?? "").toLowerCase().includes(s) ||
+    (ev.venue ?? "").toLowerCase().includes(s) ||
+    ev.city?.toLowerCase().includes(s) ||
+    ev.country?.toLowerCase().includes(s)
+  );
+}
 
 export default function EventsPage() {
   const [allEvents, setAllEvents]     = useState<EventRow[]>([]);
@@ -33,6 +39,9 @@ export default function EventsPage() {
 
   const [dateFilter, setDateFilter]   = useState("month");
   const [typeFilter, setTypeFilter]   = useState("");
+  const [search, setSearch]           = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const searchTimer                   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch events whenever date filter changes
   useEffect(() => {
@@ -45,11 +54,19 @@ export default function EventsPage() {
       .finally(() => setLoading(false));
   }, [dateFilter]);
 
-  // Client-side type filter
+  const handleSearchChange = (val: string) => {
+    setSearchInput(val);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => setSearch(val.trim()), 220);
+  };
+
+  // Client-side filters: type + search
   const events = useMemo(() => {
-    if (!typeFilter) return allEvents;
-    return allEvents.filter((ev) => ev.event_type === typeFilter);
-  }, [allEvents, typeFilter]);
+    let out = allEvents;
+    if (typeFilter) out = out.filter((ev) => ev.event_type === typeFilter);
+    if (search)     out = out.filter((ev) => matchesSearch(ev, search));
+    return out;
+  }, [allEvents, typeFilter, search]);
 
   const handleFindLocation = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -88,6 +105,26 @@ export default function EventsPage() {
             </div>
           </div>
 
+          {/* Search bar */}
+          <div className="relative mb-3">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search artist, event, city, country…"
+              className="w-full pl-9 pr-9 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-gray-50"
+            />
+            {searchInput && (
+              <button
+                onClick={() => { setSearchInput(""); setSearch(""); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
           {/* Date filter pills */}
           <div className="flex gap-2 flex-wrap mb-2">
             {DATE_FILTERS.map((f) => (
@@ -124,7 +161,11 @@ export default function EventsPage() {
           </div>
 
           {/* Find My Location */}
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">
+              {loading ? "Loading…" : `${events.length} event${events.length !== 1 ? "s" : ""}`}
+              {(search || typeFilter) ? " found" : ""}
+            </span>
             <button
               onClick={handleFindLocation}
               disabled={locating}
