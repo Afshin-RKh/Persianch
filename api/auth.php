@@ -1,6 +1,7 @@
 <?php
 require_once 'config.php';
 require_once 'jwt.php';
+require_once 'mailer.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -23,14 +24,7 @@ function save_otp(PDO $pdo, int $userId, string $code, string $type = 'email'): 
 function send_verification_email(string $toEmail, string $toName, string $code): bool {
     $subject = "Your BiruniMap verification code: $code";
     $body    = "Hi $toName,\n\nYour BiruniMap verification code is:\n\n    $code\n\nThis code expires in 15 minutes.\n\nIf you did not request this, ignore this email.\n\n— BiruniMap Team";
-    $headers = implode("\r\n", [
-        "From: BiruniMap <noreply@birunimap.com>",
-        "Reply-To: noreply@birunimap.com",
-        "X-Mailer: PHP/" . PHP_VERSION,
-        "MIME-Version: 1.0",
-        "Content-Type: text/plain; charset=utf-8",
-    ]);
-    return @mail($toEmail, $subject, $body, $headers);
+    return send_email($toEmail, $toName, $subject, $body);
 }
 
 // ---------------------------------------------------------------------------
