@@ -45,10 +45,13 @@ export default function BusinessesContent() {
       if (canton && b.canton !== canton) return false;
       if (search.trim()) {
         const q = search.trim().toLowerCase();
+        const catMeta = CATEGORIES.find((c) => c.slug === b.category);
         return (
           b.name.toLowerCase().includes(q) ||
           (b.name_fa && b.name_fa.includes(search.trim())) ||
-          (b.description && b.description.toLowerCase().includes(q))
+          (b.description && b.description.toLowerCase().includes(q)) ||
+          (catMeta && catMeta.label_en.toLowerCase().includes(q)) ||
+          (catMeta && catMeta.label_fa.includes(search.trim()))
         );
       }
       return true;
@@ -86,7 +89,7 @@ export default function BusinessesContent() {
             >
               All
             </button>
-            {CATEGORIES.map((cat) => (
+            {CATEGORIES.filter((cat) => !["kitchen", "school", "carpet", "airbnb", "tour"].includes(cat.slug)).map((cat) => (
               <button
                 key={cat.slug}
                 onClick={() => setCategory(cat.slug === category ? "" : cat.slug)}
