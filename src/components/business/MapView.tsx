@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Business, CATEGORIES, CitySquare, SQUARE_LINK_CATEGORIES } from "@/types";
+import { Business, CATEGORIES, CitySquare } from "@/types";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
@@ -1589,7 +1589,6 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
   const userMarkerRef = useRef<import("leaflet").Marker | null>(null);
   const router = useRouter();
   const [squares, setSquares] = useState<CitySquare[]>([]);
-  const [activeSquare, setActiveSquare] = useState<CitySquare | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -1747,23 +1746,23 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
 
         const divIcon = L.divIcon({
           html: `<div style="
-            width:70px; height:70px;
+            width:57px; height:57px;
             background: #1B3A6B;
-            border: 3px solid #C9A84C;
+            border: 2.5px solid #C9A84C;
             border-radius: 50%;
             display:flex; flex-direction:column;
             align-items:center; justify-content:center;
-            box-shadow: 0 4px 16px rgba(27,58,107,0.5);
+            box-shadow: 0 4px 14px rgba(27,58,107,0.45);
             cursor:pointer;
             transition: transform 0.15s, box-shadow 0.15s;
             gap:2px;
           "
-          onmouseover="this.style.transform='scale(1.12)';this.style.boxShadow='0 8px 24px rgba(27,58,107,0.7)'"
-          onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 16px rgba(27,58,107,0.5)'"
-          >${starSvg}<span style="color:#C9A84C;font-size:8px;font-weight:700;font-family:Arial,sans-serif;line-height:1;text-align:center;padding:0 4px;white-space:nowrap;max-width:64px;overflow:hidden;text-overflow:ellipsis;">${sq.city}</span></div>`,
+          onmouseover="this.style.transform='scale(1.12)';this.style.boxShadow='0 6px 20px rgba(27,58,107,0.65)'"
+          onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 14px rgba(27,58,107,0.45)'"
+          >${starSvg}<span style="color:#C9A84C;font-size:7px;font-weight:700;font-family:Arial,sans-serif;line-height:1;text-align:center;padding:0 4px;white-space:nowrap;max-width:52px;overflow:hidden;text-overflow:ellipsis;">${sq.city}</span></div>`,
           className: "",
-          iconSize: [70, 70],
-          iconAnchor: [35, 35],
+          iconSize: [57, 57],
+          iconAnchor: [28, 28],
         });
 
         const tooltipHtml = `
@@ -1776,7 +1775,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
         const marker = L.marker([sq.lat, sq.lng], { icon: divIcon, zIndexOffset: 1000 })
           .addTo(mapInstanceRef.current!)
           .bindTooltip(tooltipHtml, { direction: "top", offset: [0, -36], opacity: 1, className: "persian-hub-tooltip" })
-          .on("click", () => setActiveSquare((prev) => prev?.id === sq.id ? null : sq));
+          .on("click", () => router.push(`/squares?id=${sq.id}`));
 
         squareMarkersRef.current.push(marker);
       });
@@ -1867,77 +1866,6 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
   return (
     <>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-      {/* City Square popup panel */}
-      {activeSquare && (
-        <div style={{
-          position: "absolute", top: 12, right: 12, zIndex: 1000,
-          width: 320, maxHeight: "calc(100% - 24px)",
-          background: "white", borderRadius: 16,
-          border: "2px solid #C9A84C",
-          boxShadow: "0 8px 32px rgba(27,58,107,0.2)",
-          overflow: "hidden", display: "flex", flexDirection: "column",
-        }}>
-          {/* Header */}
-          <div style={{ background: "#1B3A6B", padding: "14px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
-                  <path d={PERSIAN_STAR_PATH} fill="#C9A84C"/>
-                </svg>
-                <span style={{ color: "white", fontWeight: 700, fontSize: 15 }}>{activeSquare.name_en}</span>
-              </div>
-              <div style={{ color: "#C9A84C", fontSize: 13, fontFamily: "Vazirmatn, Arial, sans-serif", direction: "rtl" }}>{activeSquare.name_fa}</div>
-            </div>
-            <button onClick={() => setActiveSquare(null)} style={{ color: "#C9A84C", background: "none", border: "none", cursor: "pointer", fontSize: 20, lineHeight: 1, flexShrink: 0, padding: "0 2px" }}>×</button>
-          </div>
-
-          <div style={{ overflowY: "auto", padding: "14px 16px", flex: 1 }}>
-            {/* Descriptions */}
-            {activeSquare.description_en && (
-              <p style={{ fontSize: 13, color: "#555", marginBottom: 8, lineHeight: 1.5 }}>{activeSquare.description_en}</p>
-            )}
-            {activeSquare.description_fa && (
-              <p style={{ fontSize: 13, color: "#555", marginBottom: 12, lineHeight: 1.6, direction: "rtl", textAlign: "right", fontFamily: "Vazirmatn, Arial, sans-serif" }}>{activeSquare.description_fa}</p>
-            )}
-
-            {/* Links grouped by category */}
-            {activeSquare.links.length === 0
-              ? <p style={{ fontSize: 13, color: "#aaa", textAlign: "center", padding: "16px 0" }}>No links yet.</p>
-              : (() => {
-                  const grouped: Record<string, typeof activeSquare.links> = {};
-                  activeSquare.links.forEach((l) => {
-                    if (!grouped[l.category]) grouped[l.category] = [];
-                    grouped[l.category].push(l);
-                  });
-                  return Object.entries(grouped).map(([cat, links]) => {
-                    const meta = SQUARE_LINK_CATEGORIES.find((c) => c.slug === cat);
-                    return (
-                      <div key={cat} style={{ marginBottom: 14 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: "#1B3A6B", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, borderBottom: "1px solid #eef0f8", paddingBottom: 4 }}>
-                          {meta?.label_en ?? cat}
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                          {links.map((l) => (
-                            <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer"
-                              style={{ display: "flex", flexDirection: "column", padding: "8px 10px", borderRadius: 10, border: "1px solid #e8eaf6", textDecoration: "none", background: "#f8f9ff", transition: "border-color 0.15s" }}
-                              onMouseOver={(e) => (e.currentTarget.style.borderColor = "#C9A84C")}
-                              onMouseOut={(e) => (e.currentTarget.style.borderColor = "#e8eaf6")}
-                            >
-                              <span style={{ fontSize: 13, fontWeight: 600, color: "#1B3A6B" }}>{l.title_en}</span>
-                              {l.title_fa && <span style={{ fontSize: 12, color: "#888", direction: "rtl", textAlign: "right", fontFamily: "Vazirmatn, Arial, sans-serif", marginTop: 2 }}>{l.title_fa}</span>}
-                              <span style={{ fontSize: 10, color: "#C9A84C", marginTop: 3, fontWeight: 600 }}>↗ Visit</span>
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  });
-                })()
-            }
-          </div>
-        </div>
-      )}
 
       <style>{`
         .persian-hub-tooltip {
