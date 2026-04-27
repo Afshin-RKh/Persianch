@@ -37,12 +37,12 @@ export default function HomePage() {
 
       {/* Map — visible immediately on load */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-6 mb-4">
           <Link href="/businesses" className="text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
-            Explore Businesses →
+            All Businesses →
           </Link>
           <Link href="/events" className="text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
-            Explore Events →
+            All Events →
           </Link>
         </div>
         <Suspense fallback={<div className="w-full rounded-2xl bg-gray-100" style={{ height: 520 }} />}>
