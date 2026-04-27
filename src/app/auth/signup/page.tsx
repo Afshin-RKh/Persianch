@@ -41,9 +41,6 @@ export default function SignUpPage() {
       const result = await register(name, email, password, [], phone);
       setPendingId(result.user_id);
       setOtpMsg(result.message);
-      if (result.debug_code) {
-        setOtp(result.debug_code);
-      }
       setStep("verify");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");

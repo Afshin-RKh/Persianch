@@ -133,15 +133,13 @@ if ($method === 'POST') {
             }
         }
 
-        // DEBUG: include code in response until SMTP is confirmed working
         echo json_encode([
-            'pending'      => true,
-            'user_id'      => $id,
-            'email_sent'   => $emailSent,
-            'debug_code'   => $emailSent ? null : $otp,
-            'message'      => $emailSent
+            'pending'    => true,
+            'user_id'    => $id,
+            'email_sent' => $emailSent,
+            'message'    => $emailSent
                 ? "We sent a 6-digit code to $email. Enter it below to verify your account."
-                : "Email delivery failed. Use the code shown below to verify (temporary).",
+                : "We could not send the verification email. Please try again or contact support.",
         ]);
         exit();
     }
