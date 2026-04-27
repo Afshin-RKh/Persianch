@@ -206,10 +206,9 @@ export default function GetListedPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Business Phone</label>
               <input
                 type="tel"
-                required
                 value={form.phone}
                 onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                 placeholder="+49 30 123456"
@@ -240,22 +239,20 @@ export default function GetListedPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Email *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Business Email</label>
               <input
                 type="email"
-                required
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="your@email.com"
+                placeholder="info@yourbusiness.com"
                 className={inputCls}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Short Description *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Short Description</label>
             <textarea
-              required
               rows={3}
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
