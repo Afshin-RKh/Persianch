@@ -54,7 +54,7 @@ interface UserProfile {
   blog_posts: { id: number; title: string; slug: string; status: string; created_at: string }[];
   comments: { id: number; content: string; entity_type: string; created_at: string }[];
   admin_locations?: Location[];
-  activity_log?: { action: string; entity_type: string; entity_id: number; entity_name: string; created_at: string }[];
+  activity_log?: { action: string; entity_type: string; entity_id: number; entity_name: string; details?: string; created_at: string }[];
   owned_businesses?: { id: number; name: string; category: string; country: string; canton: string; is_approved: boolean }[];
 }
 
@@ -356,11 +356,12 @@ function UserProfilePanel({ profile, onClose, token, onSaveAdminLocs }: {
               ? <p className="text-sm text-gray-400">No actions recorded.</p>
               : <div className="space-y-2">
                   {profile.activity_log.map((e, i) => (
-                    <div key={i} className="flex items-center gap-3 py-1.5 border-b border-gray-100 last:border-0">
-                      {actionBadge(e.action)}
-                      <span className="text-xs text-gray-400 capitalize">{e.entity_type}</span>
-                      <span className="text-sm text-gray-800 font-medium flex-1 truncate">{e.entity_name ?? `#${e.entity_id}`}</span>
-                      <span className="text-xs text-gray-400 flex-shrink-0">{new Date(e.created_at).toLocaleDateString()}</span>
+                    <div key={i} className="flex items-start gap-3 py-2 border-b border-gray-100 last:border-0">
+                      <div className="flex-shrink-0 mt-0.5">{actionBadge(e.action)}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-800">{e.details ?? `${e.entity_type}: ${e.entity_name ?? `#${e.entity_id}`}`}</p>
+                        <p className="text-xs text-gray-400 mt-0.5 capitalize">{e.entity_type} · {new Date(e.created_at).toLocaleString()}</p>
+                      </div>
                     </div>
                   ))}
                 </div>

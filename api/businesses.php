@@ -12,10 +12,10 @@ function admin_can_manage(PDO $pdo, int $userId, string $country, string $city):
 }
 
 // Helper: write to activity_log
-function log_activity(PDO $pdo, int $userId, string $action, string $entityType, int $entityId, ?string $entityName): void {
+function log_activity(PDO $pdo, int $userId, string $action, string $entityType, int $entityId, ?string $entityName, ?string $details = null): void {
     try {
-        $pdo->prepare("INSERT INTO activity_log (user_id, action, entity_type, entity_id, entity_name) VALUES (:uid, :action, :type, :eid, :name)")
-            ->execute([':uid' => $userId, ':action' => $action, ':type' => $entityType, ':eid' => $entityId, ':name' => $entityName]);
+        $pdo->prepare("INSERT INTO activity_log (user_id, action, entity_type, entity_id, entity_name, details) VALUES (:uid, :action, :type, :eid, :name, :details)")
+            ->execute([':uid' => $userId, ':action' => $action, ':type' => $entityType, ':eid' => $entityId, ':name' => $entityName, ':details' => $details]);
     } catch (PDOException $e) { /* non-fatal */ }
 }
 
@@ -146,7 +146,10 @@ if ($method === 'POST') {
 
     $newId = (int)$pdo->lastInsertId();
     if ($isAdmin) {
-        log_activity($pdo, (int)$authUser['sub'], 'create', 'business', $newId, $data['name']);
+        $adminName = $authUser['name'] ?? 'Admin';
+        $loc = trim(($data['canton'] ?? '') . ', ' . ($data['country'] ?? ''), ', ');
+        log_activity($pdo, (int)$authUser['sub'], 'create', 'business', $newId, $data['name'],
+            "$adminName created business \"{$data['name']}\" in $loc");
     }
     echo json_encode(['success' => true, 'id' => $newId]);
 }
@@ -183,7 +186,8 @@ if ($method === 'PATCH') {
         }
         if (empty($fields)) { echo json_encode(['success' => false]); exit(); }
         $pdo->prepare("UPDATE businesses SET " . implode(', ', $fields) . " WHERE id = :id")->execute($params);
-        log_activity($pdo, $userId, 'update', 'business', $id, $ownedBiz['name']);
+        log_activity($pdo, $userId, 'update', 'business', $id, $ownedBiz['name'],
+            "Business owner updated their own business \"{$ownedBiz['name']}\"");
         echo json_encode(['success' => true]);
         exit();
     }
@@ -212,12 +216,19 @@ if ($method === 'PATCH') {
     }
     if (empty($fields)) { echo json_encode(['success' => false]); exit(); }
 
+    $adminName = $authUser['name'] ?? 'Admin';
+
     // If assigning an owner, promote that user to business_owner role
+    $assignedOwnerName = null;
     if (array_key_exists('owner_user_id', $data) && $data['owner_user_id']) {
         $pdo->prepare("UPDATE users SET role = 'business_owner' WHERE id = :uid AND role = 'user'")
             ->execute([':uid' => (int)$data['owner_user_id']]);
+        $ownerRow = $pdo->prepare("SELECT name FROM users WHERE id = :uid");
+        $ownerRow->execute([':uid' => (int)$data['owner_user_id']]);
+        $assignedOwnerName = $ownerRow->fetchColumn() ?: null;
     }
     // If removing owner, demote user back to 'user' only if they own no other businesses
+    $removedOwnerName = null;
     if (array_key_exists('owner_user_id', $data) && !$data['owner_user_id']) {
         $prev = $pdo->prepare("SELECT owner_user_id FROM businesses WHERE id = :id");
         $prev->execute([':id' => $id]);
@@ -229,14 +240,34 @@ if ($method === 'PATCH') {
                 $pdo->prepare("UPDATE users SET role = 'user' WHERE id = :uid AND role = 'business_owner'")
                     ->execute([':uid' => $prevOwner]);
             }
+            $prevRow = $pdo->prepare("SELECT name FROM users WHERE id = :uid");
+            $prevRow->execute([':uid' => $prevOwner]);
+            $removedOwnerName = $prevRow->fetchColumn() ?: null;
         }
     }
 
     $pdo->prepare("UPDATE businesses SET " . implode(', ', $fields) . " WHERE id = :id")->execute($params);
 
-    $bizName = $pdo->prepare("SELECT name FROM businesses WHERE id = :id");
-    $bizName->execute([':id' => $id]);
-    log_activity($pdo, $userId, 'update', 'business', $id, $bizName->fetchColumn() ?: null);
+    $bizNameRow = $pdo->prepare("SELECT name FROM businesses WHERE id = :id");
+    $bizNameRow->execute([':id' => $id]);
+    $bizName = $bizNameRow->fetchColumn() ?: null;
+
+    // Build a meaningful details string
+    if ($assignedOwnerName) {
+        $action  = 'assign';
+        $details = "$adminName assigned \"$assignedOwnerName\" as owner of \"$bizName\"";
+    } elseif ($removedOwnerName) {
+        $action  = 'update';
+        $details = "$adminName removed \"$removedOwnerName\" as owner of \"$bizName\"";
+    } elseif (array_key_exists('is_approved', $data)) {
+        $action  = $data['is_approved'] ? 'approve' : 'reject';
+        $verb    = $data['is_approved'] ? 'approved' : 'rejected';
+        $details = "$adminName $verb business \"$bizName\"";
+    } else {
+        $action  = 'update';
+        $details = "$adminName edited business \"$bizName\"";
+    }
+    log_activity($pdo, $userId, $action, 'business', $id, $bizName, $details);
 
     echo json_encode(['success' => true]);
 }
@@ -269,7 +300,9 @@ if ($method === 'DELETE') {
             ->execute([':uid' => (int)$existing['owner_user_id']]);
     }
 
-    log_activity($pdo, (int)$authUser['sub'], 'delete', 'business', $id, $existing['name']);
+    $adminName = $authUser['name'] ?? 'Admin';
+    log_activity($pdo, (int)$authUser['sub'], 'delete', 'business', $id, $existing['name'],
+        "$adminName deleted business \"{$existing['name']}\" ({$existing['country']})");
     $pdo->prepare("DELETE FROM businesses WHERE id = :id")->execute([':id' => $id]);
     echo json_encode(['success' => true, 'deleted' => $id]);
 }

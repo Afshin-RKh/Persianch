@@ -33,7 +33,7 @@ if ($method === 'GET') {
             $s->execute([':uid' => $uid]);
             $u['admin_locations'] = $s->fetchAll();
 
-            $s = $pdo->prepare("SELECT action, entity_type, entity_id, entity_name, created_at FROM activity_log WHERE user_id = :uid ORDER BY created_at DESC LIMIT 50");
+            $s = $pdo->prepare("SELECT action, entity_type, entity_id, entity_name, details, created_at FROM activity_log WHERE user_id = :uid ORDER BY created_at DESC LIMIT 50");
             $s->execute([':uid' => $uid]);
             $u['activity_log'] = $s->fetchAll();
         }

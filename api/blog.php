@@ -9,6 +9,27 @@ function optional_auth(): ?array {
     return $token ? jwt_verify($token) : null;
 }
 
+function blog_admin_can_manage(PDO $pdo, int $userId, ?string $country, ?string $city): bool {
+    if (!$country && !$city) return true; // unlocated post: any admin can touch it
+    if (!$country) return true;
+    if (!$city) {
+        // country-only post: allow if admin manages any city in that country
+        $stmt = $pdo->prepare("SELECT 1 FROM admin_locations WHERE user_id = :uid AND country = :country LIMIT 1");
+        $stmt->execute([':uid' => $userId, ':country' => $country]);
+        return (bool)$stmt->fetch();
+    }
+    $stmt = $pdo->prepare("SELECT 1 FROM admin_locations WHERE user_id = :uid AND country = :country AND city = :city LIMIT 1");
+    $stmt->execute([':uid' => $userId, ':country' => $country, ':city' => $city]);
+    return (bool)$stmt->fetch();
+}
+
+function log_blog_activity(PDO $pdo, int $userId, string $action, int $postId, ?string $postTitle, ?string $details = null): void {
+    try {
+        $pdo->prepare("INSERT INTO activity_log (user_id, action, entity_type, entity_id, entity_name, details) VALUES (:uid, :action, 'blog', :eid, :name, :details)")
+            ->execute([':uid' => $userId, ':action' => $action, ':eid' => $postId, ':name' => $postTitle, ':details' => $details]);
+    } catch (PDOException $e) { /* non-fatal */ }
+}
+
 if ($method === 'GET') {
     $viewer  = optional_auth();
     $isAdmin = in_array($viewer['role'] ?? '', ['admin', 'superadmin']);
@@ -39,16 +60,16 @@ if ($method === 'GET') {
     $params = [];
 
     if (!empty($_GET['tag'])) {
-        $where[]          = "FIND_IN_SET(:tag, p.tags)";
-        $params[':tag']   = $_GET['tag'];
+        $where[]        = "FIND_IN_SET(:tag, p.tags)";
+        $params[':tag'] = $_GET['tag'];
     }
     if (!empty($_GET['country'])) {
-        $where[]             = "p.country = :country";
-        $params[':country']  = $_GET['country'];
+        $where[]           = "p.country = :country";
+        $params[':country'] = $_GET['country'];
     }
     if (!empty($_GET['city'])) {
-        $where[]          = "p.city LIKE :city";
-        $params[':city']  = '%' . $_GET['city'] . '%';
+        $where[]        = "p.city LIKE :city";
+        $params[':city'] = '%' . $_GET['city'] . '%';
     }
 
     $sql  = "SELECT p.id, p.title, p.slug, p.cover_image, p.created_at, p.tags, p.country, p.city, u.name as author_name
@@ -76,7 +97,7 @@ if ($method === 'POST') {
     $isAdmin = in_array($authUser['role'], ['admin', 'superadmin']);
     $status  = $isAdmin ? 'approved' : 'pending';
 
-    // Normalize tags: array or comma string → clean comma string
+    // Normalize tags
     $tags = $data['tags'] ?? null;
     if (is_array($tags)) $tags = implode(',', array_filter(array_map('trim', $tags)));
 
@@ -105,15 +126,41 @@ if ($method === 'POST') {
         exit();
     }
 
+    $newId = (int)$pdo->lastInsertId();
+    if ($isAdmin) {
+        $adminName = $authUser['name'] ?? 'Admin';
+        log_blog_activity($pdo, (int)$authUser['sub'], 'create', $newId, $title,
+            "$adminName published post \"$title\"");
+    }
+
     echo json_encode(['success' => true, 'slug' => $slug, 'status' => $status]);
     exit();
 }
 
 if ($method === 'PATCH') {
-    $authUser = auth_required('admin');
-    $data     = json_decode(file_get_contents('php://input'), true);
-    $id       = (int)($data['id'] ?? 0);
+    $authUser  = auth_required('admin');
+    $data      = json_decode(file_get_contents('php://input'), true);
+    $id        = (int)($data['id'] ?? 0);
+    $adminRole = $authUser['role'] ?? '';
+    $adminId   = (int)$authUser['sub'];
+    $adminName = $authUser['name'] ?? 'Admin';
+
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
+
+    // Fetch post to check its location
+    $postRow = $pdo->prepare("SELECT title, country, city, status FROM blog_posts WHERE id = :id");
+    $postRow->execute([':id' => $id]);
+    $post = $postRow->fetch(PDO::FETCH_ASSOC);
+    if (!$post) { http_response_code(404); echo json_encode(['error' => 'Post not found']); exit(); }
+
+    // Location enforcement for non-superadmin
+    if ($adminRole === 'admin') {
+        $checkCountry = $data['country'] ?? $post['country'];
+        $checkCity    = $data['city']    ?? $post['city'];
+        if (!blog_admin_can_manage($pdo, $adminId, $checkCountry, $checkCity)) {
+            http_response_code(403); echo json_encode(['error' => 'Not allowed to manage posts in this location']); exit();
+        }
+    }
 
     $allowed = ['title', 'title_fa', 'content', 'content_fa', 'cover_image', 'status', 'country', 'city'];
     $sets    = [];
@@ -130,15 +177,15 @@ if ($method === 'PATCH') {
     if (array_key_exists('tags', $data)) {
         $tags = $data['tags'];
         if (is_array($tags)) $tags = implode(',', array_filter(array_map('trim', $tags)));
-        $sets[]         = "tags = :tags";
+        $sets[]          = "tags = :tags";
         $params[':tags'] = $tags ?: null;
     }
 
     if (empty($sets)) { http_response_code(400); echo json_encode(['error' => 'Nothing to update']); exit(); }
 
     if (isset($data['status'])) {
-        $sets[]               = "published = :published";
-        $params[':published']  = $data['status'] === 'approved' ? 1 : 0;
+        $sets[]              = "published = :published";
+        $params[':published'] = $data['status'] === 'approved' ? 1 : 0;
     }
 
     try {
@@ -148,15 +195,46 @@ if ($method === 'PATCH') {
         echo json_encode(['error' => 'Failed to update post: ' . $e->getMessage()]);
         exit();
     }
+
+    $postTitle = $data['title'] ?? $post['title'];
+    if (isset($data['status'])) {
+        $action  = $data['status'] === 'approved' ? 'approve' : 'reject';
+        $verb    = $data['status'] === 'approved' ? 'approved' : 'rejected';
+        $details = "$adminName $verb blog post \"$postTitle\"";
+    } else {
+        $action  = 'update';
+        $details = "$adminName edited blog post \"$postTitle\"";
+    }
+    log_blog_activity($pdo, $adminId, $action, $id, $postTitle, $details);
+
     echo json_encode(['success' => true]);
     exit();
 }
 
 if ($method === 'DELETE') {
-    $authUser = auth_required('admin');
-    $id       = (int)($_GET['id'] ?? 0);
+    $authUser  = auth_required('admin');
+    $id        = (int)($_GET['id'] ?? 0);
+    $adminRole = $authUser['role'] ?? '';
+    $adminId   = (int)$authUser['sub'];
+    $adminName = $authUser['name'] ?? 'Admin';
+
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
 
+    // Fetch post for location check and log
+    $postRow = $pdo->prepare("SELECT title, country, city FROM blog_posts WHERE id = :id");
+    $postRow->execute([':id' => $id]);
+    $post = $postRow->fetch(PDO::FETCH_ASSOC);
+    if (!$post) { http_response_code(404); echo json_encode(['error' => 'Post not found']); exit(); }
+
+    // Location enforcement for non-superadmin
+    if ($adminRole === 'admin') {
+        if (!blog_admin_can_manage($pdo, $adminId, $post['country'], $post['city'])) {
+            http_response_code(403); echo json_encode(['error' => 'Not allowed to manage posts in this location']); exit();
+        }
+    }
+
+    log_blog_activity($pdo, $adminId, 'delete', $id, $post['title'],
+        "$adminName deleted blog post \"{$post['title']}\"");
     $pdo->prepare("DELETE FROM blog_posts WHERE id = :id")->execute([':id' => $id]);
     echo json_encode(['success' => true]);
     exit();
