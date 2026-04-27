@@ -45,3 +45,5 @@ next-env.d.ts
 /database/
 _archive/
 _phub_archive/
+api/env.php
+api/.env.php
