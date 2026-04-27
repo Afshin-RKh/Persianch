@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
 
 interface Props {
@@ -13,6 +13,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const clusterRef     = useRef<any>(null);
   const userMarkerRef  = useRef<import("leaflet").Marker | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   // Init map
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
       }).addTo(map);
 
       mapInstanceRef.current = map;
+      setMapReady(true);
 
       if (!document.getElementById("heartbeat-style")) {
         const s = document.createElement("style");
@@ -69,7 +71,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
 
   // Update event markers with clustering
   useEffect(() => {
-    if (!mapInstanceRef.current) return;
+    if (!mapReady || !mapInstanceRef.current) return;
 
     (async () => {
       const L = await import("leaflet");
@@ -107,7 +109,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
       mapInstanceRef.current!.addLayer(cluster);
       clusterRef.current = cluster;
     })();
-  }, [events, onSelectEvent]);
+  }, [events, onSelectEvent, mapReady]);
 
   // User location pulsing marker
   useEffect(() => {
