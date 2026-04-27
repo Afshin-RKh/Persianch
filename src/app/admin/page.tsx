@@ -14,7 +14,7 @@ import {
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white";
 
-type Tab = "posts" | "businesses" | "users" | "squares";
+type Tab = "posts" | "businesses" | "users" | "squares" | "events";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type BizForm = {
@@ -57,6 +57,20 @@ interface UserProfile {
   activity_log?: { action: string; entity_type: string; entity_id: number; entity_name: string; details?: string; created_at: string }[];
   owned_businesses?: { id: number; name: string; category: string; country: string; canton: string; is_approved: boolean }[];
 }
+
+interface EventRow {
+  id: number; title: string; event_type: string; country: string; city: string;
+  venue?: string; start_date: string; end_date: string; is_recurring: boolean;
+  recurrence_type?: string; recurrence_end_date?: string;
+  external_link?: string; description?: string; organizer_name?: string; organizer_email?: string;
+  status: string; created_at: string;
+}
+
+const EVENT_TYPE_ICONS: Record<string, string> = {
+  concert: "🎵", theatre: "🎭", protest: "✊", language_class: "📚", dance_class: "💃",
+  food_culture: "🍽️", art_exhibition: "🎨", sports: "🏃", religious_cultural: "🕌",
+  party: "🎉", conference: "📢", other: "📌",
+};
 
 // ── Badges ───────────────────────────────────────────────────────────────────
 const roleBadge = (role: string) => {
@@ -412,6 +426,10 @@ export default function AdminPage() {
   const [assignBizUser, setAssignBizUser]   = useState<number | null>(null);
   const [assignBizId, setAssignBizId]       = useState("");
 
+  // Events
+  const [events, setEvents]         = useState<EventRow[]>([]);
+  const [editEvent, setEditEvent]   = useState<EventRow | null>(null);
+
   // Squares
   const [squares, setSquares]       = useState<CitySquare[]>([]);
   const [editSquare, setEditSquare] = useState<CitySquare | null>(null);
@@ -468,6 +486,16 @@ export default function AdminPage() {
         const r = await fetch(`${API}/city_squares.php`);
         const data = await r.json();
         setSquares(Array.isArray(data) ? data : []);
+      }
+      if (tab === "events") {
+        const [r1, r2] = await Promise.all([
+          fetch(`${API}/events.php?pending=1`, { headers: authHeaders(token) }),
+          fetch(`${API}/events.php?filter=6months`, { headers: authHeaders(token) }),
+        ]);
+        const [pending, approved] = await Promise.all([r1.json(), r2.json()]);
+        const combined: EventRow[] = [...(Array.isArray(pending) ? pending : []), ...(Array.isArray(approved) ? approved : [])];
+        const seen = new Set<number>();
+        setEvents(combined.filter((e) => { if (seen.has(e.id)) return false; seen.add(e.id); return true; }));
       }
     } finally {
       setDataLoading(false);
@@ -599,6 +627,17 @@ export default function AdminPage() {
     loadData();
   };
 
+  // ── Event actions ────────────────────────────────────────────────────────────
+  const updateEventStatus = async (id: number, status: string) => {
+    await fetch(`${API}/events.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, status }) });
+    loadData();
+  };
+  const deleteEvent = async (id: number) => {
+    if (!confirm("Delete this event?")) return;
+    await fetch(`${API}/events.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
+    loadData();
+  };
+
   const addSqLink = () => setSqForm((f) => ({ ...f, links: [...f.links, { title_en: "", title_fa: "", url: "", category: "other" as SquareLinkCategory }] as Partial<SquareLink>[] }));
   const updateSqLink = (i: number, patch: Partial<SquareLink>) => setSqForm((f) => ({ ...f, links: f.links.map((l, idx) => idx === i ? { ...l, ...patch } : l) as Partial<SquareLink>[] }));
   const removeSqLink = (i: number) => setSqForm((f) => ({ ...f, links: f.links.filter((_, idx) => idx !== i) as Partial<SquareLink>[] }));
@@ -610,6 +649,7 @@ export default function AdminPage() {
     { key: "posts",      label: "Blog Posts",   icon: <FileText size={15} /> },
     { key: "businesses", label: "Businesses",   icon: <Building2 size={15} /> },
     { key: "users",      label: "Users",        icon: <Users size={15} /> },
+    { key: "events",     label: "Events",       icon: <span className="text-sm">📅</span> },
     { key: "squares",    label: "City Squares", icon: <MapPin size={15} />, superOnly: true },
   ];
 
@@ -688,6 +728,7 @@ export default function AdminPage() {
             { label: "Posts", value: posts.length || "—", color: "#8B1A1A", icon: <FileText size={18} /> },
             { label: "Businesses", value: businesses.length || "—", color: "#1B3A6B", icon: <Building2 size={18} /> },
             { label: "Users", value: users.length || "—", color: "#C9A84C", icon: <Users size={18} /> },
+            { label: "Events", value: events.length || "—", color: "#059669", icon: <span>📅</span> },
             ...(isSuperAdmin ? [{ label: "Squares", value: squares.length || "—", color: "#6B3A9E", icon: <MapPin size={18} /> }] : []),
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-4 shadow-sm">
@@ -1176,6 +1217,119 @@ export default function AdminPage() {
                 </div>
               }
             </div>
+          </div>
+        )}
+
+        {/* ── EVENTS TAB ──────────────────────────────────────────────────────── */}
+        {tab === "events" && !dataLoading && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-900">Events <span className="text-gray-400 font-normal text-sm">({events.length})</span></h2>
+              <a href="/events/submit" className="flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-2 rounded-xl hover:opacity-90" style={{ backgroundColor: "#059669" }}>
+                + Submit Event
+              </a>
+            </div>
+            {events.length === 0
+              ? <p className="text-gray-400 text-sm p-6">No events yet.</p>
+              : <div className="divide-y divide-gray-50">
+                {events.map((ev) => (
+                  <div key={ev.id} className="px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                    {editEvent?.id === ev.id ? (
+                      /* ── Inline edit form ── */
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Title *</label>
+                            <input value={editEvent.title} onChange={(e) => setEditEvent({ ...editEvent, title: e.target.value })} className={inp} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Type</label>
+                            <select value={editEvent.event_type} onChange={(e) => setEditEvent({ ...editEvent, event_type: e.target.value })} className={inp}>
+                              {Object.entries(EVENT_TYPE_ICONS).map(([k, icon]) => (
+                                <option key={k} value={k}>{icon} {k.replace(/_/g, " ")}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Start Date</label>
+                            <input type="datetime-local" value={editEvent.start_date?.slice(0, 16)} onChange={(e) => setEditEvent({ ...editEvent, start_date: e.target.value })} className={inp} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">End Date</label>
+                            <input type="datetime-local" value={editEvent.end_date?.slice(0, 16)} onChange={(e) => setEditEvent({ ...editEvent, end_date: e.target.value })} className={inp} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Country</label>
+                            <input value={editEvent.country} onChange={(e) => setEditEvent({ ...editEvent, country: e.target.value })} className={inp} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">City</label>
+                            <input value={editEvent.city} onChange={(e) => setEditEvent({ ...editEvent, city: e.target.value })} className={inp} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Venue</label>
+                            <input value={editEvent.venue ?? ""} onChange={(e) => setEditEvent({ ...editEvent, venue: e.target.value })} className={inp} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Status</label>
+                            <select value={editEvent.status} onChange={(e) => setEditEvent({ ...editEvent, status: e.target.value })} className={inp}>
+                              <option value="pending">Pending</option>
+                              <option value="approved">Approved</option>
+                              <option value="rejected">Rejected</option>
+                            </select>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Description</label>
+                            <textarea rows={2} value={editEvent.description ?? ""} onChange={(e) => setEditEvent({ ...editEvent, description: e.target.value })} className={inp + " resize-none"} />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">External Link</label>
+                            <input value={editEvent.external_link ?? ""} onChange={(e) => setEditEvent({ ...editEvent, external_link: e.target.value })} className={inp} />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={async () => {
+                            await fetch(`${API}/events.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify(editEvent) });
+                            setEditEvent(null); loadData();
+                          }} className="flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-2 rounded-xl" style={{ backgroundColor: "#1B3A6B" }}>
+                            <Save size={13} /> Save
+                          </button>
+                          <button onClick={() => setEditEvent(null)} className="text-xs font-semibold px-3 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-4">
+                        <span className="text-2xl flex-shrink-0">{EVENT_TYPE_ICONS[ev.event_type] ?? "📌"}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            {statusBadge(ev.status)}
+                            <span className="text-xs text-gray-400 capitalize">{ev.event_type.replace(/_/g, " ")}</span>
+                            <span className="text-xs text-gray-400">· {ev.city}, {ev.country}</span>
+                            {ev.is_recurring && <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">Recurring · {ev.recurrence_type}</span>}
+                          </div>
+                          <p className="font-semibold text-gray-900 text-sm">{ev.title}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {new Date(ev.start_date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                            {ev.venue && ` · ${ev.venue}`}
+                          </p>
+                          {ev.organizer_name && <p className="text-xs text-gray-400 mt-0.5">By: {ev.organizer_name}{ev.organizer_email ? ` (${ev.organizer_email})` : ""}</p>}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {ev.status === "pending" && <>
+                            <button onClick={() => updateEventStatus(ev.id, "approved")} title="Approve" className="p-1.5 rounded-lg text-gray-300 hover:text-green-600 hover:bg-green-50 transition-colors"><CheckCircle size={16} /></button>
+                            <button onClick={() => updateEventStatus(ev.id, "rejected")} title="Reject" className="p-1.5 rounded-lg text-gray-300 hover:text-orange-500 hover:bg-orange-50 transition-colors"><XCircle size={16} /></button>
+                          </>}
+                          {ev.status === "approved" && <button onClick={() => updateEventStatus(ev.id, "rejected")} title="Reject" className="p-1.5 rounded-lg text-gray-300 hover:text-orange-500 hover:bg-orange-50 transition-colors"><XCircle size={16} /></button>}
+                          {ev.status === "rejected" && <button onClick={() => updateEventStatus(ev.id, "approved")} title="Approve" className="p-1.5 rounded-lg text-gray-300 hover:text-green-600 hover:bg-green-50 transition-colors"><CheckCircle size={16} /></button>}
+                          <button onClick={() => setEditEvent(ev)} className="p-1.5 rounded-lg text-gray-400 hover:text-[#1B3A6B] hover:bg-[#1B3A6B]/10 transition-colors"><Edit2 size={14} /></button>
+                          <button onClick={() => deleteEvent(ev.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={14} /></button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            }
           </div>
         )}
 

@@ -61,6 +61,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-7">
             {navLink("/", "Home")}
             {navLink("/businesses", "Businesses")}
+            {navLink("/events", "Events")}
             {navLink("/about", "About Us")}
             {navLink("/contact", "Contact Us")}
             {navLink("/blog", "Blog")}
@@ -133,6 +134,7 @@ export default function Navbar() {
           {[
             ["/", "🏠 Home"],
             ["/businesses", "🏪 Businesses"],
+            ["/events", "📅 Events"],
             ["/about", "🦁 About Us"],
             ["/contact", "✉️ Contact Us"],
             ["/blog", "📝 Blog"],
