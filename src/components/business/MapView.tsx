@@ -1580,7 +1580,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const markersRef = useRef<import("leaflet").Marker[]>([]);
-  const userMarkerRef = useRef<import("leaflet").CircleMarker | null>(null);
+  const userMarkerRef = useRef<import("leaflet").Marker | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -1739,22 +1739,60 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
     }
   }, [focusCountry, focusCanton]);
 
-  // User location — fly to and show a blue dot marker
+  // User location — animated pulsing marker above all others
   useEffect(() => {
     if (!userLocation || !mapInstanceRef.current) return;
     import("leaflet").then((L) => {
-      if (userMarkerRef.current) {
-        userMarkerRef.current.remove();
+      if (userMarkerRef.current) userMarkerRef.current.remove();
+
+      if (!document.getElementById("user-location-style")) {
+        const s = document.createElement("style");
+        s.id = "user-location-style";
+        s.textContent = `
+          @keyframes user-pulse {
+            0%   { transform: scale(1);   opacity: 1; }
+            70%  { transform: scale(2.8); opacity: 0; }
+            100% { transform: scale(1);   opacity: 0; }
+          }
+          @keyframes user-glow {
+            0%, 100% { box-shadow: 0 0 6px 2px rgba(74,144,217,0.8); }
+            50%       { box-shadow: 0 0 18px 6px rgba(74,144,217,1); }
+          }
+          .user-location-dot {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: #4A90D9;
+            border: 3px solid white;
+            box-shadow: 0 0 6px 2px rgba(74,144,217,0.8);
+            animation: user-glow 1.8s ease-in-out infinite;
+            position: relative;
+          }
+          .user-location-dot::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background: rgba(74,144,217,0.5);
+            animation: user-pulse 1.8s ease-out infinite;
+          }
+        `;
+        document.head.appendChild(s);
       }
-      userMarkerRef.current = L.circleMarker(userLocation, {
-        radius: 10,
-        color: "#1B3A6B",
-        fillColor: "#4A90D9",
-        fillOpacity: 0.9,
-        weight: 2,
-      })
-        .bindTooltip("📍 You are here", { permanent: false, direction: "top" })
-        .addTo(mapInstanceRef.current!);
+
+      const icon = L.divIcon({
+        html: `<div class="user-location-dot"></div>`,
+        className: "",
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      });
+
+      userMarkerRef.current = L.marker(userLocation, {
+        icon,
+        zIndexOffset: 9999,
+        interactive: false,
+      }).addTo(mapInstanceRef.current!);
+
       mapInstanceRef.current!.flyTo(userLocation, 13, { duration: 1.2 });
     });
   }, [userLocation]);
