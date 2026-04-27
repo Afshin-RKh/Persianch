@@ -37,11 +37,11 @@ export default function HomePage() {
 
       {/* Map — visible immediately on load */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center gap-6 mb-4">
-          <Link href="/businesses" className="text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
+        <div className="flex items-center gap-9 mb-4">
+          <Link href="/businesses" className="text-sm font-semibold px-5 py-2 rounded-xl text-white transition-all hover:opacity-90 hover:scale-105" style={{ backgroundColor: "#1B3A6B" }}>
             All Businesses →
           </Link>
-          <Link href="/events" className="text-sm font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
+          <Link href="/events" className="text-sm font-semibold px-5 py-2 rounded-xl transition-all hover:opacity-90 hover:scale-105" style={{ backgroundColor: "#C9A84C", color: "#0D1B2E" }}>
             All Events →
           </Link>
         </div>
