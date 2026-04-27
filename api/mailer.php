@@ -6,19 +6,10 @@
  */
 
 function send_email(string $toEmail, string $toName, string $subject, string $body): bool {
-    if (defined('SMTP_HOST') && SMTP_HOST) {
-        // Try configured port first, then swap between 465/587 as fallback
-        if (_smtp_send($toEmail, $toName, $subject, $body)) return true;
-        error_log("[BiruniMap mailer] Primary SMTP failed, trying alternate port");
-        $originalPort = defined('SMTP_PORT') ? SMTP_PORT : 587;
-        $altPort = ($originalPort === 465) ? 587 : 465;
-        if (_smtp_send($toEmail, $toName, $subject, $body, $altPort)) return true;
-    }
-    // Fallback: PHP mail() — works on Namecheap if From is a real mailbox
-    $from    = defined('SMTP_FROM') ? SMTP_FROM : 'BiruniMap <noreply@birunimap.com>';
+    $from    = 'BiruniMap <noreply@birunimap.com>';
     $headers = "From: $from\r\nReply-To: noreply@birunimap.com\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8";
     $result  = @mail($toEmail, $subject, $body, $headers);
-    if (!$result) error_log("[BiruniMap mailer] PHP mail() also failed for $toEmail");
+    if (!$result) error_log("[BiruniMap mailer] PHP mail() failed for $toEmail");
     return $result;
 }
 
