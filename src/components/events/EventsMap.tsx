@@ -1,20 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { EVENT_TYPE_META } from "@/app/events/page";
-
-interface EventRow {
-  id: number;
-  title: string;
-  event_type: string;
-  lat?: number;
-  lng?: number;
-  next_occurrence: string;
-  is_recurring: boolean;
-  recurrence_type?: string;
-  venue?: string;
-  city: string;
-  country: string;
-}
+import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
 
 interface Props {
   events: EventRow[];
