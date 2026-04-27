@@ -86,7 +86,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
             `<strong>${ev.title}</strong><br/>${[ev.venue, ev.city, ev.country].filter(Boolean).join(", ")}`,
             { className: "persian-hub-tooltip", direction: "top" }
           )
-          .on("click", () => onSelectEvent(ev));
+          .on("click", () => { window.location.href = `/events/detail?id=${ev.id}`; });
         markersRef.current.push(marker);
       });
     });

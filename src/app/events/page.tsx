@@ -2,7 +2,6 @@
 import { useEffect, useState, useCallback, useMemo, Suspense } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { Calendar, MapPin, ExternalLink } from "lucide-react";
 
 const EventsMap = dynamic(() => import("@/components/events/EventsMap"), { ssr: false });
 
@@ -29,7 +28,6 @@ const inactivePill = "bg-white border border-gray-200 text-gray-600 hover:border
 export default function EventsPage() {
   const [allEvents, setAllEvents]     = useState<EventRow[]>([]);
   const [loading, setLoading]         = useState(true);
-  const [selected, setSelected]       = useState<EventRow | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locating, setLocating]       = useState(false);
 
@@ -52,8 +50,6 @@ export default function EventsPage() {
     if (!typeFilter) return allEvents;
     return allEvents.filter((ev) => ev.event_type === typeFilter);
   }, [allEvents, typeFilter]);
-
-  const handleSelect = useCallback((ev: EventRow) => setSelected(ev), []);
 
   const handleFindLocation = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -149,35 +145,8 @@ export default function EventsPage() {
               <p>Loading map...</p>
             </div>
           }>
-            <EventsMap events={events} userLocation={userLocation} onSelectEvent={handleSelect} />
+            <EventsMap events={events} userLocation={userLocation} onSelectEvent={() => {}} />
           </Suspense>
-
-          {/* Selected event popup over map */}
-          {selected && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-[1000]">
-              <button
-                onClick={() => setSelected(null)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none"
-              >×</button>
-              <div className="flex items-start gap-3 pr-4">
-                <span className="text-2xl">{EVENT_TYPE_META[selected.event_type]?.icon ?? "📌"}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900">{selected.title}</p>
-                  {selected.title_fa && <p className="text-xs text-gray-400 mt-0.5" dir="rtl">{selected.title_fa}</p>}
-                  <div className="flex flex-col gap-1 mt-2 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><Calendar size={11} />{formatDate(selected.next_occurrence)}</span>
-                    <span className="flex items-center gap-1"><MapPin size={11} />{[selected.venue, selected.city, selected.country].filter(Boolean).join(", ")}</span>
-                  </div>
-                  {selected.external_link && (
-                    <a href={selected.external_link} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-[#1B3A6B] hover:underline">
-                      <ExternalLink size={11} /> More info / Tickets
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
