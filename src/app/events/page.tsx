@@ -1,7 +1,10 @@
 "use client";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Calendar, MapPin, ExternalLink, ChevronDown } from "lucide-react";
+
+const EventsMap = dynamic(() => import("@/components/events/EventsMap"), { ssr: false });
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
@@ -52,10 +55,6 @@ function formatDate(dt: string) {
 }
 
 export default function EventsPage() {
-  const mapRef        = useRef<HTMLDivElement>(null);
-  const mapInstance   = useRef<import("leaflet").Map | null>(null);
-  const markersRef    = useRef<import("leaflet").Marker[]>([]);
-
   const [events, setEvents]         = useState<EventRow[]>([]);
   const [filter, setFilter]         = useState("month");
   const [typeFilter, setTypeFilter] = useState("");
@@ -64,7 +63,6 @@ export default function EventsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locating, setLocating]     = useState(false);
-  const userMarkerRef               = useRef<import("leaflet").Marker | null>(null);
 
   const handleFindLocation = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -91,66 +89,6 @@ export default function EventsPage() {
       .finally(() => setLoading(false));
   }, [filter, typeFilter]);
 
-  // Init map + IP zoom
-  useEffect(() => {
-    if (!mapRef.current || mapInstance.current) return;
-    import("leaflet").then((L) => {
-      const map = L.map(mapRef.current!, { zoomControl: true, scrollWheelZoom: true }).setView([48, 15], 4);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap contributors", maxZoom: 18,
-      }).addTo(map);
-      mapInstance.current = map;
-
-      // Auto-zoom to user's country via IP
-      fetch("https://ipapi.co/json/")
-        .then((r) => r.json())
-        .then((d) => { if (d.latitude && d.longitude) map.flyTo([d.latitude, d.longitude], 10, { duration: 1.5 }); })
-        .catch(() => {});
-    });
-    return () => { mapInstance.current?.remove(); mapInstance.current = null; };
-  }, []);
-
-  // Show user location marker on map
-  useEffect(() => {
-    if (!mapInstance.current || !userLocation) return;
-    import("leaflet").then((L) => {
-      userMarkerRef.current?.remove();
-      const icon = L.divIcon({
-        html: `<div style="width:14px;height:14px;background:#1B3A6B;border:3px solid white;border-radius:50%;box-shadow:0 0 0 3px rgba(27,58,107,0.3);"></div>`,
-        className: "",
-        iconSize: [14, 14],
-        iconAnchor: [7, 7],
-      });
-      userMarkerRef.current = L.marker(userLocation, { icon, zIndexOffset: 1000 })
-        .addTo(mapInstance.current!)
-        .bindTooltip("You are here", { permanent: false, direction: "top" });
-      mapInstance.current!.flyTo(userLocation, 12, { duration: 1.2 });
-    });
-  }, [userLocation]);
-
-  // Update markers when events change
-  useEffect(() => {
-    if (!mapInstance.current) return;
-    import("leaflet").then((L) => {
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current = [];
-
-      events.forEach((ev) => {
-        if (ev.lat == null || ev.lng == null) return;
-        const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
-        const icon = L.divIcon({
-          html: `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${meta.icon}</div>`,
-          className: "",
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
-        });
-        const marker = L.marker([ev.lat, ev.lng], { icon })
-          .addTo(mapInstance.current!)
-          .on("click", () => setSelected(ev));
-        markersRef.current.push(marker);
-      });
-    });
-  }, [events]);
 
   const filterLabel = FILTERS.find((f) => f.value === filter)?.label ?? "This month";
   const typeLabel   = typeFilter ? (EVENT_TYPE_META[typeFilter]?.label ?? "") : "";
@@ -210,7 +148,7 @@ export default function EventsPage() {
 
       {/* Map */}
       <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm mb-6" style={{ height: 420 }}>
-        <div ref={mapRef} style={{ height: "100%", width: "100%" }} />
+        <EventsMap events={events} userLocation={userLocation} onSelectEvent={setSelected} />
       </div>
 
       {/* Selected event popup */}
