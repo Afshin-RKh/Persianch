@@ -19,6 +19,10 @@ $sock587 = @fsockopen('mail.privateemail.com', 587, $errno, $errstr, 10);
 $results['fsockopen_587'] = $sock587 ? 'OK' : "FAILED: $errstr ($errno)";
 if ($sock587) fclose($sock587);
 
+// Test PHP mail() — send to real address
+$mailResult = @mail('khosrowshahi93@gmail.com', 'BiruniMap Test', 'This is a test email from BiruniMap server.', "From: noreply@birunimap.com\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8");
+$results['php_mail_returned'] = $mailResult ? 'true (check inbox+spam)' : 'false';
+
 // Test full SMTP auth on port 465
 $host = 'ssl://mail.privateemail.com';
 $user = defined('SMTP_USER') ? SMTP_USER : '';
