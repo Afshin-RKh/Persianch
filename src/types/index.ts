@@ -38,6 +38,45 @@ export interface Business {
   lng?: number;
 }
 
+export type SquareLinkCategory = "student" | "cultural" | "media" | "religious" | "sport" | "charity" | "political" | "professional" | "other";
+
+export interface SquareLink {
+  id: number;
+  square_id: number;
+  title_en: string;
+  title_fa?: string;
+  url: string;
+  category: SquareLinkCategory;
+  sort_order: number;
+}
+
+export interface CitySquare {
+  id: number;
+  name_en: string;
+  name_fa: string;
+  city: string;
+  country: string;
+  lat: number;
+  lng: number;
+  description_en?: string;
+  description_fa?: string;
+  is_active: boolean;
+  created_at: string;
+  links: SquareLink[];
+}
+
+export const SQUARE_LINK_CATEGORIES: { slug: SquareLinkCategory; label_en: string; label_fa: string }[] = [
+  { slug: "student",      label_en: "Student Association", label_fa: "انجمن دانشجویی" },
+  { slug: "cultural",     label_en: "Cultural Group",      label_fa: "گروه فرهنگی" },
+  { slug: "media",        label_en: "Media & Press",       label_fa: "رسانه و مطبوعات" },
+  { slug: "religious",    label_en: "Religious & Mosque",  label_fa: "مذهبی و مسجد" },
+  { slug: "sport",        label_en: "Sport Club",          label_fa: "باشگاه ورزشی" },
+  { slug: "charity",      label_en: "Charity & NGO",       label_fa: "خیریه و سازمان مردم‌نهاد" },
+  { slug: "political",    label_en: "Political & Civic",   label_fa: "سیاسی و مدنی" },
+  { slug: "professional", label_en: "Professional Network",label_fa: "شبکه حرفه‌ای" },
+  { slug: "other",        label_en: "Other",               label_fa: "سایر" },
+];
+
 export interface CategoryMeta {
   slug: Category;
   label_en: string;

@@ -1,7 +1,12 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Business, CATEGORIES } from "@/types";
+import { Business, CATEGORIES, CitySquare, SQUARE_LINK_CATEGORIES } from "@/types";
+
+const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
+
+// Persian 8-pointed star (Khatam) SVG path — centered at 12,12 outer r=9.5 inner r=4
+const PERSIAN_STAR_PATH = "M12,2.5 L13.82,7.73 L19.28,5.65 L17.2,11.11 L22.43,12.93 L17.2,14.75 L19.28,20.21 L13.82,18.13 L12,23.37 L10.18,18.13 L4.72,20.21 L6.8,14.75 L1.57,12.93 L6.8,11.11 L4.72,5.65 L10.18,7.73 Z";
 
 const CANTON_COORDS: Record<string, [number, number]> = {
   Zurich: [47.3769, 8.5417],
@@ -1580,8 +1585,11 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const markersRef = useRef<import("leaflet").Marker[]>([]);
+  const squareMarkersRef = useRef<import("leaflet").Marker[]>([]);
   const userMarkerRef = useRef<import("leaflet").Marker | null>(null);
   const router = useRouter();
+  const [squares, setSquares] = useState<CitySquare[]>([]);
+  const [activeSquare, setActiveSquare] = useState<CitySquare | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -1716,6 +1724,65 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
     });
   }, [businesses, onSelect, router]);
 
+  // Fetch city squares once
+  useEffect(() => {
+    fetch(`${API}/city_squares.php`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setSquares(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
+  // Render square markers
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    import("leaflet").then((L) => {
+      squareMarkersRef.current.forEach((m) => m.remove());
+      squareMarkersRef.current = [];
+
+      squares.forEach((sq) => {
+        if (!sq.is_active) return;
+        const starSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28">
+          <path d="${PERSIAN_STAR_PATH}" fill="#C9A84C" stroke="white" stroke-width="0.6"/>
+        </svg>`;
+
+        const divIcon = L.divIcon({
+          html: `<div style="
+            width:70px; height:70px;
+            background: #1B3A6B;
+            border: 3px solid #C9A84C;
+            border-radius: 50%;
+            display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            box-shadow: 0 4px 16px rgba(27,58,107,0.5);
+            cursor:pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            gap:2px;
+          "
+          onmouseover="this.style.transform='scale(1.12)';this.style.boxShadow='0 8px 24px rgba(27,58,107,0.7)'"
+          onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 16px rgba(27,58,107,0.5)'"
+          >${starSvg}<span style="color:#C9A84C;font-size:8px;font-weight:700;font-family:Arial,sans-serif;line-height:1;text-align:center;padding:0 4px;white-space:nowrap;max-width:64px;overflow:hidden;text-overflow:ellipsis;">${sq.city}</span></div>`,
+          className: "",
+          iconSize: [70, 70],
+          iconAnchor: [35, 35],
+        });
+
+        const tooltipHtml = `
+          <div style="font-family:Arial,sans-serif;min-width:160px;max-width:220px;">
+            <div style="font-weight:700;font-size:13px;color:#1B3A6B;margin-bottom:2px;">${sq.name_en}</div>
+            <div style="font-size:12px;color:#888;margin-bottom:4px;">${sq.name_fa}</div>
+            <div style="font-size:11px;color:#C9A84C;font-weight:600;">${sq.links.length} link${sq.links.length !== 1 ? "s" : ""} · Click to explore →</div>
+          </div>`;
+
+        const marker = L.marker([sq.lat, sq.lng], { icon: divIcon, zIndexOffset: 1000 })
+          .addTo(mapInstanceRef.current!)
+          .bindTooltip(tooltipHtml, { direction: "top", offset: [0, -36], opacity: 1, className: "persian-hub-tooltip" })
+          .on("click", () => setActiveSquare((prev) => prev?.id === sq.id ? null : sq));
+
+        squareMarkersRef.current.push(marker);
+      });
+    });
+  }, [squares]);
+
   // Fly to selected business
   useEffect(() => {
     if (!mapInstanceRef.current || !selected) return;
@@ -1800,6 +1867,78 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
   return (
     <>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+      {/* City Square popup panel */}
+      {activeSquare && (
+        <div style={{
+          position: "absolute", top: 12, right: 12, zIndex: 1000,
+          width: 320, maxHeight: "calc(100% - 24px)",
+          background: "white", borderRadius: 16,
+          border: "2px solid #C9A84C",
+          boxShadow: "0 8px 32px rgba(27,58,107,0.2)",
+          overflow: "hidden", display: "flex", flexDirection: "column",
+        }}>
+          {/* Header */}
+          <div style={{ background: "#1B3A6B", padding: "14px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
+                  <path d={PERSIAN_STAR_PATH} fill="#C9A84C"/>
+                </svg>
+                <span style={{ color: "white", fontWeight: 700, fontSize: 15 }}>{activeSquare.name_en}</span>
+              </div>
+              <div style={{ color: "#C9A84C", fontSize: 13, fontFamily: "Vazirmatn, Arial, sans-serif", direction: "rtl" }}>{activeSquare.name_fa}</div>
+            </div>
+            <button onClick={() => setActiveSquare(null)} style={{ color: "#C9A84C", background: "none", border: "none", cursor: "pointer", fontSize: 20, lineHeight: 1, flexShrink: 0, padding: "0 2px" }}>×</button>
+          </div>
+
+          <div style={{ overflowY: "auto", padding: "14px 16px", flex: 1 }}>
+            {/* Descriptions */}
+            {activeSquare.description_en && (
+              <p style={{ fontSize: 13, color: "#555", marginBottom: 8, lineHeight: 1.5 }}>{activeSquare.description_en}</p>
+            )}
+            {activeSquare.description_fa && (
+              <p style={{ fontSize: 13, color: "#555", marginBottom: 12, lineHeight: 1.6, direction: "rtl", textAlign: "right", fontFamily: "Vazirmatn, Arial, sans-serif" }}>{activeSquare.description_fa}</p>
+            )}
+
+            {/* Links grouped by category */}
+            {activeSquare.links.length === 0
+              ? <p style={{ fontSize: 13, color: "#aaa", textAlign: "center", padding: "16px 0" }}>No links yet.</p>
+              : (() => {
+                  const grouped: Record<string, typeof activeSquare.links> = {};
+                  activeSquare.links.forEach((l) => {
+                    if (!grouped[l.category]) grouped[l.category] = [];
+                    grouped[l.category].push(l);
+                  });
+                  return Object.entries(grouped).map(([cat, links]) => {
+                    const meta = SQUARE_LINK_CATEGORIES.find((c) => c.slug === cat);
+                    return (
+                      <div key={cat} style={{ marginBottom: 14 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#1B3A6B", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, borderBottom: "1px solid #eef0f8", paddingBottom: 4 }}>
+                          {meta?.label_en ?? cat}
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {links.map((l) => (
+                            <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer"
+                              style={{ display: "flex", flexDirection: "column", padding: "8px 10px", borderRadius: 10, border: "1px solid #e8eaf6", textDecoration: "none", background: "#f8f9ff", transition: "border-color 0.15s" }}
+                              onMouseOver={(e) => (e.currentTarget.style.borderColor = "#C9A84C")}
+                              onMouseOut={(e) => (e.currentTarget.style.borderColor = "#e8eaf6")}
+                            >
+                              <span style={{ fontSize: 13, fontWeight: 600, color: "#1B3A6B" }}>{l.title_en}</span>
+                              {l.title_fa && <span style={{ fontSize: 12, color: "#888", direction: "rtl", textAlign: "right", fontFamily: "Vazirmatn, Arial, sans-serif", marginTop: 2 }}>{l.title_fa}</span>}
+                              <span style={{ fontSize: 10, color: "#C9A84C", marginTop: 3, fontWeight: 600 }}>↗ Visit</span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()
+            }
+          </div>
+        </div>
+      )}
+
       <style>{`
         .persian-hub-tooltip {
           background: white !important;

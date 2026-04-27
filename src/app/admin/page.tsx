@@ -3,18 +3,18 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, authHeaders } from "@/lib/auth";
-import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
+import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY, CitySquare, SquareLink, SQUARE_LINK_CATEGORIES, SquareLinkCategory } from "@/types";
 import LocationSelector, { type Location } from "@/components/LocationSelector";
 import {
   Trash2, CheckCircle, XCircle, Edit2, ChevronDown, X, Eye,
   Users, Building2, FileText, Shield,
-  ChevronRight, Save,
+  ChevronRight, Save, MapPin, ExternalLink, Plus,
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white";
 
-type Tab = "posts" | "businesses" | "users";
+type Tab = "posts" | "businesses" | "users" | "squares";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type BizForm = {
@@ -411,6 +411,17 @@ export default function AdminPage() {
   const [userCountry, setUserCountry]       = useState("");
   const [assignBizUser, setAssignBizUser]   = useState<number | null>(null);
   const [assignBizId, setAssignBizId]       = useState("");
+
+  // Squares
+  const [squares, setSquares]       = useState<CitySquare[]>([]);
+  const [editSquare, setEditSquare] = useState<CitySquare | null>(null);
+  const [showAddSq, setShowAddSq]   = useState(false);
+  type SqFormState = Omit<Partial<CitySquare>, "links"> & { links: Partial<SquareLink>[] };
+  const [sqForm, setSqForm]         = useState<SqFormState>({
+    name_en: "", name_fa: "", city: "", country: "", lat: 0, lng: 0,
+    description_en: "", description_fa: "", is_active: true, links: [],
+  });
+  const [sqLoading, setSqLoading]   = useState(false);
   const [assignBizSaving, setAssignBizSaving] = useState(false);
 
   useEffect(() => {
@@ -452,6 +463,11 @@ export default function AdminPage() {
         ]);
         setUsers(await ur.json());
         setBusinesses(await br.json());
+      }
+      if (tab === "squares") {
+        const r = await fetch(`${API}/city_squares.php`);
+        const data = await r.json();
+        setSquares(Array.isArray(data) ? data : []);
       }
     } finally {
       setDataLoading(false);
@@ -553,13 +569,48 @@ export default function AdminPage() {
     loadData();
   };
 
+  // ── Squares actions ────────────────────────────────────────────────────────
+  const EMPTY_SQ: SqFormState = { name_en: "", name_fa: "", city: "", country: "", lat: 0, lng: 0, description_en: "", description_fa: "", is_active: true, links: [] };
+
+  const openEditSq = (sq: CitySquare) => {
+    setEditSquare(sq);
+    setShowAddSq(false);
+    setSqForm({ ...sq, links: sq.links });
+  };
+
+  const submitSquare = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSqLoading(true);
+    try {
+      const isEdit = !!editSquare;
+      const body = isEdit ? { id: editSquare!.id, ...sqForm } : sqForm;
+      await fetch(`${API}/city_squares.php`, {
+        method: isEdit ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders(token) },
+        body: JSON.stringify(body),
+      });
+      setEditSquare(null); setShowAddSq(false); setSqForm({ ...EMPTY_SQ }); loadData();
+    } finally { setSqLoading(false); }
+  };
+
+  const deleteSquare = async (id: number) => {
+    if (!confirm("Delete this city square?")) return;
+    await fetch(`${API}/city_squares.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
+    loadData();
+  };
+
+  const addSqLink = () => setSqForm((f) => ({ ...f, links: [...f.links, { title_en: "", title_fa: "", url: "", category: "other" as SquareLinkCategory }] as Partial<SquareLink>[] }));
+  const updateSqLink = (i: number, patch: Partial<SquareLink>) => setSqForm((f) => ({ ...f, links: f.links.map((l, idx) => idx === i ? { ...l, ...patch } : l) as Partial<SquareLink>[] }));
+  const removeSqLink = (i: number) => setSqForm((f) => ({ ...f, links: f.links.filter((_, idx) => idx !== i) as Partial<SquareLink>[] }));
+
   if (loading || !user) return null;
   if (!isAdmin) return null;
 
-  const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
-    { key: "posts",      label: "Blog Posts",  icon: <FileText size={15} /> },
-    { key: "businesses", label: "Businesses",  icon: <Building2 size={15} /> },
-    { key: "users",      label: "Users",       icon: <Users size={15} /> },
+  const TABS: { key: Tab; label: string; icon: React.ReactNode; superOnly?: boolean }[] = [
+    { key: "posts",      label: "Blog Posts",   icon: <FileText size={15} /> },
+    { key: "businesses", label: "Businesses",   icon: <Building2 size={15} /> },
+    { key: "users",      label: "Users",        icon: <Users size={15} /> },
+    { key: "squares",    label: "City Squares", icon: <MapPin size={15} />, superOnly: true },
   ];
 
   const POST_TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
@@ -632,11 +683,12 @@ export default function AdminPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className={`grid gap-4 mb-6 ${isSuperAdmin ? "grid-cols-4" : "grid-cols-3"}`}>
           {[
             { label: "Posts", value: posts.length || "—", color: "#8B1A1A", icon: <FileText size={18} /> },
             { label: "Businesses", value: businesses.length || "—", color: "#1B3A6B", icon: <Building2 size={18} /> },
             { label: "Users", value: users.length || "—", color: "#C9A84C", icon: <Users size={18} /> },
+            ...(isSuperAdmin ? [{ label: "Squares", value: squares.length || "—", color: "#6B3A9E", icon: <MapPin size={18} /> }] : []),
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-4 shadow-sm">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ backgroundColor: s.color }}>
@@ -652,7 +704,7 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-5 bg-white rounded-2xl border border-gray-100 p-1 shadow-sm w-fit">
-          {TABS.map((t) => (
+          {TABS.filter((t) => !t.superOnly || isSuperAdmin).map((t) => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
                 tab === t.key ? "text-white shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
@@ -975,6 +1027,158 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+        {/* ── CITY SQUARES TAB ───────────────────────────────────────────── */}
+        {tab === "squares" && !dataLoading && isSuperAdmin && (
+          <div>
+            {/* Add / Edit form */}
+            {(showAddSq || editSquare) && (
+              <div className="bg-white rounded-2xl border border-[#1B3A6B]/15 shadow-sm mb-4 overflow-hidden">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                  <h3 className="font-bold text-gray-800 text-sm">{editSquare ? `Editing: ${editSquare.name_en}` : "New City Square"}</h3>
+                  <button onClick={() => { setShowAddSq(false); setEditSquare(null); setSqForm({ ...EMPTY_SQ }); }} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100"><X size={16} /></button>
+                </div>
+                <form onSubmit={submitSquare} className="p-6 space-y-5">
+                  {/* Names */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Name (English) *</label>
+                      <input value={sqForm.name_en ?? ""} onChange={(e) => setSqForm((f) => ({ ...f, name_en: e.target.value }))} required className={inp} placeholder="Zurich Square" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Name (Persian) *</label>
+                      <input value={sqForm.name_fa ?? ""} onChange={(e) => setSqForm((f) => ({ ...f, name_fa: e.target.value }))} required className={inp} dir="rtl" placeholder="میدان زوریخ" />
+                    </div>
+                  </div>
+                  {/* Location */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">City *</label>
+                      <input value={sqForm.city ?? ""} onChange={(e) => setSqForm((f) => ({ ...f, city: e.target.value }))} required className={inp} placeholder="Zurich" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Country *</label>
+                      <input value={sqForm.country ?? ""} onChange={(e) => setSqForm((f) => ({ ...f, country: e.target.value }))} required className={inp} placeholder="Switzerland" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Latitude *</label>
+                      <input type="number" step="any" value={sqForm.lat ?? ""} onChange={(e) => setSqForm((f) => ({ ...f, lat: parseFloat(e.target.value) }))} required className={inp} placeholder="47.3769" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Longitude *</label>
+                      <input type="number" step="any" value={sqForm.lng ?? ""} onChange={(e) => setSqForm((f) => ({ ...f, lng: parseFloat(e.target.value) }))} required className={inp} placeholder="8.5417" />
+                    </div>
+                  </div>
+                  {/* Descriptions */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Description (English)</label>
+                      <textarea value={sqForm.description_en ?? ""} onChange={(e) => setSqForm((f) => ({ ...f, description_en: e.target.value }))} rows={3} className={`${inp} resize-none`} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Description (Persian)</label>
+                      <textarea value={sqForm.description_fa ?? ""} onChange={(e) => setSqForm((f) => ({ ...f, description_fa: e.target.value }))} rows={3} dir="rtl" className={`${inp} resize-none`} />
+                    </div>
+                  </div>
+                  {/* Active */}
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" checked={!!sqForm.is_active} onChange={(e) => setSqForm((f) => ({ ...f, is_active: e.target.checked }))} className="rounded accent-[#1B3A6B] w-4 h-4" />
+                    Active (visible on map)
+                  </label>
+                  {/* Links */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Links</p>
+                      <button type="button" onClick={addSqLink} className="flex items-center gap-1 text-xs font-semibold text-[#1B3A6B] hover:underline"><Plus size={12} /> Add Link</button>
+                    </div>
+                    {sqForm.links.length === 0 && <p className="text-xs text-gray-400 italic">No links yet. Add some below.</p>}
+                    <div className="space-y-3">
+                      {sqForm.links.map((l, i) => (
+                        <div key={i} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end p-3 bg-gray-50 rounded-xl border border-gray-100">
+                          <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Title (EN) *</label>
+                            <input value={l.title_en ?? ""} onChange={(e) => updateSqLink(i, { title_en: e.target.value })} className={inp} placeholder="Iranian Students Association" />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Title (FA)</label>
+                            <input value={l.title_fa ?? ""} onChange={(e) => updateSqLink(i, { title_fa: e.target.value })} className={inp} dir="rtl" placeholder="انجمن دانشجویان ایرانی" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Category</label>
+                            <select value={l.category ?? "other"} onChange={(e) => updateSqLink(i, { category: e.target.value as SquareLinkCategory })} className={inp}>
+                              {SQUARE_LINK_CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.label_en}</option>)}
+                            </select>
+                          </div>
+                          <div className="sm:col-span-4">
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">URL *</label>
+                            <input value={l.url ?? ""} onChange={(e) => updateSqLink(i, { url: e.target.value })} className={inp} placeholder="https://..." />
+                          </div>
+                          <button type="button" onClick={() => removeSqLink(i)} className="text-red-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 self-end"><Trash2 size={14} /></button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 pt-1">
+                    <button type="submit" disabled={sqLoading || !sqForm.name_en || !sqForm.city || !sqForm.country}
+                      className="flex items-center gap-2 text-white font-semibold px-5 py-2.5 rounded-xl text-sm disabled:opacity-50"
+                      style={{ backgroundColor: "#1B3A6B" }}>
+                      <Save size={14} />{sqLoading ? "Saving…" : editSquare ? "Save Changes" : "Create Square"}
+                    </button>
+                    <button type="button" onClick={() => { setShowAddSq(false); setEditSquare(null); setSqForm({ ...EMPTY_SQ }); }} className="text-sm text-gray-500 hover:text-gray-700 font-medium px-3 py-2">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* List */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-900">City Squares <span className="text-gray-400 font-normal text-sm">({squares.length})</span></h2>
+                <button onClick={() => { setShowAddSq((v) => !v); setEditSquare(null); setSqForm({ ...EMPTY_SQ }); }}
+                  className="flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-2 rounded-xl" style={{ backgroundColor: "#1B3A6B" }}>
+                  <Plus size={13} /> Add Square
+                </button>
+              </div>
+              {squares.length === 0
+                ? <p className="text-gray-400 text-sm p-6">No city squares yet. Create one above.</p>
+                : <div className="divide-y divide-gray-50">
+                  {squares.map((sq) => (
+                    <div key={sq.id} className="px-5 py-4 flex items-start gap-4 hover:bg-gray-50/50 transition-colors">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#1B3A6B" }}>
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12,2.5 L13.82,7.73 L19.28,5.65 L17.2,11.11 L22.43,12.93 L17.2,14.75 L19.28,20.21 L13.82,18.13 L12,23.37 L10.18,18.13 L4.72,20.21 L6.8,14.75 L1.57,12.93 L6.8,11.11 L4.72,5.65 L10.18,7.73 Z" fill="#C9A84C"/></svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <p className="font-semibold text-gray-900 text-sm">{sq.name_en}</p>
+                          <span className="text-sm text-gray-500" dir="rtl">{sq.name_fa}</span>
+                          {!sq.is_active && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">inactive</span>}
+                        </div>
+                        <p className="text-xs text-gray-400">{sq.city}, {sq.country} · {sq.links.length} link{sq.links.length !== 1 ? "s" : ""}</p>
+                        {sq.description_en && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{sq.description_en}</p>}
+                        {sq.links.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {sq.links.slice(0, 5).map((l) => (
+                              <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full hover:opacity-80 transition-opacity"
+                                style={{ background: "#EEF2FF", color: "#1B3A6B" }}>
+                                {l.title_en} <ExternalLink size={9} />
+                              </a>
+                            ))}
+                            {sq.links.length > 5 && <span className="text-xs text-gray-400 px-2 py-0.5">+{sq.links.length - 5} more</span>}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button onClick={() => openEditSq(sq)} className="p-1.5 rounded-lg text-gray-400 hover:text-[#1B3A6B] hover:bg-[#1B3A6B]/10 transition-colors"><Edit2 size={14} /></button>
+                        <button onClick={() => deleteSquare(sq.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              }
+            </div>
+          </div>
+        )}
+
       </div>
     </main>
   );
