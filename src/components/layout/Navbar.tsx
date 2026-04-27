@@ -62,9 +62,9 @@ export default function Navbar() {
             {navLink("/", "Home")}
             {navLink("/businesses", "Businesses")}
             {navLink("/events", "Events")}
+            {navLink("/blog", "Blog")}
             {navLink("/about", "About Us")}
             {navLink("/contact", "Contact Us")}
-            {navLink("/blog", "Blog")}
           </div>
 
           {/* Desktop right side */}
@@ -135,9 +135,9 @@ export default function Navbar() {
             ["/", "🏠 Home"],
             ["/businesses", "🏪 Businesses"],
             ["/events", "📅 Events"],
+            ["/blog", "📝 Blog"],
             ["/about", "🦁 About Us"],
             ["/contact", "✉️ Contact Us"],
-            ["/blog", "📝 Blog"],
           ].map(([href, label]) => (
             <Link key={href} href={href}
               className="flex items-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
