@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState, useCallback, useMemo, Suspense, lazy } from "react";
+import { useEffect, useState, useCallback, useMemo, Suspense } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Calendar, MapPin, ExternalLink } from "lucide-react";
 
-const EventsMap = lazy(() => import("@/components/events/EventsMap"));
+const EventsMap = dynamic(() => import("@/components/events/EventsMap"), { ssr: false });
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
@@ -29,7 +30,6 @@ export default function EventsPage() {
   const [allEvents, setAllEvents]     = useState<EventRow[]>([]);
   const [loading, setLoading]         = useState(true);
   const [selected, setSelected]       = useState<EventRow | null>(null);
-  const [showMap, setShowMap]         = useState(true);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locating, setLocating]       = useState(false);
 
@@ -61,7 +61,6 @@ export default function EventsPage() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLocation([pos.coords.latitude, pos.coords.longitude]);
-        setShowMap(true);
         setLocating(false);
       },
       () => setLocating(false),
@@ -83,14 +82,6 @@ export default function EventsPage() {
               <p className="text-gray-400 text-xs mt-0.5">Persian & Iranian events around the world</p>
             </div>
             <div className="flex items-center gap-2">
-              {/* Map / List toggle */}
-              <button
-                onClick={() => setShowMap((v) => !v)}
-                className="text-xs font-semibold px-4 py-1.5 rounded-full border transition-colors"
-                style={{ backgroundColor: showMap ? "#1B3A6B" : "white", color: showMap ? "white" : "#1B3A6B", borderColor: "#1B3A6B" }}
-              >
-                {showMap ? "📋 List" : "🗺️ Map"}
-              </button>
               <Link
                 href="/events/submit"
                 className="text-white text-xs font-semibold px-4 py-1.5 rounded-full hover:opacity-90 transition-opacity"
@@ -150,115 +141,44 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Main content — full-height map */}
       <div className="flex flex-1" style={{ minHeight: "600px" }}>
+        <div className="flex-1 relative">
+          <Suspense fallback={
+            <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
+              <p>Loading map...</p>
+            </div>
+          }>
+            <EventsMap events={events} userLocation={userLocation} onSelectEvent={handleSelect} />
+          </Suspense>
 
-        {/* Event list */}
-        <div className={`overflow-y-auto flex-shrink-0 ${showMap ? "hidden" : "w-full"} bg-[#FDF8F3]`}>
-          <div className="p-4">
-            {loading ? (
-              <div className="text-center py-16 text-gray-400">
-                <div className="text-4xl mb-4">⏳</div>
-                <p>Loading events...</p>
-              </div>
-            ) : events.length === 0 ? (
-              <div className="text-center py-16 text-gray-500">
-                <p className="text-4xl mb-4">📅</p>
-                <p className="font-medium">No events found.</p>
-                <p className="text-sm mt-1">
-                  Try a wider date range or{" "}
-                  <Link href="/events/submit" className="underline text-[#1B3A6B]">submit one</Link>.
-                </p>
-              </div>
-            ) : (
-              <>
-                <p className="text-sm text-gray-400 mb-4">{events.length} events found</p>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {events.map((ev) => {
-                    const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
-                    return (
-                      <div
-                        key={ev.id}
-                        onClick={() => setSelected(ev)}
-                        className={`cursor-pointer rounded-2xl transition-all bg-white border border-gray-100 shadow-sm hover:shadow-md p-4 ${selected?.id === ev.id ? "outline outline-2 outline-offset-1 outline-[#1B3A6B]" : ""}`}
-                      >
-                        <div className="flex items-start gap-2 mb-2">
-                          <span className="text-2xl">{meta.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: meta.color + "20", color: meta.color }}>
-                              {meta.label}
-                            </span>
-                            <h3 className="font-bold text-gray-900 text-sm mt-1 truncate">{ev.title}</h3>
-                            {ev.title_fa && <p className="text-gray-400 text-xs" dir="rtl">{ev.title_fa}</p>}
-                          </div>
-                        </div>
-                        <div className="space-y-1 text-xs text-gray-500">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar size={11} className="flex-shrink-0" />
-                            {formatDate(ev.next_occurrence)}
-                            {ev.is_recurring && <span className="text-blue-500 font-medium">· {ev.recurrence_type}</span>}
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <MapPin size={11} className="flex-shrink-0" />
-                            {[ev.venue, ev.city, ev.country].filter(Boolean).join(", ")}
-                          </div>
-                        </div>
-                        {ev.description && <p className="text-xs text-gray-400 mt-2 line-clamp-2">{ev.description}</p>}
-                        {ev.external_link && (
-                          <a href={ev.external_link} target="_blank" rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-[#1B3A6B] hover:underline">
-                            <ExternalLink size={11} /> Tickets / Info
-                          </a>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Map */}
-        {showMap && (
-          <div className="flex-1 relative">
-            <Suspense fallback={
-              <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
-                <p>Loading map...</p>
-              </div>
-            }>
-              <EventsMap events={events} userLocation={userLocation} onSelectEvent={handleSelect} />
-            </Suspense>
-
-            {/* Selected event popup over map */}
-            {selected && (
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-[1000]">
-                <button
-                  onClick={() => setSelected(null)}
-                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none"
-                >×</button>
-                <div className="flex items-start gap-3 pr-4">
-                  <span className="text-2xl">{EVENT_TYPE_META[selected.event_type]?.icon ?? "📌"}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900">{selected.title}</p>
-                    {selected.title_fa && <p className="text-xs text-gray-400 mt-0.5" dir="rtl">{selected.title_fa}</p>}
-                    <div className="flex flex-col gap-1 mt-2 text-xs text-gray-500">
-                      <span className="flex items-center gap-1"><Calendar size={11} />{formatDate(selected.next_occurrence)}</span>
-                      <span className="flex items-center gap-1"><MapPin size={11} />{[selected.venue, selected.city, selected.country].filter(Boolean).join(", ")}</span>
-                    </div>
-                    {selected.external_link && (
-                      <a href={selected.external_link} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-[#1B3A6B] hover:underline">
-                        <ExternalLink size={11} /> More info / Tickets
-                      </a>
-                    )}
+          {/* Selected event popup over map */}
+          {selected && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-[1000]">
+              <button
+                onClick={() => setSelected(null)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none"
+              >×</button>
+              <div className="flex items-start gap-3 pr-4">
+                <span className="text-2xl">{EVENT_TYPE_META[selected.event_type]?.icon ?? "📌"}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900">{selected.title}</p>
+                  {selected.title_fa && <p className="text-xs text-gray-400 mt-0.5" dir="rtl">{selected.title_fa}</p>}
+                  <div className="flex flex-col gap-1 mt-2 text-xs text-gray-500">
+                    <span className="flex items-center gap-1"><Calendar size={11} />{formatDate(selected.next_occurrence)}</span>
+                    <span className="flex items-center gap-1"><MapPin size={11} />{[selected.venue, selected.city, selected.country].filter(Boolean).join(", ")}</span>
                   </div>
+                  {selected.external_link && (
+                    <a href={selected.external_link} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-[#1B3A6B] hover:underline">
+                      <ExternalLink size={11} /> More info / Tickets
+                    </a>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
