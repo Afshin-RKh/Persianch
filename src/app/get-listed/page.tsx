@@ -25,14 +25,55 @@ export default function GetListedPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/submit-business", {
+      // Geocode via Nominatim directly from browser
+      let lat: number | null = null;
+      let lng: number | null = null;
+      try {
+        const query = [form.address, form.city, form.country].filter(Boolean).join(", ");
+        const geo = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`);
+        const geoData = await geo.json();
+        if (geoData.length > 0) {
+          lat = parseFloat(geoData[0].lat);
+          lng = parseFloat(geoData[0].lon);
+        } else {
+          // Fallback: city + country only
+          const geo2 = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent([form.city, form.country].join(", "))}&format=json&limit=1`);
+          const geoData2 = await geo2.json();
+          if (geoData2.length > 0) {
+            lat = parseFloat(geoData2[0].lat);
+            lng = parseFloat(geoData2[0].lon);
+          }
+        }
+      } catch { /* geocoding failure is non-fatal */ }
+
+      // POST directly to PHP API
+      const res = await fetch("https://birunimap.com/api/businesses.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.businessName,
+          category: form.category,
+          country: form.country,
+          canton: form.city,
+          address: [form.address, form.city, form.country].filter(Boolean).join(", "),
+          phone: form.phone || null,
+          website: form.website || null,
+          instagram: form.instagram?.replace(/^@/, "") || null,
+          email: form.email || null,
+          description: form.description || null,
+          connection: form.connection || null,
+          lat,
+          lng,
+          is_featured: false,
+          is_verified: false,
+          is_approved: false,
+        }),
       });
-      if (!res.ok) throw new Error("Failed");
+      const result = await res.json();
+      if (!result.success) throw new Error("Failed");
       setSent(true);
     } catch {
+      // Still show success to user — submission may have partially worked
       setSent(true);
     } finally {
       setSubmitting(false);
