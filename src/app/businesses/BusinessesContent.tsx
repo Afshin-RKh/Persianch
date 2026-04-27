@@ -12,7 +12,7 @@ const MapView = lazy(() => import("@/components/business/MapView"));
 
 export default function BusinessesContent() {
   const searchParams = useSearchParams();
-  const { token, isAdmin } = useAuth();
+  const { token, isAdmin, loading: authLoading } = useAuth();
 
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,13 +28,13 @@ export default function BusinessesContent() {
   const [category, setCategory] = useState(searchParams.get("category") ?? "");
 
   useEffect(() => {
-    if (token === undefined) return;
+    if (authLoading) return; // wait for auth to resolve so the token is ready
     setLoading(true);
     getBusinesses({ token: token ?? undefined })
       .then(setAllBusinesses)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [authLoading, token]);
 
   const businesses = useMemo(() => {
     return allBusinesses.filter((b) => {
