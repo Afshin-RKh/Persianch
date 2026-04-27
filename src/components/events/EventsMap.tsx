@@ -98,7 +98,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
           const pending = ev.status === "pending";
           const icon = L.divIcon({
             html: pending
-              ? `<div style="font-size:28px;line-height:1;opacity:0.45;filter:grayscale(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2));">${meta.icon}</div>`
+              ? `<div style="font-size:24px;line-height:1;background:#fefce8;border:2.5px solid #eab308;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(234,179,8,0.4));">${meta.icon}</div>`
               : `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${meta.icon}</div>`,
             className: "", iconSize: [36, 36], iconAnchor: [18, 18],
           });
