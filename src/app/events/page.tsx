@@ -9,6 +9,7 @@ const EventsMap = dynamic(() => import("@/components/events/EventsMap"), { ssr: 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
+import { useAuth } from "@/lib/auth";
 
 const DATE_FILTERS = [
   { value: "week",    label: "This week" },
@@ -32,6 +33,7 @@ function matchesSearch(ev: EventRow, q: string): boolean {
 }
 
 export default function EventsPage() {
+  const { token, isAdmin, loading: authLoading } = useAuth();
   const [allEvents, setAllEvents]     = useState<EventRow[]>([]);
   const [loading, setLoading]         = useState(true);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -43,16 +45,19 @@ export default function EventsPage() {
   const [searchInput, setSearchInput] = useState("");
   const searchTimer                   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fetch events whenever date filter changes
+  // Fetch events — admins send token so backend includes pending
   useEffect(() => {
+    if (authLoading) return;
     setLoading(true);
     const params = new URLSearchParams({ filter: dateFilter });
-    fetch(`${API}/events.php?${params}`)
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API}/events.php?${params}`, { headers })
       .then((r) => r.json())
       .then((data) => setAllEvents(Array.isArray(data) ? data : []))
       .catch(() => setAllEvents([]))
       .finally(() => setLoading(false));
-  }, [dateFilter]);
+  }, [dateFilter, authLoading, token]);
 
   const handleSearchChange = (val: string) => {
     setSearchInput(val);

@@ -88,11 +88,11 @@ if ($method === 'GET') {
         exit();
     }
 
-    // Public: approved events with optional filters
+    // Public: approved events (admins see all statuses)
     $filter  = $_GET['filter'] ?? '6months'; // week | month | 6months
     [$from, $to] = window_dates($filter);
 
-    $where  = ["status = 'approved'"];
+    $where  = $isAdmin ? [] : ["status = 'approved'"];
     $params = [];
 
     if (!empty($_GET['type'])) {

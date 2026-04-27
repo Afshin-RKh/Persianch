@@ -31,4 +31,5 @@ export interface EventRow {
   recurrence_type?: string;
   description?: string;
   external_link?: string;
+  status?: string;
 }

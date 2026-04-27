@@ -94,9 +94,12 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
             lng += Math.cos(angle) * SPREAD;
           }
 
-          const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
+          const meta    = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
+          const pending = ev.status === "pending";
           const icon = L.divIcon({
-            html: `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${meta.icon}</div>`,
+            html: pending
+              ? `<div style="font-size:28px;line-height:1;opacity:0.45;filter:grayscale(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2));">${meta.icon}</div>`
+              : `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${meta.icon}</div>`,
             className: "", iconSize: [36, 36], iconAnchor: [18, 18],
           });
 
@@ -104,10 +107,11 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
             weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
           });
 
+          const pendingBadge = pending ? `<br/><span style="color:#B45309;font-size:11px;font-weight:600;">⏳ Pending approval</span>` : "";
           const marker = L.marker([lat, lng], { icon })
             .addTo(mapInstanceRef.current!)
             .bindTooltip(
-              `<strong>${ev.title}</strong><br/><span style="color:#6b7280;font-size:12px;">📅 ${dateStr}</span>`,
+              `<strong>${ev.title}</strong>${pendingBadge}<br/><span style="color:#6b7280;font-size:12px;">📅 ${dateStr}</span>`,
               { className: "persian-hub-tooltip", direction: "top" }
             )
             .on("click", () => { window.location.href = `/events/detail?id=${ev.id}`; });
