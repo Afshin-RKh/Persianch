@@ -99,11 +99,13 @@ export default function GetListedPage() {
                 className={inputCls}
               >
                 <option value="">Select category</option>
-                {CATEGORIES.map((cat) => (
-                  <option key={cat.slug} value={cat.slug}>
-                    {cat.icon} {cat.label_en}
-                  </option>
-                ))}
+                {[...CATEGORIES]
+                  .sort((a, b) => a.slug === "other" ? 1 : b.slug === "other" ? -1 : a.label_en.localeCompare(b.label_en))
+                  .map((cat) => (
+                    <option key={cat.slug} value={cat.slug}>
+                      {cat.icon} {cat.label_en}
+                    </option>
+                  ))}
               </select>
             </div>
             <div>
@@ -115,7 +117,7 @@ export default function GetListedPage() {
                 className={inputCls}
               >
                 <option value="">Select country</option>
-                {COUNTRIES.map((c) => (
+                {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
@@ -130,7 +132,7 @@ export default function GetListedPage() {
                   className={inputCls}
                 >
                   <option value="">Select city</option>
-                  {cities.map((c) => (
+                  {[...cities].sort((a, b) => a.localeCompare(b)).map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
