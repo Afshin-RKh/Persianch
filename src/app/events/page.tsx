@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { Calendar, MapPin, ExternalLink, ChevronDown } from "lucide-react";
 
@@ -56,12 +56,28 @@ export default function EventsPage() {
   const mapInstance   = useRef<import("leaflet").Map | null>(null);
   const markersRef    = useRef<import("leaflet").Marker[]>([]);
 
-  const [events, setEvents]     = useState<EventRow[]>([]);
-  const [filter, setFilter]     = useState("month");
+  const [events, setEvents]         = useState<EventRow[]>([]);
+  const [filter, setFilter]         = useState("month");
   const [typeFilter, setTypeFilter] = useState("");
-  const [loading, setLoading]   = useState(true);
-  const [selected, setSelected] = useState<EventRow | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [selected, setSelected]     = useState<EventRow | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [locating, setLocating]     = useState(false);
+  const userMarkerRef               = useRef<import("leaflet").Marker | null>(null);
+
+  const handleFindLocation = useCallback(() => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { timeout: 10000 }
+    );
+  }, []);
 
   // Load events
   useEffect(() => {
@@ -75,7 +91,7 @@ export default function EventsPage() {
       .finally(() => setLoading(false));
   }, [filter, typeFilter]);
 
-  // Init map
+  // Init map + IP zoom
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
     import("leaflet").then((L) => {
@@ -84,9 +100,33 @@ export default function EventsPage() {
         attribution: "© OpenStreetMap contributors", maxZoom: 18,
       }).addTo(map);
       mapInstance.current = map;
+
+      // Auto-zoom to user's country via IP
+      fetch("https://ipapi.co/json/")
+        .then((r) => r.json())
+        .then((d) => { if (d.latitude && d.longitude) map.flyTo([d.latitude, d.longitude], 10, { duration: 1.5 }); })
+        .catch(() => {});
     });
     return () => { mapInstance.current?.remove(); mapInstance.current = null; };
   }, []);
+
+  // Show user location marker on map
+  useEffect(() => {
+    if (!mapInstance.current || !userLocation) return;
+    import("leaflet").then((L) => {
+      userMarkerRef.current?.remove();
+      const icon = L.divIcon({
+        html: `<div style="width:14px;height:14px;background:#1B3A6B;border:3px solid white;border-radius:50%;box-shadow:0 0 0 3px rgba(27,58,107,0.3);"></div>`,
+        className: "",
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+      });
+      userMarkerRef.current = L.marker(userLocation, { icon, zIndexOffset: 1000 })
+        .addTo(mapInstance.current!)
+        .bindTooltip("You are here", { permanent: false, direction: "top" });
+      mapInstance.current!.flyTo(userLocation, 12, { duration: 1.2 });
+    });
+  }, [userLocation]);
 
   // Update markers when events change
   useEffect(() => {
@@ -153,6 +193,12 @@ export default function EventsPage() {
               <option key={k} value={k}>{v.icon} {v.label}</option>
             ))}
           </select>
+
+          <button onClick={handleFindLocation} disabled={locating}
+            className="text-xs font-semibold px-4 py-2 rounded-xl border transition-colors disabled:opacity-60"
+            style={{ backgroundColor: userLocation ? "#1B3A6B" : "white", color: userLocation ? "white" : "#1B3A6B", borderColor: "#1B3A6B" }}>
+            {locating ? "⏳ Locating…" : "📍 Find My Location"}
+          </button>
 
           <Link href="/events/submit"
             className="flex items-center gap-1.5 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:opacity-90 transition-opacity"
