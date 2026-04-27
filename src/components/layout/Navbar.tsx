@@ -69,10 +69,6 @@ export default function Navbar() {
 
           {/* Desktop right side */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/contact#get-listed" className="text-white text-sm px-5 py-2 rounded-xl font-semibold transition-all hover:opacity-90 hover:scale-105 shadow-sm" style={{ backgroundColor: "#8B1A1A" }}>
-              + Get Listed
-            </Link>
-
             {user ? (
               <div className="relative" ref={menuRef}>
                 <button
@@ -164,9 +160,6 @@ export default function Navbar() {
             </>
           )}
           <div className="pt-2 space-y-2">
-            <Link href="/contact#get-listed" className="flex items-center justify-center w-full py-3 rounded-xl text-white text-sm font-bold" style={{ backgroundColor: "#8B1A1A" }} onClick={() => setOpen(false)}>
-              + Get Listed
-            </Link>
             {user ? (
               <button onClick={() => { logout(); setOpen(false); }}
                 className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600">

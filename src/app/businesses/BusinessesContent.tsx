@@ -210,16 +210,15 @@ export default function BusinessesContent() {
       </div>
 
       {/* Add to map banner */}
-      <div className="border-t border-gray-100 bg-[#FDF8F3] px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <p className="text-sm text-gray-600 text-center sm:text-left">
-          Know an Iranian business that's not on the map yet?
-        </p>
+      <div className="border-t border-gray-100 bg-[#FDF8F3] px-6 py-6 flex flex-col items-center gap-3 text-center">
+        <p className="text-sm font-medium text-gray-700">Know an Iranian business that's not on the map yet?</p>
+        <p className="text-xs text-gray-400">Help the community — it only takes 2 minutes and it's free.</p>
         <Link
           href="/get-listed"
-          className="shrink-0 text-sm font-semibold px-5 py-2 rounded-xl text-white transition-all hover:opacity-90"
+          className="text-sm font-bold px-6 py-2.5 rounded-xl text-white transition-all hover:opacity-90 hover:scale-105 shadow-sm"
           style={{ backgroundColor: "#8B1A1A" }}
         >
-          Add to Map →
+          + Add to Map
         </Link>
       </div>
     </div>
