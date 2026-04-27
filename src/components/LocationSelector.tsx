@@ -41,7 +41,7 @@ export default function LocationSelector({ selected, onChange, label = "Location
         {cities.length > 0 ? (
           <select value={city} onChange={(e) => setCity(e.target.value)} className={`${inp} flex-1 min-w-32`}>
             <option value="">— select city —</option>
-            {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+            {[...cities].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         ) : (
           <input

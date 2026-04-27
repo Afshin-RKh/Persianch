@@ -96,7 +96,7 @@ function AdminEditPanel({ event, token, onSaved }: { event: EventRow; token: str
             {cities.length > 0 ? (
               <select value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={inp}>
                 <option value="">— select —</option>
-                {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+                {[...cities].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             ) : (
               <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={inp} />

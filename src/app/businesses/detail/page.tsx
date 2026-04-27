@@ -209,7 +209,7 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
             {regions.length > 0 ? (
               <select value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} className={inp}>
                 <option value="">— select —</option>
-                {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+                {[...regions].sort((a, b) => a.localeCompare(b)).map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             ) : (
               <input value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} className={inp} />

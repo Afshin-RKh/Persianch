@@ -155,7 +155,7 @@ export default function WriteBlogPage() {
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white"
               >
                 <option value="">— select region —</option>
-                {(REGIONS_BY_COUNTRY[form.country] ?? []).map((r) => <option key={r} value={r}>{r}</option>)}
+                {[...(REGIONS_BY_COUNTRY[form.country] ?? [])].sort((a, b) => a.localeCompare(b)).map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             ) : (
               <input

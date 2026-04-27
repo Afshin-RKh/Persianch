@@ -124,7 +124,7 @@ function BizFormPanel({ title, form, setForm, onSubmit, loading, success, onClos
               {regions.length > 0
                 ? <select value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} className={inp}>
                     <option value="">— select —</option>
-                    {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+                    {[...regions].sort((a, b) => a.localeCompare(b)).map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
                 : <input type="text" value={form.canton} onChange={(e) => setForm({ ...form, canton: e.target.value })} placeholder="City or region" className={inp} />
               }
