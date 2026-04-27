@@ -200,8 +200,9 @@ export default function AboutPage() {
 
           <a href="https://afshin.ch" target="_blank" rel="noopener noreferrer"
             className="flex flex-col items-center text-center p-4 rounded-2xl border border-gray-100 hover:border-[#1B3A6B] hover:shadow-sm transition-all group">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3"
-              style={{ backgroundColor: navy }}>AK</div>
+            <img src="/team/afshin.jpg" alt="Afshin Khosroshahi"
+              className="w-14 h-14 rounded-full object-cover mb-3"
+              style={{ filter: "grayscale(100%)" }} />
             <p className="text-sm font-semibold text-gray-900 group-hover:text-[#1B3A6B]">Afshin Khosroshahi</p>
             <p className="text-xs text-gray-400 mt-0.5">afshin.ch ↗</p>
           </a>
