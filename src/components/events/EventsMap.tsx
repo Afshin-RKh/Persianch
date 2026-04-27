@@ -73,21 +73,46 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
 
+      // Group events by rounded lat/lng to detect stacking
+      const groups = new Map<string, typeof events>();
       events.forEach((ev) => {
         if (ev.lat == null || ev.lng == null) return;
-        const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
-        const icon = L.divIcon({
-          html: `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${meta.icon}</div>`,
-          className: "", iconSize: [36, 36], iconAnchor: [18, 18],
+        const key = `${ev.lat.toFixed(4)},${ev.lng.toFixed(4)}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(ev);
+      });
+
+      // Spiral offset so stacked markers fan out in a circle
+      const SPREAD = 0.0006; // degrees (~60m) between co-located markers
+      groups.forEach((group) => {
+        group.forEach((ev, i) => {
+          let lat = ev.lat!;
+          let lng = ev.lng!;
+          if (group.length > 1) {
+            const angle = (2 * Math.PI * i) / group.length;
+            lat += Math.sin(angle) * SPREAD;
+            lng += Math.cos(angle) * SPREAD;
+          }
+
+          const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
+          const icon = L.divIcon({
+            html: `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${meta.icon}</div>`,
+            className: "", iconSize: [36, 36], iconAnchor: [18, 18],
+          });
+
+          const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", {
+            weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+          });
+
+          const marker = L.marker([lat, lng], { icon })
+            .addTo(mapInstanceRef.current!)
+            .bindTooltip(
+              `<strong>${ev.title}</strong><br/><span style="color:#6b7280;font-size:12px;">📅 ${dateStr}</span>`,
+              { className: "persian-hub-tooltip", direction: "top" }
+            )
+            .on("click", () => { window.location.href = `/events/detail?id=${ev.id}`; });
+          markersRef.current.push(marker);
         });
-        const marker = L.marker([ev.lat, ev.lng], { icon })
-          .addTo(mapInstanceRef.current!)
-          .bindTooltip(
-            `<strong>${ev.title}</strong><br/>${[ev.venue, ev.city, ev.country].filter(Boolean).join(", ")}`,
-            { className: "persian-hub-tooltip", direction: "top" }
-          )
-          .on("click", () => { window.location.href = `/events/detail?id=${ev.id}`; });
-        markersRef.current.push(marker);
       });
     });
   }, [events, onSelectEvent, mapReady]);
