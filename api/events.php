@@ -65,11 +65,19 @@ if ($method === 'GET') {
     $viewer  = optional_auth_ev();
     $isAdmin = is_admin_ev($viewer);
 
-    // Single event by id (admin only)
-    if (!empty($_GET['id']) && $isAdmin) {
-        $stmt = $pdo->prepare("SELECT * FROM events WHERE id = :id");
+    // Single event by id — public for approved, full access for admin
+    if (!empty($_GET['id'])) {
+        $where = $isAdmin ? "id = :id" : "id = :id AND status = 'approved'";
+        $stmt  = $pdo->prepare("SELECT * FROM events WHERE $where");
         $stmt->execute([':id' => (int)$_GET['id']]);
-        echo json_encode($stmt->fetch() ?: null);
+        $row = $stmt->fetch();
+        if ($row) {
+            $row['is_recurring'] = (bool)$row['is_recurring'];
+            $row['lat'] = $row['lat'] ? (float)$row['lat'] : null;
+            $row['lng'] = $row['lng'] ? (float)$row['lng'] : null;
+            $row['next_occurrence'] = $row['start_date'];
+        }
+        echo json_encode($row ?: null);
         exit();
     }
 
