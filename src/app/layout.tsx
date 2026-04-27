@@ -26,12 +26,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${geist.variable} h-full antialiased`}>
       <head>
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-8757131R86" strategy="afterInteractive" />
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-R71GKWRRVM" strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">{`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', 'G-8757131R86');
+          gtag('config', 'G-R71GKWRRVM');
         `}</Script>
       </head>
       <body className="min-h-full flex flex-col bg-gray-50">
