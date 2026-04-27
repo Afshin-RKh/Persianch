@@ -231,7 +231,8 @@ async function main() {
   fs.writeFileSync(FOUND_FILE, JSON.stringify(enriched, null, 2), "utf8");
   console.log(`\nSaved JSON → ${FOUND_FILE}`);
 
-  const rows = enriched.filter((ev) => ev.start_date);
+  const now = new Date();
+  const rows = enriched.filter((ev) => ev.start_date && new Date(ev.start_date) >= now);
   if (rows.length === 0) {
     console.log("No events with parseable dates — no SQL generated.");
     return;
