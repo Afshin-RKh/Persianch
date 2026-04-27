@@ -67,13 +67,18 @@ function _smtp_send(string $toEmail, string $toName, string $subject, string $bo
             $cmd('EHLO birunimap.com');
         }
 
-        $cmd('AUTH LOGIN');
-        $cmd(base64_encode($user));
-        $resp = $cmd(base64_encode($pass));
-        if (substr(trim($resp), 0, 3) !== '235') {
-            error_log("[BiruniMap mailer] SMTP AUTH failed: $resp");
-            fclose($sock);
-            return false;
+        // Try AUTH PLAIN first, fall back to AUTH LOGIN
+        $plainResp = $cmd('AUTH PLAIN ' . base64_encode("\0" . $user . "\0" . $pass));
+        if (substr(trim($plainResp), 0, 3) !== '235') {
+            error_log("[BiruniMap mailer] AUTH PLAIN failed: $plainResp — trying LOGIN");
+            $cmd('AUTH LOGIN');
+            $cmd(base64_encode($user));
+            $resp = $cmd(base64_encode($pass));
+            if (substr(trim($resp), 0, 3) !== '235') {
+                error_log("[BiruniMap mailer] AUTH LOGIN also failed: $resp");
+                fclose($sock);
+                return false;
+            }
         }
 
         $cmd("MAIL FROM:<$fromAddr>");
