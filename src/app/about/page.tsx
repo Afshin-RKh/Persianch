@@ -256,7 +256,7 @@ export default function AboutPage() {
             className="flex flex-col items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl px-5 py-5 transition-all group">
             <span className="text-2xl">🗺️</span>
             <p className="text-white font-bold text-sm">Add to Map</p>
-            <p className="text-blue-200 text-xs">Own or know an Iranian business? Put it on the map for free</p>
+            <p className="text-blue-200 text-xs">Own or know an Iranian business? Put it on the map</p>
           </Link>
           <Link href="/events/submit"
             className="flex flex-col items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl px-5 py-5 transition-all group">

@@ -212,7 +212,7 @@ export default function BusinessesContent() {
       {/* Add to map banner */}
       <div className="border-t border-gray-100 bg-[#FDF8F3] px-6 py-6 flex flex-col items-center gap-3 text-center">
         <p className="text-sm font-medium text-gray-700">Know an Iranian business that's not on the map yet?</p>
-        <p className="text-xs text-gray-400">Help the community — it only takes 2 minutes and it's free.</p>
+        <p className="text-xs text-gray-400">Help the community — it only takes a couple of minutes.</p>
         <Link
           href="/get-listed"
           className="text-sm font-bold px-6 py-2.5 rounded-xl text-white transition-all hover:opacity-90 hover:scale-105 shadow-sm"

@@ -49,10 +49,10 @@ export default function ContactPage() {
           <span className="text-3xl mb-4">🏪</span>
           <h2 className="text-lg font-bold mb-2" style={{ color: navy }}>Add Your Business</h2>
           <p className="text-gray-500 text-sm leading-relaxed flex-1">
-            Own or know an Iranian business that belongs on the map? Getting listed is free and only takes a couple of minutes.
+            Own or know an Iranian business that belongs on the map? Getting listed takes a couple of minutes and helps the whole community find you.
           </p>
           <div className="mt-5 space-y-2 text-xs text-gray-400">
-            <div className="flex items-center gap-2"><span style={{ color: gold }}>✓</span> Free — always</div>
+            <div className="flex items-center gap-2"><span style={{ color: gold }}>✓</span> Open to all Iranian businesses</div>
             <div className="flex items-center gap-2"><span style={{ color: gold }}>✓</span> Listed within a few days</div>
             <div className="flex items-center gap-2"><span style={{ color: gold }}>✓</span> Visible to Iranians worldwide</div>
           </div>

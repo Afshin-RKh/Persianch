@@ -90,14 +90,14 @@ export default function GetListedPage() {
           Get Your Business Listed
         </h1>
         <p className="text-gray-600 leading-relaxed max-w-xl mx-auto">
-          Are you Persian or Iranian — running a business where your language, culture, and cuisine make a real difference for your audience? Fill in the form below and we'll review and add your business within a few days — for free.
+          Are you Iranian — running a business where your language, culture, and cuisine make a real difference for your audience? Fill in the form below and we'll review and add your business within a few days.
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10 text-sm text-gray-600 text-center">
         <div className="flex flex-col items-center gap-2">
           <span className="text-2xl">✅</span>
-          <span>100% Free</span>
+          <span>Open to everyone</span>
         </div>
         <div className="flex flex-col items-center gap-2">
           <span className="text-2xl">⚡</span>

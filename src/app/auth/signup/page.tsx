@@ -139,7 +139,7 @@ export default function SignUpPage() {
           <Link href="/" className="text-2xl font-bold" style={{ color: "#1B3A6B" }}>
             Biruni<span style={{ color: "#C9A84C" }}>Map</span>
           </Link>
-          <p className="text-gray-500 text-sm mt-2">Create your free account</p>
+          <p className="text-gray-500 text-sm mt-2">Create your account</p>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
