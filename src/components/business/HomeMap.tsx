@@ -120,13 +120,7 @@ export default function HomeMap() {
           iconAnchor: [18, 18],
         });
 
-        const tooltipHtml = `
-          <div style="font-family:Arial,sans-serif;min-width:140px;max-width:200px;">
-            <div style="font-weight:700;font-size:13px;color:#1a0a0a;margin-bottom:2px;">${business.name}</div>
-            <div style="font-size:11px;color:#8B1A1A;font-weight:600;">${icon} ${category?.label_en ?? ""}</div>
-            <div style="font-size:11px;color:#888;margin-top:2px;">📍 ${business.canton ?? ""}</div>
-            <div style="font-size:11px;color:#C9A84C;margin-top:4px;font-weight:600;">Click to view →</div>
-          </div>`;
+        const tooltipHtml = `<div style="font-family:Arial,sans-serif;font-weight:700;font-size:13px;color:#1a0a0a;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;">${business.name}</div>`;
 
         L.marker([lat, lng], { icon: divIcon })
           .addTo(mapInstanceRef.current!)
@@ -151,7 +145,7 @@ export default function HomeMap() {
           background: white !important;
           border: 1.5px solid #e8d5b0 !important;
           border-radius: 10px !important;
-          padding: 8px 12px !important;
+          padding: 5px 10px !important;
           box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
         }
         .persian-hub-tooltip::before { border-top-color: #e8d5b0 !important; }
