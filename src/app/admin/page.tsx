@@ -100,29 +100,6 @@ function BizFormPanel({ title, form, setForm, onSubmit, loading, success, onClos
   ownerUsers: UserRow[]; assignOwner: string; setAssignOwner: (v: string) => void;
 }) {
   const regions = REGIONS_BY_COUNTRY[form.country] ?? [];
-  const [geocoding, setGeocoding] = useState(false);
-
-  const autoGeocode = async () => {
-    const q1 = [form.address, form.canton, form.country].filter(Boolean).join(", ");
-    const q2 = [form.canton, form.country].filter(Boolean).join(", ");
-    setGeocoding(true);
-    try {
-      for (const q of [q1, q2]) {
-        if (!q) continue;
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
-          headers: { "Accept-Language": "en" },
-        });
-        const data = await res.json();
-        if (data[0]) {
-          setForm({ ...form, lat: parseFloat(data[0].lat).toFixed(6), lng: parseFloat(data[0].lon).toFixed(6) });
-          break;
-        }
-      }
-    } finally {
-      setGeocoding(false);
-    }
-  };
-
   return (
     <div className="bg-white rounded-2xl border border-[#1B3A6B]/15 shadow-sm mb-2 overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
@@ -223,29 +200,18 @@ function BizFormPanel({ title, form, setForm, onSubmit, loading, success, onClos
 
         {/* Coordinates */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Coordinates</p>
-            <button
-              type="button"
-              onClick={autoGeocode}
-              disabled={geocoding || (!form.address && !form.canton && !form.country)}
-              className="text-xs font-semibold px-3 py-1 rounded-lg border transition-colors disabled:opacity-40"
-              style={{ borderColor: "#1B3A6B", color: "#1B3A6B" }}
-            >
-              {geocoding ? "Detecting…" : "📍 Auto-detect"}
-            </button>
-          </div>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Coordinates</p>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Latitude</label>
-              <input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="47.3769" className={inp} />
+              <input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="auto-detected on save" className={inp} />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Longitude</label>
-              <input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="8.5417" className={inp} />
+              <input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="auto-detected on save" className={inp} />
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-1.5">Or right-click on Google Maps → &ldquo;What&apos;s here?&rdquo;</p>
+          <p className="text-xs text-gray-400 mt-1.5">Leave blank to auto-detect from address. Or right-click on Google Maps → &ldquo;What&apos;s here?&rdquo;</p>
         </div>
 
         {/* Flags */}
@@ -573,10 +539,26 @@ export default function AdminPage() {
     e.preventDefault();
     setBizLoading(true);
     try {
+      let lat = bizForm.lat;
+      let lng = bizForm.lng;
+      if (!lat || !lng) {
+        try {
+          const q1 = [bizForm.address, bizForm.canton, bizForm.country].filter(Boolean).join(", ");
+          const geo1 = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q1)}&format=json&limit=1`);
+          const d1 = await geo1.json();
+          if (d1[0]) { lat = d1[0].lat; lng = d1[0].lon; }
+          else {
+            const q2 = [bizForm.canton, bizForm.country].filter(Boolean).join(", ");
+            const geo2 = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q2)}&format=json&limit=1`);
+            const d2 = await geo2.json();
+            if (d2[0]) { lat = d2[0].lat; lng = d2[0].lon; }
+          }
+        } catch { /* non-fatal */ }
+      }
       const isEdit = !!editBiz;
       const body = isEdit
-        ? { id: editBiz!.id, ...bizForm, owner_user_id: assignOwner ? parseInt(assignOwner) : null }
-        : bizForm;
+        ? { id: editBiz!.id, ...bizForm, lat, lng, owner_user_id: assignOwner ? parseInt(assignOwner) : null }
+        : { ...bizForm, lat, lng };
       const res  = await fetch(`${API}/businesses.php`, { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify(body) });
       const data = await res.json();
       if (data.success) {
