@@ -100,6 +100,29 @@ function BizFormPanel({ title, form, setForm, onSubmit, loading, success, onClos
   ownerUsers: UserRow[]; assignOwner: string; setAssignOwner: (v: string) => void;
 }) {
   const regions = REGIONS_BY_COUNTRY[form.country] ?? [];
+  const [geocoding, setGeocoding] = useState(false);
+
+  const autoGeocode = async () => {
+    const q1 = [form.address, form.canton, form.country].filter(Boolean).join(", ");
+    const q2 = [form.canton, form.country].filter(Boolean).join(", ");
+    setGeocoding(true);
+    try {
+      for (const q of [q1, q2]) {
+        if (!q) continue;
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+          headers: { "Accept-Language": "en" },
+        });
+        const data = await res.json();
+        if (data[0]) {
+          setForm({ ...form, lat: parseFloat(data[0].lat).toFixed(6), lng: parseFloat(data[0].lon).toFixed(6) });
+          break;
+        }
+      }
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-[#1B3A6B]/15 shadow-sm mb-2 overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
@@ -200,7 +223,18 @@ function BizFormPanel({ title, form, setForm, onSubmit, loading, success, onClos
 
         {/* Coordinates */}
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Coordinates</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Coordinates</p>
+            <button
+              type="button"
+              onClick={autoGeocode}
+              disabled={geocoding || (!form.address && !form.canton && !form.country)}
+              className="text-xs font-semibold px-3 py-1 rounded-lg border transition-colors disabled:opacity-40"
+              style={{ borderColor: "#1B3A6B", color: "#1B3A6B" }}
+            >
+              {geocoding ? "Detecting…" : "📍 Auto-detect"}
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Latitude</label>
@@ -211,7 +245,7 @@ function BizFormPanel({ title, form, setForm, onSubmit, loading, success, onClos
               <input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="8.5417" className={inp} />
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-1.5">Right-click on Google Maps → &ldquo;What&apos;s here?&rdquo;</p>
+          <p className="text-xs text-gray-400 mt-1.5">Or right-click on Google Maps → &ldquo;What&apos;s here?&rdquo;</p>
         </div>
 
         {/* Flags */}
