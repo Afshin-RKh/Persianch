@@ -2,6 +2,7 @@
 -- Run this in your cPanel MySQL database
 
 CREATE TABLE IF NOT EXISTS events (
+  -- charset set at table level so Persian/Arabic text stores correctly
   id                  INT AUTO_INCREMENT PRIMARY KEY,
   title               VARCHAR(255)  NOT NULL,
   title_fa            VARCHAR(255)  DEFAULT NULL,
@@ -32,7 +33,7 @@ CREATE TABLE IF NOT EXISTS events (
   created_at          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
   updated_at          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE SET NULL
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE INDEX IF NOT EXISTS idx_events_status       ON events(status);
 CREATE INDEX IF NOT EXISTS idx_events_start_date   ON events(start_date);

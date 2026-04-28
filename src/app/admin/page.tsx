@@ -1260,11 +1260,21 @@ export default function AdminPage() {
                           </div>
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1">Country</label>
-                            <input value={editEvent.country} onChange={(e) => setEditEvent({ ...editEvent, country: e.target.value })} className={inp} />
+                            <select value={editEvent.country} onChange={(e) => setEditEvent({ ...editEvent, country: e.target.value, city: "" })} className={inp}>
+                              <option value="">Select country</option>
+                              {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
+                            </select>
                           </div>
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1">City</label>
-                            <input value={editEvent.city} onChange={(e) => setEditEvent({ ...editEvent, city: e.target.value })} className={inp} />
+                            {(REGIONS_BY_COUNTRY[editEvent.country] ?? []).length > 0 ? (
+                              <select value={editEvent.city} onChange={(e) => setEditEvent({ ...editEvent, city: e.target.value })} className={inp}>
+                                <option value="">Select city</option>
+                                {[...( REGIONS_BY_COUNTRY[editEvent.country] ?? [])].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
+                              </select>
+                            ) : (
+                              <input value={editEvent.city} onChange={(e) => setEditEvent({ ...editEvent, city: e.target.value })} className={inp} placeholder="Enter city" />
+                            )}
                           </div>
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1">Venue</label>
