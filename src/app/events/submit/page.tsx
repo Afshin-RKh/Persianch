@@ -5,18 +5,13 @@ import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
 const EVENT_TYPES = [
-  { value: "concert",           label: "🎵 Concert" },
-  { value: "theatre",           label: "🎭 Theatre" },
-  { value: "protest",           label: "✊ Protest / Gathering" },
-  { value: "language_class",    label: "📚 Language Class" },
-  { value: "dance_class",       label: "💃 Dance Class" },
-  { value: "food_culture",      label: "🍽️ Food & Culture" },
-  { value: "art_exhibition",    label: "🎨 Art Exhibition" },
-  { value: "sports",            label: "🏃 Sports" },
-  { value: "religious_cultural",label: "🕌 Religious / Cultural" },
-  { value: "party",             label: "🎉 Party / Celebration" },
-  { value: "conference",        label: "📢 Conference / Talk" },
-  { value: "other",             label: "📌 Other" },
+  { value: "concert", label: "🎵 Concert" },
+  { value: "show",    label: "🎭 Show" },
+  { value: "march",   label: "✊ March" },
+  { value: "class",   label: "📚 Class" },
+  { value: "sports",  label: "🏃 Sports" },
+  { value: "party",   label: "🎉 Party" },
+  { value: "other",   label: "📌 Other" },
 ];
 
 const inp = "w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] focus:border-transparent bg-white";

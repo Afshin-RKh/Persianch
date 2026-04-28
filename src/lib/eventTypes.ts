@@ -1,16 +1,11 @@
 export const EVENT_TYPE_META: Record<string, { icon: string; label: string; color: string }> = {
-  concert:            { icon: "🎵", label: "Concert",              color: "#7C3AED" },
-  theatre:            { icon: "🎭", label: "Theatre",              color: "#B45309" },
-  protest:            { icon: "✊", label: "Protest / Gathering",  color: "#DC2626" },
-  language_class:     { icon: "📚", label: "Language Class",       color: "#0369A1" },
-  dance_class:        { icon: "💃", label: "Dance Class",          color: "#DB2777" },
-  food_culture:       { icon: "🍽️", label: "Food & Culture",       color: "#D97706" },
-  art_exhibition:     { icon: "🎨", label: "Art Exhibition",       color: "#059669" },
-  sports:             { icon: "🏃", label: "Sports",               color: "#16A34A" },
-  religious_cultural: { icon: "🕌", label: "Religious / Cultural", color: "#1B3A6B" },
-  party:              { icon: "🎉", label: "Party / Celebration",  color: "#9333EA" },
-  conference:         { icon: "📢", label: "Conference / Talk",    color: "#475569" },
-  other:              { icon: "📌", label: "Other",                color: "#6B7280" },
+  concert: { icon: "🎵", label: "Concert", color: "#7C3AED" },
+  show:    { icon: "🎭", label: "Show",    color: "#B45309" },
+  march:   { icon: "✊", label: "March",   color: "#DC2626" },
+  class:   { icon: "📚", label: "Class",   color: "#0369A1" },
+  sports:  { icon: "🏃", label: "Sports",  color: "#16A34A" },
+  party:   { icon: "🎉", label: "Party",   color: "#9333EA" },
+  other:   { icon: "📌", label: "Other",   color: "#6B7280" },
 };
 
 export interface EventRow {

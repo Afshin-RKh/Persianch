@@ -9,9 +9,7 @@ CREATE TABLE IF NOT EXISTS events (
   description         TEXT          DEFAULT NULL,
   description_fa      TEXT          DEFAULT NULL,
   event_type          ENUM(
-    'concert','theatre','protest','language_class','dance_class',
-    'food_culture','art_exhibition','sports','religious_cultural',
-    'party','conference','other'
+    'concert','show','march','class','sports','party','other'
   ) NOT NULL DEFAULT 'other',
   country             VARCHAR(100)  NOT NULL,
   city                VARCHAR(100)  NOT NULL,

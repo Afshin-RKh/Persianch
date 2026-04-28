@@ -67,9 +67,8 @@ interface EventRow {
 }
 
 const EVENT_TYPE_ICONS: Record<string, string> = {
-  concert: "🎵", theatre: "🎭", protest: "✊", language_class: "📚", dance_class: "💃",
-  food_culture: "🍽️", art_exhibition: "🎨", sports: "🏃", religious_cultural: "🕌",
-  party: "🎉", conference: "📢", other: "📌",
+  concert: "🎵", show: "🎭", march: "✊", class: "📚",
+  sports: "🏃", party: "🎉", other: "📌",
 };
 
 // ── Badges ───────────────────────────────────────────────────────────────────
