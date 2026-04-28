@@ -35,6 +35,26 @@ function EditForm() {
   const [error, setError]     = useState("");
   const [success, setSuccess] = useState(false);
 
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!post) return;
+    if (!window.confirm(`Delete "${post.title}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API}/blog.php`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", ...authHeaders(token) },
+        body: JSON.stringify({ id: post.id }),
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      router.push("/admin");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+      setDeleting(false);
+    }
+  };
+
   const [form, setForm] = useState({
     title: "", title_fa: "", content: "", content_fa: "",
     cover_image: "", country: "", city: "", status: "approved",
@@ -121,10 +141,20 @@ function EditForm() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      <div className="mb-8">
-        <Link href="/admin" className="text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors">← Back to Admin</Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-4">Edit Post</h1>
-        <p className="text-sm text-gray-400 mt-1 truncate">{post.title}</p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <Link href="/admin" className="text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors">← Back to Admin</Link>
+          <h1 className="text-2xl font-bold text-gray-900 mt-4">Edit Post</h1>
+          <p className="text-sm text-gray-400 mt-1 truncate">{post.title}</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className="mt-8 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors flex-shrink-0"
+        >
+          {deleting ? "Deleting…" : "🗑 Delete Post"}
+        </button>
       </div>
 
       {success && (
