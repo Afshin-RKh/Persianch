@@ -10,6 +10,33 @@ import Highlight from "@tiptap/extension-highlight";
 import FontFamily from "@tiptap/extension-font-family";
 import { useEffect, useCallback } from "react";
 
+// ── Text direction (LTR / RTL) on block nodes ────────────────────────────────
+const TextDirection = Extension.create({
+  name: "textDirection",
+  addGlobalAttributes() {
+    return [{
+      types: ["paragraph", "heading", "bulletList", "orderedList", "listItem", "blockquote"],
+      attributes: {
+        dir: {
+          default: null,
+          parseHTML: (el) => el.getAttribute("dir") || null,
+          renderHTML: (attrs) => attrs.dir ? { dir: attrs.dir } : {},
+        },
+      },
+    }];
+  },
+  addCommands() {
+    return {
+      setTextDirection: (dir: "ltr" | "rtl") => ({ commands }: any) =>
+        ["paragraph","heading","bulletList","orderedList","listItem","blockquote"]
+          .every((t) => commands.updateAttributes(t, { dir })),
+      unsetTextDirection: () => ({ commands }: any) =>
+        ["paragraph","heading","bulletList","orderedList","listItem","blockquote"]
+          .every((t) => commands.updateAttributes(t, { dir: null })),
+    } as any;
+  },
+});
+
 // ── Font-size via TextStyle attribute ─────────────────────────────────────────
 const FontSize = Extension.create({
   name: "fontSize",
@@ -94,6 +121,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
       Color,
       FontFamily,
       FontSize,
+      TextDirection,
       Highlight.configure({ multicolor: true }),
       Link.configure({ openOnClick: false }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -221,6 +249,12 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         <Btn onClick={() => editor.chain().focus().setTextAlign("right").run()} active={editor.isActive({ textAlign: "right" })} title="Align right">
           <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm6 4h12v2H9zm-6 4h18v2H3zm6 4h12v2H9z"/></svg>
         </Btn>
+
+        <Sep />
+
+        {/* Direction */}
+        <Btn onClick={() => (editor.chain().focus() as any).setTextDirection("ltr").run()} active={editor.isActive({ dir: "ltr" })} title="Left to right (LTR)">LTR</Btn>
+        <Btn onClick={() => (editor.chain().focus() as any).setTextDirection("rtl").run()} active={editor.isActive({ dir: "rtl" })} title="Right to left (RTL)">RTL</Btn>
 
         <Sep />
 
