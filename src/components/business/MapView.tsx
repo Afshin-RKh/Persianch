@@ -1697,13 +1697,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
         });
 
         // Tooltip: shows on hover
-        const tooltipHtml = `
-          <div style="font-family:Arial,sans-serif;min-width:140px;max-width:200px;">
-            <div style="font-weight:700;font-size:13px;color:#1a0a0a;margin-bottom:2px;">${business.name}</div>
-            <div style="font-size:11px;color:#8B1A1A;font-weight:600;">${icon} ${category?.label_en ?? ""}</div>
-            <div style="font-size:11px;color:#888;margin-top:2px;">📍 ${business.canton ?? ""}</div>
-            <div style="font-size:11px;color:#C9A84C;margin-top:4px;font-weight:600;">Click to view →</div>
-          </div>`;
+        const tooltipHtml = `<div style="font-family:Arial,sans-serif;font-weight:700;font-size:13px;color:#1a0a0a;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;">${business.name}</div>`;
 
         const marker = L.marker([lat, lng], { icon: divIcon })
           .addTo(mapInstanceRef.current!)
