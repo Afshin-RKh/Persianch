@@ -34,7 +34,7 @@ export default function BlogPage() {
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 gold-underline inline-block">Blog</h1>
-          <p className="text-gray-500 mt-3">News, tips and stories from the Persian community across Europe.</p>
+          <p className="text-gray-500 mt-3">News, tips and stories from the Iranian community around the world.</p>
         </div>
         {user && (
           <Link href="/blog/write" className="text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:opacity-90 flex-shrink-0 mt-1" style={{ backgroundColor: "#8B1A1A" }}>
