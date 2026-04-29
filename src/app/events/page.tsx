@@ -1,12 +1,11 @@
 "use client";
-import { useEffect, useState, useCallback, useMemo, useRef, Suspense } from "react";
-import dynamic from "next/dynamic";
+import { useEffect, useState, useCallback, useMemo, useRef, Suspense, lazy } from "react";
 import { Search, X } from "lucide-react";
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
 import { useAuth } from "@/lib/auth";
 import Link from "next/link";
 
-const EventsMap = dynamic(() => import("@/components/events/EventsMap"), { ssr: false });
+const EventsMap = lazy(() => import("@/components/events/EventsMap"));
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
