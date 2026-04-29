@@ -196,7 +196,7 @@ export default function EventsPage() {
 
             {/* Dropdown calendar — right edge aligned with button's right edge */}
             {dateOpen && (
-              <div className="absolute top-full right-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 w-72">
+              <div className="absolute top-full right-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 w-80">
                 <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Select date range</p>
                 <div className="flex gap-3">
                   <div className="flex-1">
