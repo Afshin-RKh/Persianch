@@ -27,7 +27,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-      const map = L.map(mapRef.current!, { center: [48, 15], zoom: 4, minZoom: 2, maxZoom: 19 });
+      const map = L.map(mapRef.current!, { center: [48, 15], zoom: 4, minZoom: 2, maxZoom: 19, zoomControl: false });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap contributors", maxZoom: 19,
       }).addTo(map);
@@ -164,6 +164,14 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
     });
   }, [userLocation]);
 
+  const handleLocate = () => {
+    if (!navigator.geolocation || !mapInstanceRef.current) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => mapInstanceRef.current!.flyTo([pos.coords.latitude, pos.coords.longitude], 13, { duration: 1.2 }),
+      () => {}
+    );
+  };
+
   return (
     <>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -185,7 +193,35 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
           70% { transform: scale(1); }
         }
       `}</style>
-      <div ref={mapRef} className="w-full h-full rounded-xl" />
+      <div className="relative w-full h-full">
+        <div ref={mapRef} className="w-full h-full rounded-xl" />
+        <div className="absolute bottom-6 right-3 z-[1000] flex flex-col gap-1">
+          <button
+            onClick={() => mapInstanceRef.current?.zoomIn()}
+            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
+            title="Zoom in"
+          >+</button>
+          <button
+            onClick={() => mapInstanceRef.current?.zoomOut()}
+            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
+            title="Zoom out"
+          >−</button>
+          <div className="h-2" />
+          <button
+            onClick={handleLocate}
+            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-[#1B3A6B] hover:bg-gray-50 border border-gray-200"
+            title="Find my location"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <circle cx="12" cy="12" r="3" />
+              <line x1="12" y1="2" x2="12" y2="6" />
+              <line x1="12" y1="18" x2="12" y2="22" />
+              <line x1="2" y1="12" x2="6" y2="12" />
+              <line x1="18" y1="12" x2="22" y2="12" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </>
   );
 }
