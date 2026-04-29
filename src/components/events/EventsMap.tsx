@@ -12,11 +12,15 @@ interface Props {
 }
 
 export default function EventsMap({ events, userLocation, onSelectEvent, focusCountry, focusRegion }: Props) {
-  const mapRef         = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
-  const markersRef     = useRef<import("leaflet").Marker[]>([]);
-  const userMarkerRef  = useRef<import("leaflet").Marker | null>(null);
+  const mapRef            = useRef<HTMLDivElement>(null);
+  const mapInstanceRef    = useRef<import("leaflet").Map | null>(null);
+  const markersRef        = useRef<import("leaflet").Marker[]>([]);
+  const userMarkerRef     = useRef<import("leaflet").Marker | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const focusCountryRef   = useRef(focusCountry);
+  const focusRegionRef    = useRef(focusRegion);
+  useEffect(() => { focusCountryRef.current = focusCountry; }, [focusCountry]);
+  useEffect(() => { focusRegionRef.current  = focusRegion;  }, [focusRegion]);
 
   // Init map
   useEffect(() => {
@@ -37,6 +41,19 @@ export default function EventsMap({ events, userLocation, onSelectEvent, focusCo
 
       mapInstanceRef.current = map;
       setMapReady(true);
+
+      // Apply any focus selection that arrived before map was ready
+      setTimeout(() => {
+        const fr = focusRegionRef.current;
+        const fc = focusCountryRef.current;
+        if (fr && CANTON_COORDS[fr]) {
+          const [lat, lng] = CANTON_COORDS[fr];
+          map.flyTo([lat, lng], 11, { duration: 1 });
+        } else if (fc && COUNTRY_COORDS[fc]) {
+          const { center, zoom } = COUNTRY_COORDS[fc];
+          map.flyTo(center, zoom, { duration: 1.2 });
+        }
+      }, 0);
 
       if (!document.getElementById("heartbeat-style")) {
         const s = document.createElement("style");
