@@ -270,12 +270,10 @@ export default function EventsPage() {
         </div>
 
         {/* Row 4: Type pills — swipeable */}
-        <div className="pointer-events-auto relative">
-          <div className="absolute right-0 top-0 bottom-0 w-10 z-10 pointer-events-none"
-            style={{ background: "linear-gradient(to left, rgba(255,255,255,0.95), transparent)" }} />
+        <div className="pointer-events-auto">
           <div
             className="flex gap-2 overflow-x-auto"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch", maskImage: "linear-gradient(to left, transparent, black 48px)", WebkitMaskImage: "linear-gradient(to left, transparent, black 48px)" }}
           >
             <button
               onClick={() => setTypeFilter("")}
