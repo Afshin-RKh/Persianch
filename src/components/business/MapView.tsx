@@ -1649,17 +1649,13 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
 
       map.on("moveend", () => fireBounds(map));
 
-      // Detect user location via IP (same as HomeMap)
-      fetch("https://ipapi.co/json/")
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.latitude && data.longitude) {
-            map.flyTo([data.latitude, data.longitude], 10, { duration: 1.5 });
-          } else {
-            fireBounds(map);
-          }
+      // Detect user location via IP — cached so only one request across all maps
+      import("@/lib/ipLocation").then(({ getIPLocation }) =>
+        getIPLocation().then((loc) => {
+          if (loc) map.flyTo(loc, 10, { duration: 1.5 });
+          else fireBounds(map);
         })
-        .catch(() => { fireBounds(map); });
+      ).catch(() => fireBounds(map));
 
       let resizeTimer: ReturnType<typeof setTimeout>;
       const onResize = () => {

@@ -47,9 +47,9 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
       });
       L.marker([32.4279, 53.6880], { icon: heartIcon, interactive: false, zIndexOffset: -1000 }).addTo(map);
 
-      fetch("https://ipapi.co/json/").then((r) => r.json())
-        .then((d) => { if (d.latitude && d.longitude) map.flyTo([d.latitude, d.longitude], 10, { duration: 1.5 }); })
-        .catch(() => {});
+      import("@/lib/ipLocation").then(({ getIPLocation }) =>
+        getIPLocation().then((loc) => { if (loc) map.flyTo(loc, 10, { duration: 1.5 }); })
+      ).catch(() => {});
 
       let resizeTimer: ReturnType<typeof setTimeout>;
       const onResize = () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => map.invalidateSize(), 150); };
