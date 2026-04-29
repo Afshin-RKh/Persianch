@@ -61,7 +61,6 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-7">
             {navLink("/businesses", "Businesses")}
             {navLink("/events", "Events")}
-            {navLink("/blog", "Blog")}
             {navLink("/about", "About Us")}
           </div>
 
@@ -97,10 +96,6 @@ export default function Navbar() {
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                       <User size={15} /> My Profile
                     </Link>
-                    <Link href="/blog/write" onClick={() => setUserMenu(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                      <PenLine size={15} /> Write a Post
-                    </Link>
                     {isAdmin && (
                       <Link href="/admin" onClick={() => setUserMenu(false)}
                         className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
@@ -135,7 +130,6 @@ export default function Navbar() {
           {[
             ["/businesses", "🏪 Businesses"],
             ["/events", "📅 Events"],
-            ["/blog", "📝 Blog"],
             ["/about", "🦁 About Us"],
           ].map(([href, label]) => (
             <Link key={href} href={href}
@@ -149,10 +143,6 @@ export default function Navbar() {
               <Link href="/profile" onClick={() => setOpen(false)}
                 className="flex items-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 👤 My Profile
-              </Link>
-              <Link href="/blog/write" onClick={() => setOpen(false)}
-                className="flex items-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                ✍️ Write a Post
               </Link>
               {isAdmin && (
                 <Link href="/admin" onClick={() => setOpen(false)}
