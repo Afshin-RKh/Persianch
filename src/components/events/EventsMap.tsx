@@ -27,7 +27,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-      const map = L.map(mapRef.current!, { center: [48, 15], zoom: 4, minZoom: 2, maxZoom: 19, zoomControl: false });
+      const map = L.map(mapRef.current!, { center: [48, 15], zoom: 3, minZoom: 2, maxZoom: 19, zoomControl: false });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap contributors", maxZoom: 19,
       }).addTo(map);
@@ -167,7 +167,26 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
   const handleLocate = () => {
     if (!navigator.geolocation || !mapInstanceRef.current) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => mapInstanceRef.current!.flyTo([pos.coords.latitude, pos.coords.longitude], 13, { duration: 1.2 }),
+      (pos) => {
+        const latlng: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        import("leaflet").then((L) => {
+          if (userMarkerRef.current) userMarkerRef.current.remove();
+          if (!document.getElementById("user-location-style")) {
+            const s = document.createElement("style");
+            s.id = "user-location-style";
+            s.textContent = `
+              @keyframes user-pulse { 0% { transform:scale(1);opacity:1; } 70% { transform:scale(2.8);opacity:0; } 100% { transform:scale(1);opacity:0; } }
+              @keyframes user-glow { 0%,100% { box-shadow:0 0 6px 2px rgba(74,144,217,0.8); } 50% { box-shadow:0 0 18px 6px rgba(74,144,217,1); } }
+              .user-location-dot { width:16px;height:16px;border-radius:50%;background:#4A90D9;border:3px solid #1B3A6B;box-shadow:0 0 6px 2px rgba(74,144,217,0.8);animation:user-glow 1.8s ease-in-out infinite;position:relative; }
+              .user-location-dot::after { content:'';position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;background:rgba(74,144,217,0.5);animation:user-pulse 1.8s ease-out infinite; }
+            `;
+            document.head.appendChild(s);
+          }
+          const icon = L.divIcon({ html: `<div class="user-location-dot"></div>`, className: "", iconSize: [16, 16], iconAnchor: [8, 8] });
+          userMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 9999, interactive: false }).addTo(mapInstanceRef.current!);
+          mapInstanceRef.current!.flyTo(latlng, 13, { duration: 1.2 });
+        });
+      },
       () => {}
     );
   };
