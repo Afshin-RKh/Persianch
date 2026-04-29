@@ -64,11 +64,17 @@ export default function Navbar() {
             {navLink("/events", "Events")}
             {navLink("/blog", "Blog")}
             {navLink("/about", "About Us")}
-            {navLink("/contact", "Contact Us")}
           </div>
 
           {/* Desktop right side */}
           <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/get-listed"
+              className="text-sm font-bold px-4 py-2 rounded-xl text-white transition-all hover:opacity-90 shadow-sm"
+              style={{ backgroundColor: "#8B1A1A" }}
+            >
+              + Add to Map
+            </Link>
             {user ? (
               <div className="relative" ref={menuRef}>
                 <button
@@ -133,7 +139,6 @@ export default function Navbar() {
             ["/events", "📅 Events"],
             ["/blog", "📝 Blog"],
             ["/about", "🦁 About Us"],
-            ["/contact", "✉️ Contact Us"],
           ].map(([href, label]) => (
             <Link key={href} href={href}
               className="flex items-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -160,6 +165,11 @@ export default function Navbar() {
             </>
           )}
           <div className="pt-2 space-y-2">
+            <Link href="/get-listed" onClick={() => setOpen(false)}
+              className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-bold text-white"
+              style={{ backgroundColor: "#8B1A1A" }}>
+              + Add to Map
+            </Link>
             {user ? (
               <button onClick={() => { logout(); setOpen(false); }}
                 className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600">
