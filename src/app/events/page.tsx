@@ -89,7 +89,7 @@ export default function EventsPage() {
   const handleSelectEvent = useCallback((ev: EventRow) => setSelected(ev), []);
 
   const activePill   = "text-white font-medium text-xs px-3 py-1.5 rounded-full shadow-sm";
-  const inactivePill = "font-medium text-xs px-3 py-1.5 rounded-full transition-colors shadow-sm text-gray-700 hover:bg-white/90 bg-white/70 backdrop-blur-sm border border-white/50";
+  const inactivePill = "font-medium text-xs px-3 py-1.5 rounded-full transition-colors shadow-sm text-gray-700 hover:bg-gray-50 bg-white border border-gray-200";
 
   return (
     <div className="relative" style={{ height: "calc(100vh - 64px)" }}>
@@ -115,7 +115,7 @@ export default function EventsPage() {
               value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search artist, event, city, country…"
-              className="w-full pl-9 pr-9 py-2.5 text-sm border border-white/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white/80 backdrop-blur-sm shadow-md placeholder-gray-400"
+              className="w-full pl-9 pr-9 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-transparent bg-white shadow-sm placeholder-gray-400"
             />
             {searchInput && (
               <button
@@ -131,7 +131,7 @@ export default function EventsPage() {
             <select
               value={country}
               onChange={(e) => { setCountry(e.target.value); setRegion(""); }}
-              className="pl-9 pr-7 py-2.5 rounded-xl border border-white/50 bg-white/80 backdrop-blur-sm text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] appearance-none min-w-[150px] shadow-md cursor-pointer"
+              className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
             >
               <option value="">All Countries</option>
               {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
@@ -142,7 +142,7 @@ export default function EventsPage() {
             <select
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              className="pl-9 pr-7 py-2.5 rounded-xl border border-white/50 bg-white/80 backdrop-blur-sm text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] appearance-none min-w-[150px] shadow-md cursor-pointer"
+              className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
             >
               <option value="">All Regions</option>
               {regions.map((r) => <option key={r} value={r}>{r}</option>)}
