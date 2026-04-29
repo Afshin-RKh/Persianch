@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, useMemo, useRef, Suspense, lazy } from "react";
-import { Search, X, Globe, MapPin } from "lucide-react";
+import { Search, X, Globe, MapPin, Calendar } from "lucide-react";
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
 import { useAuth } from "@/lib/auth";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
@@ -10,11 +10,13 @@ const EventsMap = lazy(() => import("@/components/events/EventsMap"));
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
-const DATE_FILTERS = [
-  { value: "week",    label: "This week" },
-  { value: "month",   label: "This month" },
-  { value: "6months", label: "Next 6 months" },
-];
+function fmt(d: Date) {
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function fmtDisplay(iso: string) {
+  return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
 
 function matchesSearch(ev: EventRow, q: string): boolean {
   const s = q.toLowerCase();
@@ -32,30 +34,54 @@ export default function EventsPage() {
   const { token, loading: authLoading } = useAuth();
   const [allEvents, setAllEvents] = useState<EventRow[]>([]);
   const [selected, setSelected] = useState<EventRow | null>(null);
-  const [dateFilter, setDateFilter] = useState("month");
   const [typeFilter, setTypeFilter] = useState("");
   const [country, setCountry] = useState("");
   const [region, setRegion] = useState("");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const boundsRef = useRef<{ lat_min: number; lat_max: number; lng_min: number; lng_max: number } | null>(null);
+
+  // Date range — default: today → 6 months out
+  const defaultStart = fmt(new Date());
+  const defaultEnd   = fmt(new Date(Date.now() + 180 * 86400000));
+  const [dateFrom, setDateFrom] = useState(defaultStart);
+  const [dateTo,   setDateTo]   = useState(defaultEnd);
+  const [dateOpen, setDateOpen] = useState(false);
+  // Temp state while picker is open
+  const [tempFrom, setTempFrom] = useState(defaultStart);
+  const [tempTo,   setTempTo]   = useState(defaultEnd);
+  const datePickerRef = useRef<HTMLDivElement>(null);
+
+  const searchTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const boundsRef     = useRef<{ lat_min: number; lat_max: number; lng_min: number; lng_max: number } | null>(null);
   const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Close picker on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+        setDateOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const fetchForBounds = useCallback((bounds: typeof boundsRef.current) => {
     if (!bounds || authLoading) return;
-    const params = new URLSearchParams({ filter: dateFilter });
+    const params = new URLSearchParams();
     params.set("lat_min", String(bounds.lat_min));
     params.set("lat_max", String(bounds.lat_max));
     params.set("lng_min", String(bounds.lng_min));
     params.set("lng_max", String(bounds.lng_max));
+    params.set("date_from", dateFrom);
+    params.set("date_to",   dateTo);
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
     fetch(`${API}/events.php?${params}`, { headers })
       .then((r) => r.json())
       .then((data) => setAllEvents(Array.isArray(data) ? data : []))
       .catch(() => setAllEvents([]));
-  }, [authLoading, token, dateFilter]);
+  }, [authLoading, token, dateFrom, dateTo]);
 
   const handleBoundsChange = useCallback((bounds: { lat_min: number; lat_max: number; lng_min: number; lng_max: number }) => {
     boundsRef.current = bounds;
@@ -67,13 +93,35 @@ export default function EventsPage() {
     if (authLoading || !boundsRef.current) return;
     if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
     fetchTimerRef.current = setTimeout(() => fetchForBounds(boundsRef.current), 300);
-  }, [authLoading, token, dateFilter, fetchForBounds]);
+  }, [authLoading, token, dateFrom, dateTo, fetchForBounds]);
 
   const handleSearchChange = (val: string) => {
     setSearchInput(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => setSearch(val.trim()), 220);
   };
+
+  const openPicker = () => {
+    setTempFrom(dateFrom);
+    setTempTo(dateTo);
+    setDateOpen(true);
+  };
+
+  const applyDates = () => {
+    setDateFrom(tempFrom);
+    setDateTo(tempTo || tempFrom);
+    setDateOpen(false);
+  };
+
+  const clearDates = () => {
+    setDateFrom(defaultStart);
+    setDateTo(defaultEnd);
+    setTempFrom(defaultStart);
+    setTempTo(defaultEnd);
+    setDateOpen(false);
+  };
+
+  const isDefault = dateFrom === defaultStart && dateTo === defaultEnd;
 
   const regions = useMemo(() =>
     country ? [...(REGIONS_BY_COUNTRY[country] ?? [])].sort((a, b) => a.localeCompare(b)) : []
@@ -126,7 +174,76 @@ export default function EventsPage() {
           )}
         </div>
 
-        {/* Row 2: Country + Region side by side */}
+        {/* Row 2: Dates picker */}
+        <div className="pointer-events-auto relative" ref={datePickerRef}>
+          <button
+            onClick={openPicker}
+            className="flex items-center gap-2 w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white shadow-sm text-left"
+            style={{ color: isDefault ? "#9ca3af" : "#111827" }}
+          >
+            <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            {isDefault
+              ? "Dates: All upcoming events"
+              : `${fmtDisplay(dateFrom)} → ${fmtDisplay(dateTo)}`}
+            {!isDefault && (
+              <button
+                onClick={(e) => { e.stopPropagation(); clearDates(); }}
+                className="ml-auto text-gray-400 hover:text-gray-600"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </button>
+
+          {/* Dropdown calendar */}
+          {dateOpen && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50">
+              <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Select date range</p>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="text-xs text-gray-400 mb-1 block">From</label>
+                  <input
+                    type="date"
+                    value={tempFrom}
+                    min={fmt(new Date())}
+                    onChange={(e) => {
+                      setTempFrom(e.target.value);
+                      if (tempTo < e.target.value) setTempTo(e.target.value);
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-gray-400 mb-1 block">To</label>
+                  <input
+                    type="date"
+                    value={tempTo}
+                    min={tempFrom || fmt(new Date())}
+                    onChange={(e) => setTempTo(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={clearDates}
+                  className="flex-1 py-2 text-xs font-semibold rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={applyDates}
+                  className="flex-1 py-2 text-xs font-semibold rounded-xl text-white"
+                  style={{ backgroundColor: "#8B1A1A" }}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Row 3: Country + Region side by side */}
         <div className="pointer-events-auto flex gap-2">
           <div className="relative flex-1">
             <Globe size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -152,32 +269,14 @@ export default function EventsPage() {
           </div>
         </div>
 
-        {/* Row 3: All pills in a single swipeable row (Google Maps style) */}
+        {/* Row 4: Type pills — swipeable */}
         <div className="pointer-events-auto relative">
-          {/* Fade overlay — right edge */}
           <div className="absolute right-0 top-0 bottom-0 w-10 z-10 pointer-events-none"
             style={{ background: "linear-gradient(to left, rgba(255,255,255,0.95), transparent)" }} />
-
           <div
             className="flex gap-2 overflow-x-auto"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
           >
-            {/* Date pills */}
-            {DATE_FILTERS.map((f) => (
-              <button
-                key={f.value}
-                onClick={() => setDateFilter(f.value)}
-                className={`flex-shrink-0 ${dateFilter === f.value ? activePill : inactivePill}`}
-                style={dateFilter === f.value ? { backgroundColor: "#8B1A1A" } : {}}
-              >
-                {f.label}
-              </button>
-            ))}
-
-            {/* Divider — sits right after date pills, before type pills */}
-            <div className="flex-shrink-0 w-px bg-gray-300 mx-0.5 self-stretch" />
-
-            {/* Type pills */}
             <button
               onClick={() => setTypeFilter("")}
               className={`flex-shrink-0 ${!typeFilter ? activePill : inactivePill}`}

@@ -89,8 +89,14 @@ if ($method === 'GET') {
     }
 
     // Public: approved events (admins see all statuses)
-    $filter  = $_GET['filter'] ?? '6months'; // week | month | 6months
-    [$from, $to] = window_dates($filter);
+    // Support explicit date_from/date_to range, fallback to old filter param
+    if (!empty($_GET['date_from']) && !empty($_GET['date_to'])) {
+        $from = new DateTimeImmutable($_GET['date_from']);
+        $to   = new DateTimeImmutable($_GET['date_to'] . ' 23:59:59');
+    } else {
+        $filter = $_GET['filter'] ?? '6months';
+        [$from, $to] = window_dates($filter);
+    }
 
     $where  = $isAdmin ? [] : ["status = 'approved'"];
     $params = [];
