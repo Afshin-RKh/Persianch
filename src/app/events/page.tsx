@@ -179,11 +179,11 @@ export default function EventsPage() {
           <div className="relative flex-shrink-0" ref={datePickerRef}>
             <button
               onClick={openPicker}
-              className="flex items-center gap-1.5 pl-8 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white shadow-sm whitespace-nowrap"
+              className="flex items-center gap-2 pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white shadow-sm whitespace-nowrap min-w-[140px]"
               style={{ color: isDefault ? "#9ca3af" : "#8B1A1A" }}
             >
-              <Calendar size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: isDefault ? "#9ca3af" : "#8B1A1A" }} />
-              {isDefault ? "Dates" : `${fmtDisplay(dateFrom)} → ${fmtDisplay(dateTo)}`}
+              <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: isDefault ? "#9ca3af" : "#8B1A1A" }} />
+              {isDefault ? "All Dates" : `${fmtDisplay(dateFrom)} → ${fmtDisplay(dateTo)}`}
               {!isDefault && (
                 <button
                   onClick={(e) => { e.stopPropagation(); clearDates(); }}
@@ -194,9 +194,9 @@ export default function EventsPage() {
               )}
             </button>
 
-            {/* Dropdown calendar */}
+            {/* Dropdown calendar — aligned left so it doesn't go off screen */}
             {dateOpen && (
-              <div className="absolute top-full right-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 w-72">
+              <div className="absolute top-full left-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 w-72">
                 <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Select date range</p>
                 <div className="flex gap-3">
                   <div className="flex-1">
