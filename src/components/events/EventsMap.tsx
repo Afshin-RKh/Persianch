@@ -168,7 +168,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent, focusCo
   }, [userLocation]);
 
   useEffect(() => {
-    if (!mapInstanceRef.current) return;
+    if (!mapReady || !mapInstanceRef.current) return;
     if (focusRegion && CANTON_COORDS[focusRegion]) {
       const [lat, lng] = CANTON_COORDS[focusRegion];
       mapInstanceRef.current.flyTo([lat, lng], 11, { duration: 1 });
@@ -176,7 +176,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent, focusCo
       const { center, zoom } = COUNTRY_COORDS[focusCountry];
       mapInstanceRef.current.flyTo(center, zoom, { duration: 1.2 });
     }
-  }, [focusCountry, focusRegion]);
+  }, [focusCountry, focusRegion, mapReady]);
 
   const handleLocate = () => {
     if (!navigator.geolocation || !mapInstanceRef.current) return;
