@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
 import { CANTON_COORDS, COUNTRY_COORDS } from "@/lib/mapCoords";
 
@@ -12,17 +12,12 @@ interface Props {
 }
 
 export default function EventsMap({ events, userLocation, onSelectEvent, focusCountry, focusRegion }: Props) {
-  const mapRef            = useRef<HTMLDivElement>(null);
-  const mapInstanceRef    = useRef<import("leaflet").Map | null>(null);
-  const markersRef        = useRef<import("leaflet").Marker[]>([]);
-  const userMarkerRef     = useRef<import("leaflet").Marker | null>(null);
-  const [mapReady, setMapReady] = useState(false);
-  const focusCountryRef   = useRef(focusCountry);
-  const focusRegionRef    = useRef(focusRegion);
-  useEffect(() => { focusCountryRef.current = focusCountry; }, [focusCountry]);
-  useEffect(() => { focusRegionRef.current  = focusRegion;  }, [focusRegion]);
+  const mapRef        = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
+  const markersRef    = useRef<import("leaflet").Marker[]>([]);
+  const userMarkerRef = useRef<import("leaflet").Marker | null>(null);
 
-  // Init map
+  // Init map — identical pattern to MapView
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -40,20 +35,6 @@ export default function EventsMap({ events, userLocation, onSelectEvent, focusCo
       }).addTo(map);
 
       mapInstanceRef.current = map;
-      setMapReady(true);
-
-      // Apply any focus selection that arrived before map was ready
-      setTimeout(() => {
-        const fr = focusRegionRef.current;
-        const fc = focusCountryRef.current;
-        if (fr && CANTON_COORDS[fr]) {
-          const [lat, lng] = CANTON_COORDS[fr];
-          map.flyTo([lat, lng], 11, { duration: 1 });
-        } else if (fc && COUNTRY_COORDS[fc]) {
-          const { center, zoom } = COUNTRY_COORDS[fc];
-          map.flyTo(center, zoom, { duration: 1.2 });
-        }
-      }, 0);
 
       if (!document.getElementById("heartbeat-style")) {
         const s = document.createElement("style");
@@ -86,14 +67,13 @@ export default function EventsMap({ events, userLocation, onSelectEvent, focusCo
     };
   }, []);
 
-  // Update event markers
+  // Update event markers — same pattern as MapView's business markers
   useEffect(() => {
-    if (!mapReady || !mapInstanceRef.current) return;
+    if (!mapInstanceRef.current) return;
     import("leaflet").then((L) => {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
 
-      // Group events by rounded lat/lng to detect stacking
       const groups = new Map<string, typeof events>();
       events.forEach((ev) => {
         if (ev.lat == null || ev.lng == null) return;
@@ -102,8 +82,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent, focusCo
         groups.get(key)!.push(ev);
       });
 
-      // Spiral offset so stacked markers fan out in a circle
-      const SPREAD = 0.0006; // degrees (~60m) between co-located markers
+      const SPREAD = 0.0006;
       groups.forEach((group) => {
         group.forEach((ev, i) => {
           let lat = ev.lat!;
@@ -139,51 +118,31 @@ export default function EventsMap({ events, userLocation, onSelectEvent, focusCo
         });
       });
     });
-  }, [events, onSelectEvent, mapReady]);
+  }, [events, onSelectEvent]);
 
   // User location pulsing marker
   useEffect(() => {
     if (!userLocation || !mapInstanceRef.current) return;
     import("leaflet").then((L) => {
       if (userMarkerRef.current) userMarkerRef.current.remove();
-
       if (!document.getElementById("user-location-style")) {
         const s = document.createElement("style");
         s.id = "user-location-style";
         s.textContent = `
-          @keyframes user-pulse {
-            0%   { transform: scale(1);   opacity: 1; }
-            70%  { transform: scale(2.8); opacity: 0; }
-            100% { transform: scale(1);   opacity: 0; }
-          }
-          @keyframes user-glow {
-            0%, 100% { box-shadow: 0 0 6px 2px rgba(74,144,217,0.8); }
-            50%       { box-shadow: 0 0 18px 6px rgba(74,144,217,1); }
-          }
-          .user-location-dot {
-            width:16px;height:16px;border-radius:50%;background:#4A90D9;
-            border:3px solid #1B3A6B;box-shadow:0 0 6px 2px rgba(74,144,217,0.8);
-            animation:user-glow 1.8s ease-in-out infinite;position:relative;
-          }
-          .user-location-dot::after {
-            content:'';position:absolute;top:0;left:0;width:100%;height:100%;
-            border-radius:50%;background:rgba(74,144,217,0.5);
-            animation:user-pulse 1.8s ease-out infinite;
-          }
+          @keyframes user-pulse { 0% { transform:scale(1);opacity:1; } 70% { transform:scale(2.8);opacity:0; } 100% { transform:scale(1);opacity:0; } }
+          @keyframes user-glow { 0%,100% { box-shadow:0 0 6px 2px rgba(74,144,217,0.8); } 50% { box-shadow:0 0 18px 6px rgba(74,144,217,1); } }
+          .user-location-dot { width:16px;height:16px;border-radius:50%;background:#4A90D9;border:3px solid #1B3A6B;box-shadow:0 0 6px 2px rgba(74,144,217,0.8);animation:user-glow 1.8s ease-in-out infinite;position:relative; }
+          .user-location-dot::after { content:'';position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;background:rgba(74,144,217,0.5);animation:user-pulse 1.8s ease-out infinite; }
         `;
         document.head.appendChild(s);
       }
-
-      const icon = L.divIcon({
-        html: `<div class="user-location-dot"></div>`,
-        className: "", iconSize: [16, 16], iconAnchor: [8, 8],
-      });
-      userMarkerRef.current = L.marker(userLocation, { icon, zIndexOffset: 9999, interactive: false })
-        .addTo(mapInstanceRef.current!);
+      const icon = L.divIcon({ html: `<div class="user-location-dot"></div>`, className: "", iconSize: [16, 16], iconAnchor: [8, 8] });
+      userMarkerRef.current = L.marker(userLocation, { icon, zIndexOffset: 9999, interactive: false }).addTo(mapInstanceRef.current!);
       mapInstanceRef.current!.flyTo(userLocation, 13, { duration: 1.2 });
     });
   }, [userLocation]);
 
+  // Fly to country/region — identical pattern to MapView
   useEffect(() => {
     if (!mapInstanceRef.current) return;
     if (focusRegion && CANTON_COORDS[focusRegion]) {
