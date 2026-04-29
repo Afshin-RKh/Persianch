@@ -1572,6 +1572,10 @@ const COUNTRY_COORDS: Record<string, { center: [number, number]; zoom: number }>
 
 const DEFAULT_CENTER: [number, number] = [46.8182, 8.2275];
 
+interface MapBounds {
+  lat_min: number; lat_max: number; lng_min: number; lng_max: number;
+}
+
 interface Props {
   businesses: Business[];
   onSelect: (business: Business) => void;
@@ -1579,13 +1583,16 @@ interface Props {
   focusCountry?: string;
   focusCanton?: string;
   userLocation?: [number, number] | null;
+  onBoundsChange?: (bounds: MapBounds) => void;
 }
 
-export default function MapView({ businesses, onSelect, selected, focusCountry, focusCanton, userLocation }: Props) {
+export default function MapView({ businesses, onSelect, selected, focusCountry, focusCanton, userLocation, onBoundsChange }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const markersRef = useRef<import("leaflet").Marker[]>([]);
   const squareMarkersRef = useRef<import("leaflet").Marker[]>([]);
+  const onBoundsChangeRef = useRef(onBoundsChange);
+  useEffect(() => { onBoundsChangeRef.current = onBoundsChange; }, [onBoundsChange]);
   const userMarkerRef = useRef<import("leaflet").Marker | null>(null);
   const router = useRouter();
   const [squares, setSquares] = useState<CitySquare[]>([]);
@@ -1629,15 +1636,29 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
       });
       L.marker([32.4279, 53.6880], { icon: heartIcon, interactive: false, zIndexOffset: -1000 }).addTo(map);
 
+      const fireBounds = (m: import("leaflet").Map) => {
+        const b = m.getBounds();
+        onBoundsChangeRef.current?.({
+          lat_min: b.getSouth(),
+          lat_max: b.getNorth(),
+          lng_min: b.getWest(),
+          lng_max: b.getEast(),
+        });
+      };
+
+      map.on("moveend", () => fireBounds(map));
+
       // Detect user location via IP (same as HomeMap)
       fetch("https://ipapi.co/json/")
         .then((r) => r.json())
         .then((data) => {
           if (data.latitude && data.longitude) {
             map.flyTo([data.latitude, data.longitude], 10, { duration: 1.5 });
+          } else {
+            fireBounds(map);
           }
         })
-        .catch(() => {});
+        .catch(() => { fireBounds(map); });
 
       let resizeTimer: ReturnType<typeof setTimeout>;
       const onResize = () => {

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, useMemo, Suspense, lazy } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, Suspense, lazy } from "react";
 import { useSearchParams } from "next/navigation";
 import BusinessCard from "@/components/business/BusinessCard";
 import SearchBar from "@/components/business/SearchBar";
@@ -14,7 +14,7 @@ export default function BusinessesContent() {
   const searchParams = useSearchParams();
   const { token, isAdmin, loading: authLoading } = useAuth();
 
-  const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<Business | null>(null);
@@ -27,34 +27,35 @@ export default function BusinessesContent() {
   const [canton, setCanton] = useState(searchParams.get("canton") ?? "");
   const [category, setCategory] = useState(searchParams.get("category") ?? "");
 
-  useEffect(() => {
-    if (authLoading) return; // wait for auth to resolve so the token is ready
+  const boundsRef = useRef<{ lat_min: number; lat_max: number; lng_min: number; lng_max: number } | null>(null);
+  const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchForBounds = useCallback((bounds: typeof boundsRef.current) => {
+    if (!bounds || authLoading) return;
     setLoading(true);
-    getBusinesses({ token: token ?? undefined })
-      .then(setAllBusinesses)
+    getBusinesses({
+      token: token ?? undefined,
+      bounds,
+      ...(category ? { category: category as Category } : {}),
+      ...(search.trim() ? { search: search.trim() } : {}),
+    })
+      .then(setBusinesses)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [authLoading, token]);
+  }, [authLoading, token, category, search]);
 
-  const businesses = useMemo(() => {
-    return allBusinesses.filter((b) => {
-      if (category && b.category !== category) return false;
-      if (country && b.country !== country) return false;
-      if (canton && b.canton !== canton) return false;
-      if (search.trim()) {
-        const q = search.trim().toLowerCase();
-        const catMeta = CATEGORIES.find((c) => c.slug === b.category);
-        return (
-          b.name.toLowerCase().includes(q) ||
-          (b.name_fa && b.name_fa.includes(search.trim())) ||
-          (b.description && b.description.toLowerCase().includes(q)) ||
-          (catMeta && catMeta.label_en.toLowerCase().includes(q)) ||
-          (catMeta && catMeta.label_fa.includes(search.trim()))
-        );
-      }
-      return true;
-    });
-  }, [allBusinesses, search, country, canton, category]);
+  const handleBoundsChange = useCallback((bounds: { lat_min: number; lat_max: number; lng_min: number; lng_max: number }) => {
+    boundsRef.current = bounds;
+    if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
+    fetchTimerRef.current = setTimeout(() => fetchForBounds(bounds), 300);
+  }, [fetchForBounds]);
+
+  // Re-fetch when filters change (using last known bounds)
+  useEffect(() => {
+    if (authLoading || !boundsRef.current) return;
+    if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
+    fetchTimerRef.current = setTimeout(() => fetchForBounds(boundsRef.current), 300);
+  }, [authLoading, token, category, search, fetchForBounds]);
 
   const handleSelect = useCallback((b: Business) => setSelected(b), []);
 
@@ -82,7 +83,7 @@ export default function BusinessesContent() {
         <div className="max-w-7xl mx-auto">
           <div className="mb-3">
             <SearchBar
-              all={allBusinesses}
+              all={businesses}
               search={search}
               country={country}
               canton={canton}
@@ -182,6 +183,7 @@ export default function BusinessesContent() {
                 focusCountry={country}
                 focusCanton={canton}
                 userLocation={userLocation}
+                onBoundsChange={handleBoundsChange}
               />
             </Suspense>
 

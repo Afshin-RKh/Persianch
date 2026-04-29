@@ -60,6 +60,16 @@ if ($method === 'GET') {
         $where[] = 'b.is_featured = 1';
     }
 
+    if (isset($_GET['lat_min'], $_GET['lat_max'], $_GET['lng_min'], $_GET['lng_max'])) {
+        $where[] = 'b.lat IS NOT NULL AND b.lng IS NOT NULL';
+        $where[] = 'b.lat BETWEEN :lat_min AND :lat_max';
+        $where[] = 'b.lng BETWEEN :lng_min AND :lng_max';
+        $params[':lat_min'] = (float)$_GET['lat_min'];
+        $params[':lat_max'] = (float)$_GET['lat_max'];
+        $params[':lng_min'] = (float)$_GET['lng_min'];
+        $params[':lng_max'] = (float)$_GET['lng_max'];
+    }
+
     if (!empty($_GET['id'])) {
         $where[] = 'b.id = :id';
         $params[':id'] = $_GET['id'];

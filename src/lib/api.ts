@@ -8,12 +8,19 @@ export async function getBusinesses(filters?: {
   search?: string;
   featured?: boolean;
   token?: string;
+  bounds?: { lat_min: number; lat_max: number; lng_min: number; lng_max: number };
 }): Promise<Business[]> {
   const params = new URLSearchParams();
   if (filters?.category) params.set("category", filters.category);
   if (filters?.canton) params.set("canton", filters.canton);
   if (filters?.search) params.set("search", filters.search);
   if (filters?.featured) params.set("featured", "1");
+  if (filters?.bounds) {
+    params.set("lat_min", String(filters.bounds.lat_min));
+    params.set("lat_max", String(filters.bounds.lat_max));
+    params.set("lng_min", String(filters.bounds.lng_min));
+    params.set("lng_max", String(filters.bounds.lng_max));
+  }
 
   const headers: Record<string, string> = {};
   if (filters?.token) headers["Authorization"] = `Bearer ${filters.token}`;
