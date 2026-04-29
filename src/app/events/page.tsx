@@ -154,93 +154,93 @@ export default function EventsPage() {
       {/* Floating search + filters overlay */}
       <div className="absolute top-3 left-3 right-3 z-[1000] flex flex-col gap-2 pointer-events-none">
 
-        {/* Row 1: Search */}
-        <div className="pointer-events-auto relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Search artist, event, city, country…"
-            className="w-full pl-9 pr-9 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-transparent bg-white shadow-sm placeholder-gray-400"
-          />
-          {searchInput && (
-            <button
-              onClick={() => { setSearchInput(""); setSearch(""); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-
-        {/* Row 2: Dates picker */}
-        <div className="pointer-events-auto relative" ref={datePickerRef}>
-          <button
-            onClick={openPicker}
-            className="flex items-center gap-2 w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white shadow-sm text-left"
-            style={{ color: isDefault ? "#9ca3af" : "#111827" }}
-          >
-            <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            {isDefault
-              ? "Dates: All upcoming events"
-              : `${fmtDisplay(dateFrom)} → ${fmtDisplay(dateTo)}`}
-            {!isDefault && (
+        {/* Row 1: Search + Dates side by side */}
+        <div className="pointer-events-auto flex gap-2">
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search artist, event, city…"
+              className="w-full pl-9 pr-9 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-transparent bg-white shadow-sm placeholder-gray-400"
+            />
+            {searchInput && (
               <button
-                onClick={(e) => { e.stopPropagation(); clearDates(); }}
-                className="ml-auto text-gray-400 hover:text-gray-600"
+                onClick={() => { setSearchInput(""); setSearch(""); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <X size={13} />
+                <X size={14} />
               </button>
             )}
-          </button>
+          </div>
 
-          {/* Dropdown calendar */}
-          {dateOpen && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50">
-              <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Select date range</p>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="text-xs text-gray-400 mb-1 block">From</label>
-                  <input
-                    type="date"
-                    value={tempFrom}
-                    min={fmt(new Date())}
-                    onChange={(e) => {
-                      setTempFrom(e.target.value);
-                      if (tempTo < e.target.value) setTempTo(e.target.value);
-                    }}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
-                  />
+          {/* Dates button */}
+          <div className="relative flex-shrink-0" ref={datePickerRef}>
+            <button
+              onClick={openPicker}
+              className="flex items-center gap-1.5 pl-8 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white shadow-sm whitespace-nowrap"
+              style={{ color: isDefault ? "#9ca3af" : "#8B1A1A" }}
+            >
+              <Calendar size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: isDefault ? "#9ca3af" : "#8B1A1A" }} />
+              {isDefault ? "Dates" : `${fmtDisplay(dateFrom)} → ${fmtDisplay(dateTo)}`}
+              {!isDefault && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); clearDates(); }}
+                  className="ml-1 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </button>
+
+            {/* Dropdown calendar */}
+            {dateOpen && (
+              <div className="absolute top-full right-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 w-72">
+                <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Select date range</p>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400 mb-1 block">From</label>
+                    <input
+                      type="date"
+                      value={tempFrom}
+                      min={fmt(new Date())}
+                      onChange={(e) => {
+                        setTempFrom(e.target.value);
+                        if (tempTo < e.target.value) setTempTo(e.target.value);
+                      }}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400 mb-1 block">To</label>
+                    <input
+                      type="date"
+                      value={tempTo}
+                      min={tempFrom || fmt(new Date())}
+                      onChange={(e) => setTempTo(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
+                    />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <label className="text-xs text-gray-400 mb-1 block">To</label>
-                  <input
-                    type="date"
-                    value={tempTo}
-                    min={tempFrom || fmt(new Date())}
-                    onChange={(e) => setTempTo(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
-                  />
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={clearDates}
+                    className="flex-1 py-2 text-xs font-semibold rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    onClick={applyDates}
+                    className="flex-1 py-2 text-xs font-semibold rounded-xl text-white"
+                    style={{ backgroundColor: "#8B1A1A" }}
+                  >
+                    Apply
+                  </button>
                 </div>
               </div>
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={clearDates}
-                  className="flex-1 py-2 text-xs font-semibold rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={applyDates}
-                  className="flex-1 py-2 text-xs font-semibold rounded-xl text-white"
-                  style={{ backgroundColor: "#8B1A1A" }}
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Row 3: Country + Region side by side */}
