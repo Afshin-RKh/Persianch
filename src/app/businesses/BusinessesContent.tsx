@@ -85,10 +85,13 @@ export default function BusinessesContent() {
             onCantonChange={setCanton}
           />
         </div>
-        <div className="pointer-events-auto flex gap-2 flex-wrap">
+        <div
+          className="pointer-events-auto flex gap-2 overflow-x-auto"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+        >
           <button
             onClick={() => setCategory("")}
-            className={!category ? activePill : inactivePill}
+            className={`flex-shrink-0 ${!category ? activePill : inactivePill}`}
             style={!category ? { backgroundColor: "#8B1A1A" } : {}}
           >
             All
@@ -97,7 +100,7 @@ export default function BusinessesContent() {
             <button
               key={cat.slug}
               onClick={() => setCategory(cat.slug === category ? "" : cat.slug)}
-              className={category === cat.slug ? activePill : inactivePill}
+              className={`flex-shrink-0 ${category === cat.slug ? activePill : inactivePill}`}
               style={category === cat.slug ? { backgroundColor: "#8B1A1A" } : {}}
             >
               {cat.icon} {cat.label_en}

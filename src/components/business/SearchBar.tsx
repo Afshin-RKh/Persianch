@@ -77,9 +77,9 @@ export default function SearchBar({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 w-full">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full">
 
-      {/* Search with autocomplete */}
+      {/* Row 1: Search */}
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         <input
@@ -109,42 +109,43 @@ export default function SearchBar({
         )}
       </div>
 
-      {/* Country */}
-      <div className="relative">
-        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-        <select
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
-        >
-          <option value="">All Countries</option>
-          {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-      </div>
+      {/* Row 2: Country + Region side by side */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className="w-full pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none shadow-sm cursor-pointer"
+          >
+            <option value="">All Countries</option>
+            {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
 
-      {/* Region / Canton */}
-      <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-        <select
-          value={canton}
-          onChange={(e) => setCanton(e.target.value)}
-          className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
-        >
-          <option value="">All Regions</option>
-          {regions.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-      </div>
+        <div className="relative flex-1">
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+          <select
+            value={canton}
+            onChange={(e) => setCanton(e.target.value)}
+            className="w-full pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none shadow-sm cursor-pointer"
+          >
+            <option value="">All Regions</option>
+            {regions.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
 
-      {/* Submit button only shown in standalone mode */}
-      {isStandalone && (
-        <button
-          type="submit"
-          className="text-white font-semibold px-6 py-2.5 rounded-xl transition-colors text-sm flex-shrink-0"
-          style={{ backgroundColor: "#8B1A1A" }}
-        >
-          Search
-        </button>
-      )}
+        {/* Submit button only shown in standalone mode */}
+        {isStandalone && (
+          <button
+            type="submit"
+            className="text-white font-semibold px-6 py-2.5 rounded-xl transition-colors text-sm flex-shrink-0"
+            style={{ backgroundColor: "#8B1A1A" }}
+          >
+            Search
+          </button>
+        )}
+      </div>
     </form>
   );
 }
