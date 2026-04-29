@@ -18,7 +18,7 @@ export default function BusinessesContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<Business | null>(null);
-  const [showMap, setShowMap] = useState(false);
+  const [showMap, setShowMap] = useState(true);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locating, setLocating] = useState(false);
 
@@ -168,46 +168,47 @@ export default function BusinessesContent() {
           </div>
         </div>
 
-        {/* Map — always mounted so bounds fire; visually hidden when showMap is false */}
-        <div className="flex-1 relative" style={{ display: showMap ? "flex" : "none" }}>
-          <Suspense fallback={
-            <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
-              <p>Loading map...</p>
-            </div>
-          }>
-            <MapView
-              businesses={businesses}
-              onSelect={handleSelect}
-              selected={selected}
-              focusCountry={country}
-              focusCanton={canton}
-              userLocation={userLocation}
-              onBoundsChange={handleBoundsChange}
-              invalidateSizeKey={showMap}
-            />
-          </Suspense>
+        {/* Map */}
+        {showMap && (
+          <div className="flex-1 relative">
+            <Suspense fallback={
+              <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
+                <p>Loading map...</p>
+              </div>
+            }>
+              <MapView
+                businesses={businesses}
+                onSelect={handleSelect}
+                selected={selected}
+                focusCountry={country}
+                focusCanton={canton}
+                userLocation={userLocation}
+                onBoundsChange={handleBoundsChange}
+              />
+            </Suspense>
 
-          {selected && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-[1000]">
-              <button
-                onClick={() => setSelected(null)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none"
-              >×</button>
-              <p className="text-sm font-bold text-gray-900 pr-4">{selected.name}</p>
-              {selected.name_fa && (
-                <p className="text-xs text-gray-500 mt-0.5" dir="rtl">{selected.name_fa}</p>
-              )}
-              <p className="text-xs text-gray-400 mt-1">{selected.address || selected.canton}</p>
-              <Link
-                href={`/businesses/detail?id=${selected.id}`}
-                className="mt-3 block text-center text-white text-xs font-semibold py-2 rounded-xl"
-                style={{ backgroundColor: "#8B1A1A" }}
-              >
-                View Details →
-              </Link>
-            </div>
-          )}
-        </div>
+            {selected && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-[1000]">
+                <button
+                  onClick={() => setSelected(null)}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none"
+                >×</button>
+                <p className="text-sm font-bold text-gray-900 pr-4">{selected.name}</p>
+                {selected.name_fa && (
+                  <p className="text-xs text-gray-500 mt-0.5" dir="rtl">{selected.name_fa}</p>
+                )}
+                <p className="text-xs text-gray-400 mt-1">{selected.address || selected.canton}</p>
+                <Link
+                  href={`/businesses/detail?id=${selected.id}`}
+                  className="mt-3 block text-center text-white text-xs font-semibold py-2 rounded-xl"
+                  style={{ backgroundColor: "#8B1A1A" }}
+                >
+                  View Details →
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Add to map banner */}

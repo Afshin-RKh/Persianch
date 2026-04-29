@@ -1584,10 +1584,9 @@ interface Props {
   focusCanton?: string;
   userLocation?: [number, number] | null;
   onBoundsChange?: (bounds: MapBounds) => void;
-  invalidateSizeKey?: boolean;
 }
 
-export default function MapView({ businesses, onSelect, selected, focusCountry, focusCanton, userLocation, onBoundsChange, invalidateSizeKey }: Props) {
+export default function MapView({ businesses, onSelect, selected, focusCountry, focusCanton, userLocation, onBoundsChange }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const markersRef = useRef<import("leaflet").Marker[]>([]);
@@ -1678,11 +1677,6 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (!mapInstanceRef.current || !invalidateSizeKey) return;
-    setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
-  }, [invalidateSizeKey]);
 
   useEffect(() => {
     if (!mapInstanceRef.current) return;
