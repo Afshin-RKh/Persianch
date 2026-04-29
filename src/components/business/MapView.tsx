@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Business, CATEGORIES, CitySquare } from "@/types";
@@ -6,7 +6,7 @@ import { CANTON_COORDS, COUNTRY_COORDS } from "@/lib/mapCoords";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
-// Persian 8-pointed star (Khatam) SVG path â€” centered at 12,12 outer r=9.5 inner r=4
+// Persian 8-pointed star (Khatam) SVG path — centered at 12,12 outer r=9.5 inner r=4
 const PERSIAN_STAR_PATH = "M12,2.5 L13.82,7.73 L19.28,5.65 L17.2,11.11 L22.43,12.93 L17.2,14.75 L19.28,20.21 L13.82,18.13 L12,23.37 L10.18,18.13 L4.72,20.21 L6.8,14.75 L1.57,12.93 L6.8,11.11 L4.72,5.65 L10.18,7.73 Z";
 
 const DEFAULT_CENTER: [number, number] = [46.8182, 8.2275];
@@ -55,13 +55,13 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
         zoomControl: false,
       });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "Â© OpenStreetMap contributors",
+        attribution: "© OpenStreetMap contributors",
         maxZoom: 19,
       }).addTo(map);
 
       mapInstanceRef.current = map;
 
-      // Beating heart on Iran â€” inject keyframes globally then add marker
+      // Beating heart on Iran — inject keyframes globally then add marker
       if (!document.getElementById("heartbeat-style")) {
         const s = document.createElement("style");
         s.id = "heartbeat-style";
@@ -69,7 +69,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
         document.head.appendChild(s);
       }
       const heartIcon = L.divIcon({
-        html: `<div style="font-size:96px;line-height:1;animation:heartbeat 1s ease-in-out infinite;transform-origin:center;filter:drop-shadow(0 0 8px rgba(180,0,0,0.4));">â¤ï¸</div>`,
+        html: `<div style="font-size:96px;line-height:1;animation:heartbeat 1s ease-in-out infinite;transform-origin:center;filter:drop-shadow(0 0 8px rgba(180,0,0,0.4));">❤️</div>`,
         className: "",
         iconSize: [120, 120],
         iconAnchor: [60, 60],
@@ -88,7 +88,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
 
       map.on("moveend", () => fireBounds(map));
 
-      // Detect user location via IP â€” cached so only one request across all maps
+      // Detect user location via IP — cached so only one request across all maps
       import("@/lib/ipLocation").then(({ getIPLocation }) =>
         getIPLocation().then((loc) => {
           if (loc) map.flyTo(loc, 10, { duration: 1.5 });
@@ -123,7 +123,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
 
       businesses.forEach((business) => {
         const category = CATEGORIES.find((c) => c.slug === business.category);
-        const icon = category?.icon ?? "ðŸª";
+        const icon = category?.icon ?? "🏪";
         const cityKey = business.canton ?? "";
         const lat = business.lat ?? CANTON_COORDS[cityKey]?.[0];
         const lng = business.lng ?? CANTON_COORDS[cityKey]?.[1];
@@ -147,13 +147,12 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
             transition: transform 0.15s, box-shadow 0.15s;
           " onmouseover="this.style.transform='scale(1.25)';this.style.boxShadow='0 6px 16px rgba(139,26,26,0.4)'"
              onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 3px 8px rgba(0,0,0,0.25)'"
-          >${icon}${!approved ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;line-height:1;">âš ï¸</span>' : ''}</div>`,
+          >${icon}${!approved ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;line-height:1;">⚠️</span>' : ''}</div>`,
           className: "",
           iconSize: [38, 38],
           iconAnchor: [19, 19],
         });
 
-        // Tooltip: shows on hover
         const tooltipHtml = `<div style="font-family:Arial,sans-serif;font-weight:700;font-size:13px;color:#1a0a0a;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;">${business.name}</div>`;
 
         const marker = L.marker([lat, lng], { icon: divIcon })
@@ -220,7 +219,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
           <div style="font-family:Arial,sans-serif;min-width:160px;max-width:220px;">
             <div style="font-weight:700;font-size:13px;color:#1B3A6B;margin-bottom:2px;">${sq.name_en}</div>
             <div style="font-size:12px;color:#888;margin-bottom:4px;">${sq.name_fa}</div>
-            <div style="font-size:11px;color:#C9A84C;font-weight:600;">${sq.links.length} link${sq.links.length !== 1 ? "s" : ""} Â· Click to explore â†’</div>
+            <div style="font-size:11px;color:#C9A84C;font-weight:600;">${sq.links.length} link${sq.links.length !== 1 ? "s" : ""} · Click to explore →</div>
           </div>`;
 
         const marker = L.marker([sq.lat, sq.lng], { icon: divIcon, zIndexOffset: 1000 })
@@ -244,7 +243,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
     }
   }, [selected]);
 
-  // Fly to country when country filter changes
+  // Fly to country/region when filter changes
   useEffect(() => {
     if (!mapInstanceRef.current) return;
     if (focusCanton && CANTON_COORDS[focusCanton]) {
@@ -256,7 +255,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
     }
   }, [focusCountry, focusCanton]);
 
-  // User location â€” animated pulsing marker above all others
+  // User location — animated pulsing marker above all others
   useEffect(() => {
     if (!userLocation || !mapInstanceRef.current) return;
     import("leaflet").then((L) => {
@@ -391,7 +390,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
             onClick={() => mapInstanceRef.current?.zoomOut()}
             className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
             title="Zoom out"
-          >âˆ’</button>
+          >−</button>
         </div>
       </div>
     </>
