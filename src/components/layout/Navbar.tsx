@@ -69,7 +69,7 @@ export default function Navbar() {
           {/* Desktop right side */}
           <div className="hidden md:flex items-center gap-3">
             <Link
-              href="/get-listed"
+              href="/contact"
               className="text-sm font-bold px-4 py-2 rounded-xl text-white transition-all hover:opacity-90 shadow-sm"
               style={{ backgroundColor: "#8B1A1A" }}
             >
@@ -165,7 +165,7 @@ export default function Navbar() {
             </>
           )}
           <div className="pt-2 space-y-2">
-            <Link href="/get-listed" onClick={() => setOpen(false)}
+            <Link href="/contact" onClick={() => setOpen(false)}
               className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-bold text-white"
               style={{ backgroundColor: "#8B1A1A" }}>
               + Add to Map
