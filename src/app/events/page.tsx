@@ -104,7 +104,7 @@ export default function EventsPage() {
       </Suspense>
 
       {/* Floating search + filters overlay */}
-      <div className="absolute top-3 left-3 right-16 z-[1000] flex flex-col gap-2 pointer-events-none">
+      <div className="absolute top-3 left-3 right-3 z-[1000] flex flex-col gap-2 pointer-events-none">
 
         {/* Row 1: Search */}
         <div className="pointer-events-auto relative">

@@ -73,7 +73,7 @@ export default function BusinessesContent() {
       </Suspense>
 
       {/* Floating search + categories overlay */}
-      <div className="absolute top-3 left-3 right-16 z-[1000] flex flex-col gap-2 pointer-events-none">
+      <div className="absolute top-3 left-3 right-3 z-[1000] flex flex-col gap-2 pointer-events-none">
         <div className="pointer-events-auto">
           <SearchBar
             all={businesses}
