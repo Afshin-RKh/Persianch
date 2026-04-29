@@ -76,14 +76,22 @@ if ($method === 'GET') {
     }
 
     $whereClause = count($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+    // For map view (bounds query) return only columns the map needs — much smaller payload
+    $isBoundsQuery = isset($_GET['lat_min']);
     if ($isAdmin) {
         $sql = "SELECT b.*, u.name AS owner_name, u.email AS owner_email
                 FROM businesses b
                 LEFT JOIN users u ON u.id = b.owner_user_id
-                $whereClause ORDER BY b.is_featured DESC, b.created_at DESC";
+                $whereClause ORDER BY b.is_featured DESC, b.created_at DESC LIMIT 1000";
+    } elseif ($isBoundsQuery) {
+        $sql = "SELECT b.id, b.name, b.name_fa, b.category, b.canton, b.country,
+                       b.address, b.lat, b.lng, b.is_featured, b.is_verified, b.is_approved,
+                       b.logo_url, b.phone, b.website
+                FROM businesses b
+                $whereClause ORDER BY b.is_featured DESC LIMIT 500";
     } else {
         $sql = "SELECT b.* FROM businesses b
-                $whereClause ORDER BY b.is_featured DESC, b.created_at DESC";
+                $whereClause ORDER BY b.is_featured DESC, b.created_at DESC LIMIT 1000";
     }
 
     $stmt = $pdo->prepare($sql);

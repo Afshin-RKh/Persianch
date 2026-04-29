@@ -35,9 +35,16 @@ export default function BusinessesContent() {
   }, [authLoading, token, category, search]);
 
   const handleBoundsChange = useCallback((bounds: { lat_min: number; lat_max: number; lng_min: number; lng_max: number }) => {
-    boundsRef.current = bounds;
+    // Round to 2 decimal places (~1km) so small pans reuse the browser-cached response
+    const rounded = {
+      lat_min: Math.floor(bounds.lat_min * 100) / 100,
+      lat_max: Math.ceil(bounds.lat_max  * 100) / 100,
+      lng_min: Math.floor(bounds.lng_min * 100) / 100,
+      lng_max: Math.ceil(bounds.lng_max  * 100) / 100,
+    };
+    boundsRef.current = rounded;
     if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
-    fetchTimerRef.current = setTimeout(() => fetchForBounds(bounds), 300);
+    fetchTimerRef.current = setTimeout(() => fetchForBounds(rounded), 300);
   }, [fetchForBounds]);
 
   useEffect(() => {
