@@ -1,6 +1,11 @@
+"use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname === "/businesses") return null;
+
   return (
     <footer className="text-gray-300 mt-20" style={{ backgroundColor: "#0D1B2E" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
