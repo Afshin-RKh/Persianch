@@ -53,7 +53,16 @@ export default function BusinessesContent() {
     fetchTimerRef.current = setTimeout(() => fetchForBounds(boundsRef.current), 300);
   }, [authLoading, token, category, search, fetchForBounds]);
 
-  const handleSelect = useCallback((b: Business) => setSelected(b), []);
+  const handleSelect = useCallback((b: Business) => {
+    setSelected(b);
+    // Bounds query returns minimal fields; fetch full details for the card
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api"}/businesses.php?id=${b.id}`, { headers })
+      .then((r) => r.json())
+      .then((full) => { if (full) setSelected(full); })
+      .catch(() => {});
+  }, [token]);
 
   const activePill = "text-white font-medium text-xs px-3 py-1.5 rounded-full shadow-sm";
   const inactivePill = "font-medium text-xs px-3 py-1.5 rounded-full transition-colors shadow-sm text-gray-700 hover:bg-white/90"
