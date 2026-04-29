@@ -187,18 +187,6 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Submit event banner */}
-      <div className="border-t border-gray-100 bg-[#FDF8F3] px-6 py-6 flex flex-col items-center gap-3 text-center">
-        <p className="text-sm font-medium text-gray-700">Know about an Iranian event happening near you?</p>
-        <p className="text-xs text-gray-400">Share it with the community and get more participants.</p>
-        <Link
-          href="/events/submit"
-          className="text-sm font-bold px-6 py-2.5 rounded-xl text-white transition-all hover:opacity-90 hover:scale-105 shadow-sm"
-          style={{ backgroundColor: "#8B1A1A" }}
-        >
-          + Submit Event
-        </Link>
-      </div>
     </div>
   );
 }
