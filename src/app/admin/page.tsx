@@ -460,14 +460,9 @@ export default function AdminPage() {
         setPosts(combined.filter((p) => { if (seen.has(p.id)) return false; seen.add(p.id); return true; }));
       }
       if (tab === "businesses") {
-        const [r1, r2] = await Promise.all([
-          fetch(`${API}/businesses.php?pending=1`, { headers: authHeaders(token) }),
-          fetch(`${API}/businesses.php`, { headers: authHeaders(token) }),
-        ]);
-        const [pending, approved] = await Promise.all([r1.json(), r2.json()]);
-        const combined: BusinessRow[] = [...(Array.isArray(pending) ? pending : []), ...(Array.isArray(approved) ? approved : [])];
-        const seen = new Set<number>();
-        setBusinesses(combined.filter((b) => { if (seen.has(b.id)) return false; seen.add(b.id); return true; }));
+        const r = await fetch(`${API}/businesses.php?list=1`, { headers: authHeaders(token) });
+        const all_biz = await r.json();
+        setBusinesses(Array.isArray(all_biz) ? all_biz : []);
         // Pre-fetch users for owner assignment
         const ur = await fetch(`${API}/users.php`, { headers: authHeaders(token) });
         const all = await ur.json();
@@ -476,7 +471,7 @@ export default function AdminPage() {
       if (tab === "users") {
         const [ur, br] = await Promise.all([
           fetch(`${API}/users.php`, { headers: authHeaders(token) }),
-          fetch(`${API}/businesses.php`, { headers: authHeaders(token) }),
+          fetch(`${API}/businesses.php?list=1`, { headers: authHeaders(token) }),
         ]);
         setUsers(await ur.json());
         setBusinesses(await br.json());
@@ -520,20 +515,22 @@ export default function AdminPage() {
     await fetch(`${API}/businesses.php`, { method: "DELETE", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id }) });
     loadData();
   };
-  const openEdit = (b: BusinessRow) => {
-    setEditBiz(b);
-    setBizForm({
-      name: b.name ?? "", name_fa: b.name_fa ?? "", category: b.category ?? "restaurant",
-      canton: b.canton ?? "", country: b.country ?? "Switzerland", address: b.address ?? "",
-      phone: b.phone ?? "", website: b.website ?? "", email: b.email ?? "",
-      instagram: b.instagram ?? "", description: b.description ?? "",
-      description_fa: b.description_fa ?? "", google_maps_url: b.google_maps_url ?? "",
-      image_url: (b as any).image_url ?? "", logo_url: (b as any).logo_url ?? "",
-      lat: (b as any).lat?.toString() ?? "", lng: (b as any).lng?.toString() ?? "",
-      is_featured: !!b.is_featured, is_verified: !!b.is_verified, is_approved: !!b.is_approved,
-    });
-    setAssignOwner(b.owner_user_id ? String(b.owner_user_id) : "");
+  const openEdit = async (b: BusinessRow) => {
     setShowAddBiz(false);
+    const r = await fetch(`${API}/businesses.php?id=${b.id}`, { headers: authHeaders(token) });
+    const full = await r.json() ?? b;
+    setEditBiz(full);
+    setBizForm({
+      name: full.name ?? "", name_fa: full.name_fa ?? "", category: full.category ?? "restaurant",
+      canton: full.canton ?? "", country: full.country ?? "Switzerland", address: full.address ?? "",
+      phone: full.phone ?? "", website: full.website ?? "", email: full.email ?? "",
+      instagram: full.instagram ?? "", description: full.description ?? "",
+      description_fa: full.description_fa ?? "", google_maps_url: full.google_maps_url ?? "",
+      image_url: full.image_url ?? "", logo_url: full.logo_url ?? "",
+      lat: full.lat?.toString() ?? "", lng: full.lng?.toString() ?? "",
+      is_featured: !!full.is_featured, is_verified: !!full.is_verified, is_approved: !!full.is_approved,
+    });
+    setAssignOwner(full.owner_user_id ? String(full.owner_user_id) : "");
   };
   const submitBusiness = async (e: React.FormEvent) => {
     e.preventDefault();
