@@ -106,43 +106,45 @@ export default function EventsPage() {
       {/* Floating search + filters overlay */}
       <div className="absolute top-3 left-3 right-16 z-[1000] flex flex-col gap-2 pointer-events-none">
 
-        {/* Search + country + region row */}
-        <div className="pointer-events-auto flex flex-col sm:flex-row gap-2">
+        {/* Row 1: Search */}
+        <div className="pointer-events-auto relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search artist, event, city, country…"
+            className="w-full pl-9 pr-9 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-transparent bg-white shadow-sm placeholder-gray-400"
+          />
+          {searchInput && (
+            <button
+              onClick={() => { setSearchInput(""); setSearch(""); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* Row 2: Country + Region side by side */}
+        <div className="pointer-events-auto flex gap-2">
           <div className="relative flex-1">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search artist, event, city, country…"
-              className="w-full pl-9 pr-9 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-transparent bg-white shadow-sm placeholder-gray-400"
-            />
-            {searchInput && (
-              <button
-                onClick={() => { setSearchInput(""); setSearch(""); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-          <div className="relative">
             <Globe size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <select
               value={country}
               onChange={(e) => { setCountry(e.target.value); setRegion(""); }}
-              className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
+              className="w-full pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none shadow-sm cursor-pointer"
             >
               <option value="">All Countries</option>
               {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <div className="relative">
+          <div className="relative flex-1">
             <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <select
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              className="pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none min-w-[150px] shadow-sm cursor-pointer"
+              className="w-full pl-9 pr-7 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-200 appearance-none shadow-sm cursor-pointer"
             >
               <option value="">All Regions</option>
               {regions.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -150,25 +152,30 @@ export default function EventsPage() {
           </div>
         </div>
 
-        {/* Date filter pills */}
-        <div className="pointer-events-auto flex gap-2 flex-wrap">
+        {/* Row 3: All pills in a single swipeable row (Google Maps style) */}
+        <div
+          className="pointer-events-auto flex gap-2 overflow-x-auto"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+        >
+          {/* Date pills */}
           {DATE_FILTERS.map((f) => (
             <button
               key={f.value}
               onClick={() => setDateFilter(f.value)}
-              className={dateFilter === f.value ? activePill : inactivePill}
+              className={`flex-shrink-0 ${dateFilter === f.value ? activePill : inactivePill}`}
               style={dateFilter === f.value ? { backgroundColor: "#8B1A1A" } : {}}
             >
               {f.label}
             </button>
           ))}
-        </div>
 
-        {/* Event type pills */}
-        <div className="pointer-events-auto flex gap-2 flex-wrap">
+          {/* Divider */}
+          <div className="flex-shrink-0 w-px bg-gray-200 mx-1 self-stretch" />
+
+          {/* Type pills */}
           <button
             onClick={() => setTypeFilter("")}
-            className={!typeFilter ? activePill : inactivePill}
+            className={`flex-shrink-0 ${!typeFilter ? activePill : inactivePill}`}
             style={!typeFilter ? { backgroundColor: "#8B1A1A" } : {}}
           >
             All types
@@ -177,7 +184,7 @@ export default function EventsPage() {
             <button
               key={k}
               onClick={() => setTypeFilter(k === typeFilter ? "" : k)}
-              className={typeFilter === k ? activePill : inactivePill}
+              className={`flex-shrink-0 ${typeFilter === k ? activePill : inactivePill}`}
               style={typeFilter === k ? { backgroundColor: v.color } : {}}
             >
               {v.icon} {v.label}

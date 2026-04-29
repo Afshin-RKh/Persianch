@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS events (
   description         TEXT          DEFAULT NULL,
   description_fa      TEXT          DEFAULT NULL,
   event_type          ENUM(
-    'concert','show','march','class','sports','party','other'
+    'concert','show','march','class','sports','party',
+    'cultural_festival','art_exhibition','food_gathering','religious_ceremony','other'
   ) NOT NULL DEFAULT 'other',
   country             VARCHAR(100)  NOT NULL,
   city                VARCHAR(100)  NOT NULL,
@@ -27,6 +28,8 @@ CREATE TABLE IF NOT EXISTS events (
   organizer_name      VARCHAR(255)  DEFAULT NULL,
   organizer_email     VARCHAR(255)  DEFAULT NULL,
   status              ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  external_id         VARCHAR(120)  DEFAULT NULL UNIQUE,
+  source              VARCHAR(50)   DEFAULT NULL,
   submitted_by        INT           DEFAULT NULL,
   created_at          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
   updated_at          TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
