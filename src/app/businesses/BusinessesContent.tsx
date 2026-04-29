@@ -85,27 +85,33 @@ export default function BusinessesContent() {
             onCantonChange={setCanton}
           />
         </div>
-        <div
-          className="pointer-events-auto flex gap-2 overflow-x-auto"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
-        >
-          <button
-            onClick={() => setCategory("")}
-            className={`flex-shrink-0 ${!category ? activePill : inactivePill}`}
-            style={!category ? { backgroundColor: "#8B1A1A" } : {}}
+        <div className="pointer-events-auto relative">
+          {/* Fade overlay — right edge */}
+          <div className="absolute right-0 top-0 bottom-0 w-10 z-10 pointer-events-none"
+            style={{ background: "linear-gradient(to left, rgba(255,255,255,0.95), transparent)" }} />
+
+          <div
+            className="flex gap-2 overflow-x-auto"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
           >
-            All
-          </button>
-          {CATEGORIES.filter((cat) => !["kitchen", "school", "carpet", "airbnb", "tour"].includes(cat.slug)).map((cat) => (
             <button
-              key={cat.slug}
-              onClick={() => setCategory(cat.slug === category ? "" : cat.slug)}
-              className={`flex-shrink-0 ${category === cat.slug ? activePill : inactivePill}`}
-              style={category === cat.slug ? { backgroundColor: "#8B1A1A" } : {}}
+              onClick={() => setCategory("")}
+              className={`flex-shrink-0 ${!category ? activePill : inactivePill}`}
+              style={!category ? { backgroundColor: "#8B1A1A" } : {}}
             >
-              {cat.icon} {cat.label_en}
+              All
             </button>
-          ))}
+            {CATEGORIES.filter((cat) => !["kitchen", "school", "carpet", "airbnb", "tour"].includes(cat.slug)).map((cat) => (
+              <button
+                key={cat.slug}
+                onClick={() => setCategory(cat.slug === category ? "" : cat.slug)}
+                className={`flex-shrink-0 ${category === cat.slug ? activePill : inactivePill}`}
+                style={category === cat.slug ? { backgroundColor: "#8B1A1A" } : {}}
+              >
+                {cat.icon} {cat.label_en}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

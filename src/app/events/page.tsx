@@ -153,43 +153,49 @@ export default function EventsPage() {
         </div>
 
         {/* Row 3: All pills in a single swipeable row (Google Maps style) */}
-        <div
-          className="pointer-events-auto flex gap-2 overflow-x-auto"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
-        >
-          {/* Date pills */}
-          {DATE_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setDateFilter(f.value)}
-              className={`flex-shrink-0 ${dateFilter === f.value ? activePill : inactivePill}`}
-              style={dateFilter === f.value ? { backgroundColor: "#8B1A1A" } : {}}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="pointer-events-auto relative">
+          {/* Fade overlay — right edge */}
+          <div className="absolute right-0 top-0 bottom-0 w-10 z-10 pointer-events-none"
+            style={{ background: "linear-gradient(to left, rgba(255,255,255,0.95), transparent)" }} />
 
-          {/* Divider */}
-          <div className="flex-shrink-0 w-px bg-gray-200 mx-1 self-stretch" />
-
-          {/* Type pills */}
-          <button
-            onClick={() => setTypeFilter("")}
-            className={`flex-shrink-0 ${!typeFilter ? activePill : inactivePill}`}
-            style={!typeFilter ? { backgroundColor: "#8B1A1A" } : {}}
+          <div
+            className="flex gap-2 overflow-x-auto"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
           >
-            All types
-          </button>
-          {Object.entries(EVENT_TYPE_META).map(([k, v]) => (
+            {/* Date pills */}
+            {DATE_FILTERS.map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setDateFilter(f.value)}
+                className={`flex-shrink-0 ${dateFilter === f.value ? activePill : inactivePill}`}
+                style={dateFilter === f.value ? { backgroundColor: "#8B1A1A" } : {}}
+              >
+                {f.label}
+              </button>
+            ))}
+
+            {/* Divider — sits right after date pills, before type pills */}
+            <div className="flex-shrink-0 w-px bg-gray-300 mx-0.5 self-stretch" />
+
+            {/* Type pills */}
             <button
-              key={k}
-              onClick={() => setTypeFilter(k === typeFilter ? "" : k)}
-              className={`flex-shrink-0 ${typeFilter === k ? activePill : inactivePill}`}
-              style={typeFilter === k ? { backgroundColor: v.color } : {}}
+              onClick={() => setTypeFilter("")}
+              className={`flex-shrink-0 ${!typeFilter ? activePill : inactivePill}`}
+              style={!typeFilter ? { backgroundColor: "#8B1A1A" } : {}}
             >
-              {v.icon} {v.label}
+              All types
             </button>
-          ))}
+            {Object.entries(EVENT_TYPE_META).map(([k, v]) => (
+              <button
+                key={k}
+                onClick={() => setTypeFilter(k === typeFilter ? "" : k)}
+                className={`flex-shrink-0 ${typeFilter === k ? activePill : inactivePill}`}
+                style={typeFilter === k ? { backgroundColor: v.color } : {}}
+              >
+                {v.icon} {v.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
