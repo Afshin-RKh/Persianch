@@ -1,14 +1,17 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
+import { CANTON_COORDS, COUNTRY_COORDS } from "@/lib/mapCoords";
 
 interface Props {
   events: EventRow[];
   userLocation?: [number, number] | null;
   onSelectEvent: (ev: EventRow) => void;
+  focusCountry?: string;
+  focusRegion?: string;
 }
 
-export default function EventsMap({ events, userLocation, onSelectEvent }: Props) {
+export default function EventsMap({ events, userLocation, onSelectEvent, focusCountry, focusRegion }: Props) {
   const mapRef         = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const markersRef     = useRef<import("leaflet").Marker[]>([]);
@@ -163,6 +166,17 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
       mapInstanceRef.current!.flyTo(userLocation, 13, { duration: 1.2 });
     });
   }, [userLocation]);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    if (focusRegion && CANTON_COORDS[focusRegion]) {
+      const [lat, lng] = CANTON_COORDS[focusRegion];
+      mapInstanceRef.current.flyTo([lat, lng], 11, { duration: 1 });
+    } else if (focusCountry && COUNTRY_COORDS[focusCountry]) {
+      const { center, zoom } = COUNTRY_COORDS[focusCountry];
+      mapInstanceRef.current.flyTo(center, zoom, { duration: 1.2 });
+    }
+  }, [focusCountry, focusRegion]);
 
   const handleLocate = () => {
     if (!navigator.geolocation || !mapInstanceRef.current) return;
