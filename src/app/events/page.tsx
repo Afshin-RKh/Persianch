@@ -64,11 +64,9 @@ export default function EventsPage() {
   const events = useMemo(() => {
     let out = allEvents;
     if (typeFilter) out = out.filter((ev) => ev.event_type === typeFilter);
-    if (country)    out = out.filter((ev) => ev.country === country);
-    if (region)     out = out.filter((ev) => ev.city === region);
     if (search)     out = out.filter((ev) => matchesSearch(ev, search));
     return out;
-  }, [allEvents, typeFilter, country, region, search]);
+  }, [allEvents, typeFilter, search]);
 
   const handleSelectEvent = useCallback((ev: EventRow) => setSelected(ev), []);
 
@@ -84,7 +82,7 @@ export default function EventsPage() {
           <p>Loading map...</p>
         </div>
       }>
-        <EventsMap events={events} userLocation={null} onSelectEvent={handleSelectEvent} />
+        <EventsMap events={events} userLocation={null} onSelectEvent={handleSelectEvent} focusCountry={country} focusRegion={region} />
       </Suspense>
 
       {/* Floating search + filters overlay */}
