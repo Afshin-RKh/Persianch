@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState, useCallback, useMemo, useRef, Suspense, lazy } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Globe, MapPin } from "lucide-react";
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
 import { useAuth } from "@/lib/auth";
+import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 import Link from "next/link";
 
 const EventsMap = lazy(() => import("@/components/events/EventsMap"));
@@ -33,6 +34,8 @@ export default function EventsPage() {
   const [selected, setSelected] = useState<EventRow | null>(null);
   const [dateFilter, setDateFilter] = useState("month");
   const [typeFilter, setTypeFilter] = useState("");
+  const [country, setCountry] = useState("");
+  const [region, setRegion] = useState("");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -54,12 +57,18 @@ export default function EventsPage() {
     searchTimer.current = setTimeout(() => setSearch(val.trim()), 220);
   };
 
+  const regions = useMemo(() =>
+    country ? [...(REGIONS_BY_COUNTRY[country] ?? [])].sort((a, b) => a.localeCompare(b)) : []
+  , [country]);
+
   const events = useMemo(() => {
     let out = allEvents;
     if (typeFilter) out = out.filter((ev) => ev.event_type === typeFilter);
+    if (country)    out = out.filter((ev) => ev.country === country);
+    if (region)     out = out.filter((ev) => ev.city === region);
     if (search)     out = out.filter((ev) => matchesSearch(ev, search));
     return out;
-  }, [allEvents, typeFilter, search]);
+  }, [allEvents, typeFilter, country, region, search]);
 
   const handleSelectEvent = useCallback((ev: EventRow) => setSelected(ev), []);
 
@@ -81,24 +90,48 @@ export default function EventsPage() {
       {/* Floating search + filters overlay */}
       <div className="absolute top-3 left-3 right-16 z-[1000] flex flex-col gap-2 pointer-events-none">
 
-        {/* Search input */}
-        <div className="pointer-events-auto relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Search artist, event, city, country…"
-            className="w-full pl-9 pr-9 py-2.5 text-sm border border-white/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white/80 backdrop-blur-sm shadow-md placeholder-gray-400"
-          />
-          {searchInput && (
-            <button
-              onClick={() => { setSearchInput(""); setSearch(""); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+        {/* Search + country + region row */}
+        <div className="pointer-events-auto flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search artist, event, city, country…"
+              className="w-full pl-9 pr-9 py-2.5 text-sm border border-white/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white/80 backdrop-blur-sm shadow-md placeholder-gray-400"
+            />
+            {searchInput && (
+              <button
+                onClick={() => { setSearchInput(""); setSearch(""); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          <div className="relative">
+            <Globe size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <select
+              value={country}
+              onChange={(e) => { setCountry(e.target.value); setRegion(""); }}
+              className="pl-9 pr-7 py-2.5 rounded-xl border border-white/50 bg-white/80 backdrop-blur-sm text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] appearance-none min-w-[150px] shadow-md cursor-pointer"
             >
-              <X size={14} />
-            </button>
-          )}
+              <option value="">All Countries</option>
+              {[...COUNTRIES].sort((a, b) => a.localeCompare(b)).map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="relative">
+            <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <select
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              className="pl-9 pr-7 py-2.5 rounded-xl border border-white/50 bg-white/80 backdrop-blur-sm text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] appearance-none min-w-[150px] shadow-md cursor-pointer"
+            >
+              <option value="">All Regions</option>
+              {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
         </div>
 
         {/* Date filter pills */}
