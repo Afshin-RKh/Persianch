@@ -61,7 +61,7 @@ export default function ContactPage() {
             className="mt-6 block text-center text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-all hover:opacity-90 hover:scale-105"
             style={{ backgroundColor: red }}
           >
-            Add to Map →
+            Add Business →
           </Link>
         </div>
 
@@ -82,7 +82,7 @@ export default function ContactPage() {
             className="mt-6 block text-center text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-all hover:opacity-90 hover:scale-105"
             style={{ backgroundColor: red }}
           >
-            Submit Event →
+            Add Event →
           </Link>
         </div>
       </div>
@@ -106,7 +106,7 @@ export default function ContactPage() {
       <section>
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold mb-2" style={{ color: navy }}>Send Us a Message</h2>
-          <p className="text-gray-500 text-sm">Questions, ideas, feedback — we read everything.</p>
+          <p className="text-gray-500 text-sm">Want to join us? Have questions, ideas or feedback? We read everything.</p>
         </div>
 
         {contactSent ? (
