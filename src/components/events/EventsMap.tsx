@@ -114,7 +114,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
               `<strong>${ev.title}</strong>${pendingBadge}<br/><span style="color:#6b7280;font-size:12px;">📅 ${dateStr}</span>`,
               { className: "persian-hub-tooltip", direction: "top" }
             )
-            .on("click", () => { window.location.href = `/events/detail?id=${ev.id}`; });
+            .on("click", () => onSelectEvent(ev));
           markersRef.current.push(marker);
         });
       });
@@ -197,17 +197,6 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
         <div ref={mapRef} className="w-full h-full rounded-xl" />
         <div className="absolute bottom-6 right-3 z-[1000] flex flex-col gap-1">
           <button
-            onClick={() => mapInstanceRef.current?.zoomIn()}
-            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
-            title="Zoom in"
-          >+</button>
-          <button
-            onClick={() => mapInstanceRef.current?.zoomOut()}
-            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
-            title="Zoom out"
-          >−</button>
-          <div className="h-2" />
-          <button
             onClick={handleLocate}
             className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-[#1B3A6B] hover:bg-gray-50 border border-gray-200"
             title="Find my location"
@@ -220,6 +209,17 @@ export default function EventsMap({ events, userLocation, onSelectEvent }: Props
               <line x1="18" y1="12" x2="22" y2="12" />
             </svg>
           </button>
+          <div className="h-2" />
+          <button
+            onClick={() => mapInstanceRef.current?.zoomIn()}
+            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
+            title="Zoom in"
+          >+</button>
+          <button
+            onClick={() => mapInstanceRef.current?.zoomOut()}
+            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
+            title="Zoom out"
+          >−</button>
         </div>
       </div>
     </>
