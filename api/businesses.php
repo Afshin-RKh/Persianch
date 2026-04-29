@@ -76,10 +76,15 @@ if ($method === 'GET') {
     }
 
     $whereClause = count($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-    $sql = "SELECT b.*, u.name AS owner_name, u.email AS owner_email
-            FROM businesses b
-            LEFT JOIN users u ON u.id = b.owner_user_id
-            $whereClause ORDER BY b.is_featured DESC, b.created_at DESC";
+    if ($isAdmin) {
+        $sql = "SELECT b.*, u.name AS owner_name, u.email AS owner_email
+                FROM businesses b
+                LEFT JOIN users u ON u.id = b.owner_user_id
+                $whereClause ORDER BY b.is_featured DESC, b.created_at DESC";
+    } else {
+        $sql = "SELECT b.* FROM businesses b
+                $whereClause ORDER BY b.is_featured DESC, b.created_at DESC";
+    }
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);

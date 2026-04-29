@@ -1,3 +1,8 @@
+# Enable gzip compression for API responses
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json application/javascript text/html text/plain text/css
+</IfModule>
+
 # Protect sensitive files from direct web access
 <FilesMatch "^(config|env|\.env)\.php$">
     Order allow,deny
