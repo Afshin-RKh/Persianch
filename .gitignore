@@ -52,3 +52,4 @@ api/.env.php
 .claude/
 memory/
 events/database/.env
+events/.env
