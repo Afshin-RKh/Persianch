@@ -3,19 +3,24 @@ import { useEffect, useRef } from "react";
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
 import { CANTON_COORDS, COUNTRY_COORDS } from "@/lib/mapCoords";
 
+interface MapBounds { lat_min: number; lat_max: number; lng_min: number; lng_max: number; }
+
 interface Props {
   events: EventRow[];
   userLocation?: [number, number] | null;
   onSelectEvent: (ev: EventRow) => void;
+  onBoundsChange?: (bounds: MapBounds) => void;
   focusCountry?: string;
   focusRegion?: string;
 }
 
-export default function EventsMap({ events, userLocation, onSelectEvent, focusCountry, focusRegion }: Props) {
-  const mapRef        = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
-  const markersRef    = useRef<import("leaflet").Marker[]>([]);
-  const userMarkerRef = useRef<import("leaflet").Marker | null>(null);
+export default function EventsMap({ events, userLocation, onSelectEvent, onBoundsChange, focusCountry, focusRegion }: Props) {
+  const mapRef            = useRef<HTMLDivElement>(null);
+  const mapInstanceRef    = useRef<import("leaflet").Map | null>(null);
+  const markersRef        = useRef<import("leaflet").Marker[]>([]);
+  const userMarkerRef     = useRef<import("leaflet").Marker | null>(null);
+  const onBoundsChangeRef = useRef(onBoundsChange);
+  useEffect(() => { onBoundsChangeRef.current = onBoundsChange; }, [onBoundsChange]);
 
   // Init map — identical pattern to MapView
   useEffect(() => {
@@ -36,6 +41,12 @@ export default function EventsMap({ events, userLocation, onSelectEvent, focusCo
 
       mapInstanceRef.current = map;
 
+      const fireBounds = (m: import("leaflet").Map) => {
+        const b = m.getBounds();
+        onBoundsChangeRef.current?.({ lat_min: b.getSouth(), lat_max: b.getNorth(), lng_min: b.getWest(), lng_max: b.getEast() });
+      };
+      map.on("moveend", () => fireBounds(map));
+
       if (!document.getElementById("heartbeat-style")) {
         const s = document.createElement("style");
         s.id = "heartbeat-style";
@@ -49,8 +60,11 @@ export default function EventsMap({ events, userLocation, onSelectEvent, focusCo
       L.marker([32.4279, 53.6880], { icon: heartIcon, interactive: false, zIndexOffset: -1000 }).addTo(map);
 
       import("@/lib/ipLocation").then(({ getIPLocation }) =>
-        getIPLocation().then((loc) => { if (loc) map.flyTo(loc, 10, { duration: 1.5 }); })
-      ).catch(() => {});
+        getIPLocation().then((loc) => {
+          if (loc) map.flyTo(loc, 10, { duration: 1.5 });
+          else fireBounds(map);
+        })
+      ).catch(() => fireBounds(map));
 
       let resizeTimer: ReturnType<typeof setTimeout>;
       const onResize = () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => map.invalidateSize(), 150); };

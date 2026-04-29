@@ -107,6 +107,15 @@ if ($method === 'GET') {
         $where[]        = "city = :city";
         $params[':city'] = $_GET['city'];
     }
+    if (isset($_GET['lat_min'], $_GET['lat_max'], $_GET['lng_min'], $_GET['lng_max'])) {
+        $where[] = 'lat IS NOT NULL AND lng IS NOT NULL';
+        $where[] = 'lat BETWEEN :lat_min AND :lat_max';
+        $where[] = 'lng BETWEEN :lng_min AND :lng_max';
+        $params[':lat_min'] = (float)$_GET['lat_min'];
+        $params[':lat_max'] = (float)$_GET['lat_max'];
+        $params[':lng_min'] = (float)$_GET['lng_min'];
+        $params[':lng_max'] = (float)$_GET['lng_max'];
+    }
 
     $sql  = "SELECT * FROM events" . ($where ? " WHERE " . implode(' AND ', $where) : "") . " ORDER BY start_date ASC";
     $stmt = $pdo->prepare($sql);

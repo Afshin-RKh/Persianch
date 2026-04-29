@@ -39,17 +39,35 @@ export default function EventsPage() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const boundsRef = useRef<{ lat_min: number; lat_max: number; lng_min: number; lng_max: number } | null>(null);
+  const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (authLoading) return;
+  const fetchForBounds = useCallback((bounds: typeof boundsRef.current) => {
+    if (!bounds || authLoading) return;
     const params = new URLSearchParams({ filter: dateFilter });
+    params.set("lat_min", String(bounds.lat_min));
+    params.set("lat_max", String(bounds.lat_max));
+    params.set("lng_min", String(bounds.lng_min));
+    params.set("lng_max", String(bounds.lng_max));
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
     fetch(`${API}/events.php?${params}`, { headers })
       .then((r) => r.json())
       .then((data) => setAllEvents(Array.isArray(data) ? data : []))
       .catch(() => setAllEvents([]));
-  }, [dateFilter, authLoading, token]);
+  }, [authLoading, token, dateFilter]);
+
+  const handleBoundsChange = useCallback((bounds: { lat_min: number; lat_max: number; lng_min: number; lng_max: number }) => {
+    boundsRef.current = bounds;
+    if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
+    fetchTimerRef.current = setTimeout(() => fetchForBounds(bounds), 300);
+  }, [fetchForBounds]);
+
+  useEffect(() => {
+    if (authLoading || !boundsRef.current) return;
+    if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
+    fetchTimerRef.current = setTimeout(() => fetchForBounds(boundsRef.current), 300);
+  }, [authLoading, token, dateFilter, fetchForBounds]);
 
   const handleSearchChange = (val: string) => {
     setSearchInput(val);
@@ -82,7 +100,7 @@ export default function EventsPage() {
           <p>Loading map...</p>
         </div>
       }>
-        <EventsMap events={events} userLocation={null} onSelectEvent={handleSelectEvent} focusCountry={country} focusRegion={region} />
+        <EventsMap events={events} userLocation={null} onSelectEvent={handleSelectEvent} onBoundsChange={handleBoundsChange} focusCountry={country} focusRegion={region} />
       </Suspense>
 
       {/* Floating search + filters overlay */}
