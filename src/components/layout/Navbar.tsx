@@ -43,7 +43,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className={`bg-white sticky top-0 z-50 transition-shadow duration-200 ${scrolled ? "shadow-md" : "border-b border-gray-100"}`}>
+    <nav className={`bg-white sticky top-0 z-[2000] transition-shadow duration-200 ${scrolled ? "shadow-md" : "border-b border-gray-100"}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
@@ -92,7 +92,7 @@ export default function Navbar() {
                 </button>
 
                 {userMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-50">
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-[2000]">
                     <Link href="/profile" onClick={() => setUserMenu(false)}
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                       <User size={15} /> My Profile
