@@ -84,9 +84,7 @@ if ($method === 'GET') {
                 LEFT JOIN users u ON u.id = b.owner_user_id
                 $whereClause ORDER BY b.is_featured DESC, b.created_at DESC LIMIT 1000";
     } elseif ($isBoundsQuery) {
-        $sql = "SELECT b.id, b.name, b.name_fa, b.category, b.canton, b.country,
-                       b.address, b.lat, b.lng, b.is_featured, b.is_verified, b.is_approved,
-                       b.logo_url, b.phone, b.website
+        $sql = "SELECT b.id, b.name, b.category, b.lat, b.lng, b.is_featured, b.is_approved
                 FROM businesses b
                 $whereClause ORDER BY b.is_featured DESC LIMIT 500";
     } else {
