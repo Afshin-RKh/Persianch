@@ -1882,7 +1882,26 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
   const handleLocate = () => {
     if (!navigator.geolocation || !mapInstanceRef.current) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => mapInstanceRef.current!.flyTo([pos.coords.latitude, pos.coords.longitude], 13, { duration: 1.2 }),
+      (pos) => {
+        const latlng: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        import("leaflet").then((L) => {
+          if (userMarkerRef.current) userMarkerRef.current.remove();
+          if (!document.getElementById("user-location-style")) {
+            const s = document.createElement("style");
+            s.id = "user-location-style";
+            s.textContent = `
+              @keyframes user-pulse { 0% { transform:scale(1);opacity:1; } 70% { transform:scale(2.8);opacity:0; } 100% { transform:scale(1);opacity:0; } }
+              @keyframes user-glow { 0%,100% { box-shadow:0 0 6px 2px rgba(74,144,217,0.8); } 50% { box-shadow:0 0 18px 6px rgba(74,144,217,1); } }
+              .user-location-dot { width:16px;height:16px;border-radius:50%;background:#4A90D9;border:3px solid #1B3A6B;box-shadow:0 0 6px 2px rgba(74,144,217,0.8);animation:user-glow 1.8s ease-in-out infinite;position:relative; }
+              .user-location-dot::after { content:'';position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;background:rgba(74,144,217,0.5);animation:user-pulse 1.8s ease-out infinite; }
+            `;
+            document.head.appendChild(s);
+          }
+          const icon = L.divIcon({ html: `<div class="user-location-dot"></div>`, className: "", iconSize: [16, 16], iconAnchor: [8, 8] });
+          userMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 9999, interactive: false }).addTo(mapInstanceRef.current!);
+          mapInstanceRef.current!.flyTo(latlng, 13, { duration: 1.2 });
+        });
+      },
       () => {}
     );
   };
@@ -1915,17 +1934,6 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
         <div ref={mapRef} className="w-full h-full rounded-xl" />
         <div className="absolute bottom-6 right-3 z-[1000] flex flex-col gap-1">
           <button
-            onClick={() => mapInstanceRef.current?.zoomIn()}
-            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
-            title="Zoom in"
-          >+</button>
-          <button
-            onClick={() => mapInstanceRef.current?.zoomOut()}
-            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
-            title="Zoom out"
-          >−</button>
-          <div className="h-2" />
-          <button
             onClick={handleLocate}
             className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-[#1B3A6B] hover:bg-gray-50 border border-gray-200"
             title="Find my location"
@@ -1938,6 +1946,17 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
               <line x1="18" y1="12" x2="22" y2="12" />
             </svg>
           </button>
+          <div className="h-2" />
+          <button
+            onClick={() => mapInstanceRef.current?.zoomIn()}
+            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
+            title="Zoom in"
+          >+</button>
+          <button
+            onClick={() => mapInstanceRef.current?.zoomOut()}
+            className="w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 font-bold text-lg border border-gray-200"
+            title="Zoom out"
+          >−</button>
         </div>
       </div>
     </>
