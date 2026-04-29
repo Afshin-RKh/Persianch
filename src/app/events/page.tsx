@@ -74,7 +74,7 @@ export default function EventsPage() {
   const inactivePill = "font-medium text-xs px-3 py-1.5 rounded-full transition-colors shadow-sm text-gray-700 hover:bg-white/90 bg-white/70 backdrop-blur-sm border border-white/50";
 
   return (
-    <div className="relative" style={{ height: "calc(100vh - 64px)" }}>
+    <div className="relative flex-1">
 
       {/* Map — fills entire container */}
       <Suspense fallback={

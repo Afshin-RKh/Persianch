@@ -53,7 +53,7 @@ export default function BusinessesContent() {
     + " bg-white/70 backdrop-blur-sm border border-white/50";
 
   return (
-    <div className="relative" style={{ height: "calc(100vh - 64px)" }}>
+    <div className="relative flex-1">
 
       {/* Map — fills entire container */}
       <Suspense fallback={
