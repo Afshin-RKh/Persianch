@@ -4,6 +4,11 @@ require_once 'jwt.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Auto-migrate: add language column if missing
+try {
+    $pdo->exec("ALTER TABLE blog_posts ADD COLUMN language VARCHAR(32) DEFAULT NULL");
+} catch (PDOException $e) { /* column already exists */ }
+
 function optional_auth(): ?array {
     $token = bearer_token();
     return $token ? jwt_verify($token) : null;
@@ -71,8 +76,12 @@ if ($method === 'GET') {
         $where[]        = "p.city LIKE :city";
         $params[':city'] = '%' . $_GET['city'] . '%';
     }
+    if (!empty($_GET['language'])) {
+        $where[]            = "p.language = :language";
+        $params[':language'] = $_GET['language'];
+    }
 
-    $sql  = "SELECT p.id, p.title, p.slug, p.cover_image, p.created_at, p.tags, p.country, p.city, u.name as author_name
+    $sql  = "SELECT p.id, p.title, p.slug, p.cover_image, p.created_at, p.tags, p.country, p.city, p.language, u.name as author_name
              FROM blog_posts p LEFT JOIN users u ON p.author_id = u.id
              WHERE " . implode(' AND ', $where) . "
              ORDER BY p.created_at DESC";
@@ -108,8 +117,8 @@ if ($method === 'POST') {
 
     try {
         $stmt = $pdo->prepare(
-            "INSERT INTO blog_posts (title, title_fa, slug, content, content_fa, cover_image, author_id, status, published, tags, country, city)
-             VALUES (:title, :title_fa, :slug, :content, :content_fa, :cover_image, :author_id, :status, :published, :tags, :country, :city)"
+            "INSERT INTO blog_posts (title, title_fa, slug, content, content_fa, cover_image, author_id, status, published, tags, country, city, language)
+             VALUES (:title, :title_fa, :slug, :content, :content_fa, :cover_image, :author_id, :status, :published, :tags, :country, :city, :language)"
         );
         $stmt->execute([
             ':title'       => $title,
@@ -124,6 +133,7 @@ if ($method === 'POST') {
             ':tags'        => $tags ?: null,
             ':country'     => $data['country'] ?? null,
             ':city'        => $data['city'] ?? null,
+            ':language'    => $data['language'] ?? null,
         ]);
     } catch (PDOException $e) {
         http_response_code(500);
@@ -171,7 +181,7 @@ if ($method === 'PATCH') {
     if (isset($data['content']))    $data['content']    = strip_tags($data['content'],    $allowedTags);
     if (isset($data['content_fa'])) $data['content_fa'] = strip_tags($data['content_fa'], $allowedTags);
 
-    $allowed = ['title', 'title_fa', 'content', 'content_fa', 'cover_image', 'status', 'country', 'city'];
+    $allowed = ['title', 'title_fa', 'content', 'content_fa', 'cover_image', 'status', 'country', 'city', 'language'];
     $sets    = [];
     $params  = [':id' => $id];
 

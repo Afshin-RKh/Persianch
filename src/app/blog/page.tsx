@@ -21,13 +21,23 @@ export default function BlogPage() {
       .finally(() => setLoading(false));
   }, [filters]);
 
-  const toggleTag   = (tag: string)     => setFilters((f) => ({ ...f, tag: f.tag === tag ? undefined : tag }));
-  const setCountry  = (country: string) => setFilters((f) => ({ ...f, country: country || undefined, city: undefined }));
-  const setCity     = (city: string)    => setFilters((f) => ({ ...f, city: city || undefined }));
-  const clearAll    = ()                => setFilters({});
+  const toggleTag      = (tag: string)      => setFilters((f) => ({ ...f, tag: f.tag === tag ? undefined : tag }));
+  const setCountry     = (country: string)  => setFilters((f) => ({ ...f, country: country || undefined, city: undefined }));
+  const setCity        = (city: string)     => setFilters((f) => ({ ...f, city: city || undefined }));
+  const toggleLanguage = (lang: string)     => setFilters((f) => ({ ...f, language: f.language === lang ? undefined : lang }));
+  const clearAll       = ()                 => setFilters({});
 
   const regions = filters.country ? (REGIONS_BY_COUNTRY[filters.country] ?? []) : [];
-  const activeFilters = !!(filters.tag || filters.country || filters.city);
+  const activeFilters = !!(filters.tag || filters.country || filters.city || filters.language);
+
+  const LANGUAGES = [
+    { value: "en", label: "🇬🇧 English" },
+    { value: "fa", label: "🇮🇷 فارسی" },
+    { value: "de", label: "🇩🇪 Deutsch" },
+    { value: "fr", label: "🇫🇷 Français" },
+    { value: "other", label: "🌐 Other" },
+  ];
+  const langLabel = (v: string) => LANGUAGES.find((l) => l.value === v)?.label ?? v;
 
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -61,6 +71,27 @@ export default function BlogPage() {
                 style={filters.tag === tag ? { backgroundColor: "#1B3A6B" } : {}}
               >
                 {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Language filter */}
+        <div>
+          <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Filter by language</p>
+          <div className="flex flex-wrap gap-2">
+            {LANGUAGES.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => toggleLanguage(value)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  filters.language === value
+                    ? "text-white border-transparent"
+                    : "text-gray-600 border-gray-200 bg-gray-50 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
+                }`}
+                style={filters.language === value ? { backgroundColor: "#C9A84C" } : {}}
+              >
+                {label}
               </button>
             ))}
           </div>
@@ -132,7 +163,8 @@ export default function BlogPage() {
                     {(post.city || post.country) && (
                       <span className="ml-2">· {[post.city, post.country].filter(Boolean).join(", ")}</span>
                     )}
-                    {post.author_name && <span className="ml-2">· by {post.author_name}</span>}
+                      {post.author_name && <span className="ml-2">· by {post.author_name}</span>}
+                    {post.language && <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ backgroundColor: "#fef9f0", color: "#C9A84C", border: "1px solid #fde68a" }}>{langLabel(post.language)}</span>}
                   </p>
 
                   <h2 className="text-xl font-bold text-gray-900 mb-2">{post.title}</h2>

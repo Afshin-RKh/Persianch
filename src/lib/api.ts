@@ -67,13 +67,15 @@ export interface BlogFilters {
   tag?: string;
   country?: string;
   city?: string;
+  language?: string;
 }
 
 export async function getBlogPosts(filters?: BlogFilters): Promise<BlogPost[]> {
   const params = new URLSearchParams();
-  if (filters?.tag)     params.set("tag",     filters.tag);
-  if (filters?.country) params.set("country", filters.country);
-  if (filters?.city)    params.set("city",    filters.city);
+  if (filters?.tag)      params.set("tag",      filters.tag);
+  if (filters?.country)  params.set("country",  filters.country);
+  if (filters?.city)     params.set("city",      filters.city);
+  if (filters?.language) params.set("language",  filters.language);
   const qs = params.toString();
   const res = await fetch(`${API_URL}/blog.php${qs ? "?" + qs : ""}`);
   if (!res.ok) throw new Error("Failed to fetch blog posts");
@@ -99,5 +101,6 @@ export interface BlogPost {
   tags?: string;
   country?: string;
   city?: string;
+  language?: string;
   author_name?: string;
 }

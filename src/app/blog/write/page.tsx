@@ -14,7 +14,7 @@ export default function WriteBlogPage() {
   const router = useRouter();
 
   const [form, setForm] = useState({
-    title: "", content: "", cover_image: "", country: "", city: "",
+    title: "", content: "", cover_image: "", country: "", city: "", language: "",
   });
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [error, setError]   = useState("");
@@ -129,6 +129,25 @@ export default function WriteBlogPage() {
                 style={selectedTags.includes(tag) ? { backgroundColor: "#1B3A6B" } : {}}
               >
                 {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1.5">Language</label>
+          <div className="flex flex-wrap gap-2">
+            {[{ value: "en", label: "🇬🇧 English" }, { value: "fa", label: "🇮🇷 فارسی" }, { value: "de", label: "🇩🇪 Deutsch" }, { value: "fr", label: "🇫🇷 Français" }, { value: "other", label: "🌐 Other" }].map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, language: f.language === value ? "" : value }))}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  form.language === value ? "text-white border-transparent" : "text-gray-600 border-gray-200 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
+                }`}
+                style={form.language === value ? { backgroundColor: "#1B3A6B" } : {}}
+              >
+                {label}
               </button>
             ))}
           </div>
