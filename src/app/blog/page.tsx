@@ -157,13 +157,13 @@ export default function BlogPage() {
         <div className="grid gap-5">
           {posts.map((post) => (
             <Link key={post.id} href={`/blog/post?slug=${post.slug}`}>
-              <article className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex">
+              <article className={`bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex ${post.language === "fa" ? "flex-row-reverse" : ""}`}>
                 {post.cover_image && (
                   <div className="w-40 sm:w-52 flex-shrink-0">
                     <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
                   </div>
                 )}
-                <div className="p-5 flex-1 flex flex-col min-w-0">
+                <div className="p-5 flex-1 flex flex-col min-w-0" dir={post.language === "fa" ? "rtl" : "ltr"}>
                   <div className="flex items-center gap-2 flex-wrap mb-2">
                     <span className="text-xs text-gray-400">
                       {new Date(post.created_at).toLocaleDateString("en-CH", { year: "numeric", month: "long", day: "numeric" })}
