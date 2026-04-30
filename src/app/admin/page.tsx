@@ -14,7 +14,7 @@ import {
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white";
 
-type Tab = "posts" | "businesses" | "users" | "squares" | "events" | "trash";
+type Tab = "posts" | "businesses" | "users" | "squares" | "events" | "trash" | "about";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type BizForm = {
@@ -436,6 +436,21 @@ export default function AdminPage() {
   const [eventStatus, setEventStatus] = useState("");
   const [eventType,   setEventType]   = useState("");
 
+  // About
+  interface AboutContent {
+    about_biruni_en: string; about_biruni_fa: string;
+    about_story_en: string; about_story_fa: string;
+    about_vision_en: string; about_vision_fa: string;
+    about_mission_en: string; about_mission_fa: string;
+    about_founder_quote_en: string; about_founder_quote_fa: string;
+    about_founder_name: string; about_founder_name_fa: string;
+  }
+  const [aboutContent, setAboutContent]   = useState<AboutContent | null>(null);
+  const [aboutForm, setAboutForm]         = useState<AboutContent | null>(null);
+  const [aboutLoading, setAboutLoading]   = useState(false);
+  const [aboutSaving, setAboutSaving]     = useState(false);
+  const [aboutSuccess, setAboutSuccess]   = useState(false);
+
   // Squares
   const [squares, setSquares]       = useState<CitySquare[]>([]);
   const [editSquare, setEditSquare] = useState<CitySquare | null>(null);
@@ -492,6 +507,16 @@ export default function AdminPage() {
         const r = await fetch(`${API}/blog.php?trash=1`, { headers: authHeaders(token) });
         const data = await r.json();
         setTrashedPosts(Array.isArray(data) ? data : []);
+      }
+      if (tab === "about" && isSuperAdmin) {
+        if (!aboutContent) {
+          setAboutLoading(true);
+          const r = await fetch(`${API}/about.php`);
+          const data = await r.json();
+          setAboutContent(data);
+          setAboutForm(data);
+          setAboutLoading(false);
+        }
       }
       if (tab === "events") {
         const [r1, r2] = await Promise.all([
@@ -671,6 +696,24 @@ export default function AdminPage() {
     loadData();
   };
 
+  // ── About actions ────────────────────────────────────────────────────────────
+  const saveAbout = async () => {
+    if (!aboutForm) return;
+    setAboutSaving(true);
+    try {
+      await fetch(`${API}/about.php`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders(token) },
+        body: JSON.stringify(aboutForm),
+      });
+      setAboutContent(aboutForm);
+      setAboutSuccess(true);
+      setTimeout(() => setAboutSuccess(false), 3000);
+    } finally {
+      setAboutSaving(false);
+    }
+  };
+
   const addSqLink = () => setSqForm((f) => ({ ...f, links: [...f.links, { title_en: "", title_fa: "", url: "", category: "other" as SquareLinkCategory }] as Partial<SquareLink>[] }));
   const updateSqLink = (i: number, patch: Partial<SquareLink>) => setSqForm((f) => ({ ...f, links: f.links.map((l, idx) => idx === i ? { ...l, ...patch } : l) as Partial<SquareLink>[] }));
   const removeSqLink = (i: number) => setSqForm((f) => ({ ...f, links: f.links.filter((_, idx) => idx !== i) as Partial<SquareLink>[] }));
@@ -685,6 +728,7 @@ export default function AdminPage() {
     { key: "events",     label: "Events",       icon: <span className="text-sm">📅</span> },
     { key: "squares",    label: "City Squares", icon: <MapPin size={15} />, superOnly: true },
     { key: "trash",      label: "Trash",        icon: <Trash2 size={15} /> },
+    { key: "about",      label: "About Page",   icon: <Shield size={15} />, superOnly: true },
   ];
 
   const POST_TAGS = ["survival guides", "legal", "transportation", "travel guides"];
@@ -1471,6 +1515,141 @@ export default function AdminPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── ABOUT TAB ───────────────────────────────────────────────────── */}
+        {tab === "about" && isSuperAdmin && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-gray-800">Edit About Page</h2>
+              {aboutSuccess && <span className="text-xs font-semibold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg">✓ Saved!</span>}
+            </div>
+
+            {aboutLoading || !aboutForm ? (
+              <div className="text-center py-16 text-gray-400"><div className="text-4xl mb-3">⏳</div><p>Loading content...</p></div>
+            ) : (
+              <div className="space-y-6">
+                {/* Al-Biruni */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4">Inspired by Al-Biruni</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">English</label>
+                      <textarea rows={6} value={aboutForm.about_biruni_en}
+                        onChange={(e) => setAboutForm((f) => f ? { ...f, about_biruni_en: e.target.value } : f)}
+                        className={`${inp} resize-y`} placeholder="HTML supported" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">فارسی</label>
+                      <textarea rows={6} value={aboutForm.about_biruni_fa} dir="rtl"
+                        onChange={(e) => setAboutForm((f) => f ? { ...f, about_biruni_fa: e.target.value } : f)}
+                        className={`${inp} resize-y`} placeholder="HTML پشتیبانی می‌شود" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Our Story */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4">Our Story</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">English</label>
+                      <textarea rows={6} value={aboutForm.about_story_en}
+                        onChange={(e) => setAboutForm((f) => f ? { ...f, about_story_en: e.target.value } : f)}
+                        className={`${inp} resize-y`} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">فارسی</label>
+                      <textarea rows={6} value={aboutForm.about_story_fa} dir="rtl"
+                        onChange={(e) => setAboutForm((f) => f ? { ...f, about_story_fa: e.target.value } : f)}
+                        className={`${inp} resize-y`} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vision */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4">Vision</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">English</label>
+                      <textarea rows={3} value={aboutForm.about_vision_en}
+                        onChange={(e) => setAboutForm((f) => f ? { ...f, about_vision_en: e.target.value } : f)}
+                        className={`${inp} resize-y`} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">فارسی</label>
+                      <textarea rows={3} value={aboutForm.about_vision_fa} dir="rtl"
+                        onChange={(e) => setAboutForm((f) => f ? { ...f, about_vision_fa: e.target.value } : f)}
+                        className={`${inp} resize-y`} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mission */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4">Mission (use &lt;ul&gt;&lt;li&gt; for list items)</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">English</label>
+                      <textarea rows={5} value={aboutForm.about_mission_en}
+                        onChange={(e) => setAboutForm((f) => f ? { ...f, about_mission_en: e.target.value } : f)}
+                        className={`${inp} resize-y font-mono text-xs`} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">فارسی</label>
+                      <textarea rows={5} value={aboutForm.about_mission_fa} dir="rtl"
+                        onChange={(e) => setAboutForm((f) => f ? { ...f, about_mission_fa: e.target.value } : f)}
+                        className={`${inp} resize-y font-mono text-xs`} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Founder */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4">Founder&apos;s Message</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Quote (English)</label>
+                        <textarea rows={3} value={aboutForm.about_founder_quote_en}
+                          onChange={(e) => setAboutForm((f) => f ? { ...f, about_founder_quote_en: e.target.value } : f)}
+                          className={`${inp} resize-y`} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Name (English)</label>
+                        <input value={aboutForm.about_founder_name}
+                          onChange={(e) => setAboutForm((f) => f ? { ...f, about_founder_name: e.target.value } : f)}
+                          className={inp} />
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">نقل‌قول (فارسی)</label>
+                        <textarea rows={3} value={aboutForm.about_founder_quote_fa} dir="rtl"
+                          onChange={(e) => setAboutForm((f) => f ? { ...f, about_founder_quote_fa: e.target.value } : f)}
+                          className={`${inp} resize-y`} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">نام (فارسی)</label>
+                        <input value={aboutForm.about_founder_name_fa} dir="rtl"
+                          onChange={(e) => setAboutForm((f) => f ? { ...f, about_founder_name_fa: e.target.value } : f)}
+                          className={inp} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button onClick={saveAbout} disabled={aboutSaving}
+                    className="text-white font-semibold px-6 py-3 rounded-xl text-sm disabled:opacity-50"
+                    style={{ backgroundColor: "#8B1A1A" }}>
+                    {aboutSaving ? "Saving…" : "Save About Page"}
+                  </button>
+                </div>
               </div>
             )}
           </div>

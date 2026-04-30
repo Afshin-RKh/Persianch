@@ -1,8 +1,27 @@
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import DOMPurify from "isomorphic-dompurify";
 
+const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const navy = "#1B3A6B";
 const gold  = "#C9A84C";
 const dark  = "#0D1B2E";
+
+interface AboutContent {
+  about_biruni_en: string;
+  about_biruni_fa: string;
+  about_story_en: string;
+  about_story_fa: string;
+  about_vision_en: string;
+  about_vision_fa: string;
+  about_mission_en: string;
+  about_mission_fa: string;
+  about_founder_quote_en: string;
+  about_founder_quote_fa: string;
+  about_founder_name: string;
+  about_founder_name_fa: string;
+}
 
 function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
@@ -29,7 +48,35 @@ function BilingualBlock({
   );
 }
 
+function HtmlContent({ html, dir }: { html: string; dir?: "rtl" | "ltr" }) {
+  return (
+    <div
+      className="blog-content text-gray-600 text-sm leading-relaxed"
+      dir={dir}
+      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
+    />
+  );
+}
+
 export default function AboutPage() {
+  const [content, setContent] = useState<AboutContent | null>(null);
+
+  useEffect(() => {
+    fetch(`${API}/about.php`)
+      .then((r) => r.json())
+      .then(setContent)
+      .catch(() => {});
+  }, []);
+
+  if (!content) {
+    return (
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center text-gray-400">
+        <div className="text-4xl mb-4">⏳</div>
+        <p>Loading...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 fade-up">
 
@@ -46,35 +93,8 @@ export default function AboutPage() {
         <BilingualBlock
           enTitle="Inspired by Al-Biruni"
           faTitle="الهام از ابوریحان بیرونی"
-          en={
-            <>
-              <p>
-                Abu Rayhan al-Biruni (973–1048 CE) was one of history's greatest minds — a Persian scholar who
-                mastered astronomy, mathematics, geography and anthropology at a time when the world was still
-                largely unmapped. He travelled far, learned languages, and dedicated his life to understanding
-                and documenting the diversity of human civilisation.
-              </p>
-              <p>
-                His curiosity, his respect for every culture he encountered, and his belief that knowledge
-                belongs to everyone — these are the values that inspired us to build BiruniMap: a living,
-                growing map of the Iranian diaspora, connecting people, businesses and communities across the globe.
-              </p>
-            </>
-          }
-          fa={
-            <>
-              <p>
-                ابوریحان بیرونی (۳۵۰–۴۲۷ هجری شمسی) یکی از بزرگ‌ترین اندیشمندان تاریخ بود — دانشمند ایرانی‌ای که
-                در ستاره‌شناسی، ریاضیات، جغرافیا و مردم‌شناسی سرآمد روزگار خود بود. او به سرزمین‌های دور سفر کرد،
-                زبان‌های بیگانه آموخت و عمرش را وقف شناخت و ثبت تنوع تمدن‌های بشری کرد.
-              </p>
-              <p>
-                کنجکاوی او، احترامش به هر فرهنگی که با آن روبرو می‌شد، و ایمانش به اینکه دانش متعلق به همه است —
-                این ارزش‌ها ما را برانگیخت تا بیرونی‌مپ را بسازیم: نقشه‌ای زنده و رو به رشد از ایرانیان جهان
-                که مردم، کسب‌وکارها و جوامع را در سراسر دنیا به هم پیوند می‌دهد.
-              </p>
-            </>
-          }
+          en={<HtmlContent html={content.about_biruni_en} />}
+          fa={<HtmlContent html={content.about_biruni_fa} dir="rtl" />}
         />
       </Section>
 
@@ -83,36 +103,8 @@ export default function AboutPage() {
         <BilingualBlock
           enTitle="Our Story"
           faTitle="داستان ما"
-          en={
-            <>
-              <p>
-                BiruniMap began in Zurich, Switzerland — born out of a small group of Iranian students who were
-                trying to help each other settle into life abroad. Finding a store that sold saffron and dried limes,
-                a doctor who spoke Farsi, a lawyer who understood where you came from — things that sound simple,
-                but make an enormous difference when you are far from home.
-              </p>
-              <p>
-                That need became a mission. We started mapping Iranian-owned businesses across Switzerland, then
-                expanded to Europe, and we will keep growing — city by city, country by country — until every
-                Iranian living abroad can find their community, no matter where in the world they are.
-              </p>
-            </>
-          }
-          fa={
-            <>
-              <p>
-                بیرونی‌مپ در زوریخ سوئیس متولد شد — از دل یک گروه کوچک از دانشجویان ایرانی که سعی می‌کردند
-                به یکدیگر در سازگاری با زندگی در خارج کمک کنند. پیدا کردن مغازه‌ای که زعفران و لیمو عمانی بفروشد،
-                دکتری که فارسی بداند، وکیلی که بفهمد از کجا آمده‌ای — چیزهایی که ساده به نظر می‌رسند،
-                اما وقتی دور از خانه‌ای تفاوت بزرگی می‌سازند.
-              </p>
-              <p>
-                آن نیاز به یک مأموریت تبدیل شد. ما شروع به نقشه‌برداری از کسب‌وکارهای ایرانی در سراسر سوئیس کردیم،
-                سپس به اروپا گسترش یافتیم، و به رشد ادامه خواهیم داد — شهر به شهر، کشور به کشور —
-                تا هر ایرانی مقیم خارج بتواند جامعه خود را، هر کجای دنیا که باشد، بیابد.
-              </p>
-            </>
-          }
+          en={<HtmlContent html={content.about_story_en} />}
+          fa={<HtmlContent html={content.about_story_fa} dir="rtl" />}
         />
       </Section>
 
@@ -124,49 +116,17 @@ export default function AboutPage() {
           en={
             <>
               <p className="font-semibold" style={{ color: navy }}>Vision</p>
-              <p>
-                A world where every Iranian abroad feels seen, connected and supported — and where Iranian
-                culture, entrepreneurship and talent thrive in every corner of the globe.
-              </p>
+              <HtmlContent html={content.about_vision_en} />
               <p className="font-semibold mt-5" style={{ color: navy }}>Mission</p>
-              <ul className="space-y-3 mt-1">
-                <li className="flex gap-3">
-                  <span className="shrink-0 font-bold" style={{ color: gold }}>①</span>
-                  <span>Make Iranian businesses visible — so they can be found, supported and celebrated by the global Iranian community.</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="shrink-0 font-bold" style={{ color: gold }}>②</span>
-                  <span>Bring the community to life through events — encouraging Iranians to meet, celebrate and stay connected wherever they live.</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="shrink-0 font-bold" style={{ color: gold }}>③</span>
-                  <span>Help newcomers land on their feet — by gathering local knowledge, useful services and community information in one place.</span>
-                </li>
-              </ul>
+              <HtmlContent html={content.about_mission_en} />
             </>
           }
           fa={
             <>
               <p className="font-semibold" style={{ color: navy }}>چشم‌انداز</p>
-              <p>
-                دنیایی که در آن هر ایرانی مقیم خارج احساس کند دیده می‌شود، در ارتباط است و پشتیبانی دارد —
-                و فرهنگ، کارآفرینی و استعداد ایرانی در هر گوشه‌ای از جهان بالنده است.
-              </p>
+              <HtmlContent html={content.about_vision_fa} dir="rtl" />
               <p className="font-semibold mt-5" style={{ color: navy }}>مأموریت</p>
-              <ul className="space-y-3 mt-1">
-                <li className="flex gap-3">
-                  <span className="shrink-0 font-bold" style={{ color: gold }}>①</span>
-                  <span>دیده‌شدن کسب‌وکارهای ایرانی — تا جامعه جهانی ایرانیان بتواند آن‌ها را پیدا، حمایت و تحسین کند.</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="shrink-0 font-bold" style={{ color: gold }}>②</span>
-                  <span>زنده نگه داشتن جامعه از طریق رویدادها — تشویق ایرانیان به دیدار، جشن و ارتباط، هر جا که زندگی می‌کنند.</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="shrink-0 font-bold" style={{ color: gold }}>③</span>
-                  <span>کمک به تازه‌واردها برای شروعی آسان‌تر — با جمع‌آوری اطلاعات محلی، خدمات مفید و دانش جامعه در یک مکان.</span>
-                </li>
-              </ul>
+              <HtmlContent html={content.about_mission_fa} dir="rtl" />
             </>
           }
         />
@@ -176,19 +136,18 @@ export default function AboutPage() {
       <section className="rounded-3xl p-8 mb-6 text-white" style={{ background: `linear-gradient(135deg, ${dark} 0%, ${navy} 100%)` }}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
-            <p className="text-xs uppercase tracking-widest mb-4 opacity-50">Founder's Message</p>
+            <p className="text-xs uppercase tracking-widest mb-4 opacity-50">Founder&apos;s Message</p>
             <blockquote className="text-blue-100 leading-relaxed text-sm italic mb-5">
-              "I started this platform with love for Iran and for every Iranian who carries that same love with them — wherever life has taken them."
+              &ldquo;{content.about_founder_quote_en}&rdquo;
             </blockquote>
-            <p className="text-white font-semibold text-sm">— Afshin Khosroshahi</p>
+            <p className="text-white font-semibold text-sm">— {content.about_founder_name}</p>
           </div>
           <div dir="rtl">
             <p className="text-xs uppercase tracking-widest mb-4 opacity-50">پیام بنیان‌گذار</p>
             <blockquote className="text-blue-100 leading-relaxed text-sm mb-5">
-              «این پلتفرم را با عشق به ایران ساختم — و برای هر ایرانی که همین عشق را با خود حمل می‌کند،
-              هر کجا که زندگی او را برده باشد.»
+              «{content.about_founder_quote_fa}»
             </blockquote>
-            <p className="text-white font-semibold text-sm">— افشین خسروشاهی</p>
+            <p className="text-white font-semibold text-sm">— {content.about_founder_name_fa}</p>
           </div>
         </div>
       </section>
