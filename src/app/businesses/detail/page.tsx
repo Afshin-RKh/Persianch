@@ -448,6 +448,16 @@ function BusinessDetailContent() {
                   <span className="flex items-center gap-1 text-xs text-gray-500">
                     <MapPin size={12} style={{ color: "#1B3A6B" }} /> {business.canton}
                   </span>
+                  {business.owner_user_id ? (
+                    <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full"
+                      style={{ backgroundColor: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0" }}>
+                      <CheckCircle size={11} /> Managed by owner
+                    </span>
+                  ) : (
+                    <span className="text-xs px-2.5 py-1 rounded-full text-gray-400 border border-gray-200">
+                      Managed by BiruniMap
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

@@ -174,6 +174,18 @@ if ($method === 'POST') {
     ]);
 
     $newId = (int)$pdo->lastInsertId();
+
+    // If the submitter is authenticated and claims ownership, assign them as owner
+    if ($authUser && !empty($data['is_owner'])) {
+        $pdo->prepare("UPDATE businesses SET owner_user_id = :uid WHERE id = :id")
+            ->execute([':uid' => (int)$authUser['sub'], ':id' => $newId]);
+        // Promote to business_owner role if not already admin
+        if (!in_array($authUser['role'] ?? '', ['admin', 'superadmin'])) {
+            $pdo->prepare("UPDATE users SET role = 'business_owner' WHERE id = :uid AND role = 'user'")
+                ->execute([':uid' => (int)$authUser['sub']]);
+        }
+    }
+
     if ($isAdmin) {
         $adminName = $authUser['name'] ?? 'Admin';
         $loc = trim(($data['canton'] ?? '') . ', ' . ($data['country'] ?? ''), ', ');

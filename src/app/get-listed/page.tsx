@@ -61,6 +61,7 @@ export default function GetListedPage() {
           instagram: form.instagram?.replace(/^@/, "") || null,
           email: form.email || null, description: form.description || null,
           lat, lng, is_featured: false, is_verified: false, is_approved: false,
+          is_owner: isOwner && !!user,
         }),
       });
       setSent(true);

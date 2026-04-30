@@ -36,6 +36,8 @@ export interface Business {
   created_at: string;
   lat?: number;
   lng?: number;
+  owner_user_id?: number | null;
+  owner_name?: string | null;
 }
 
 export type SquareLinkCategory = "student" | "cultural" | "media" | "religious" | "sport" | "charity" | "political" | "professional" | "other";

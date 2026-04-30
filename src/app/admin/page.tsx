@@ -977,7 +977,9 @@ export default function AdminPage() {
                             {b.is_featured && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C9A84C]/15 text-[#C9A84C] flex-shrink-0">featured</span>}
                           </div>
                           <p className="text-xs text-gray-400">{b.canton}, {b.country}</p>
-                          {b.owner_name && <p className="text-xs text-amber-600 font-medium mt-0.5">👤 {b.owner_name}</p>}
+                          <p className="text-xs mt-0.5 font-medium" style={{ color: b.owner_name ? "#15803d" : "#9ca3af" }}>
+                            {b.owner_name ? `Managed by owner · ${b.owner_name}` : "Managed by BiruniMap"}
+                          </p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Link href={`/businesses/detail?id=${b.id}`} className="text-xs text-[#1B3A6B] hover:underline font-medium">View</Link>
