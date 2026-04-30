@@ -148,8 +148,14 @@ if ($method === 'POST') {
         }
     }
 
-    $sql = "INSERT INTO businesses (name, name_fa, category, country, canton, address, phone, website, email, instagram, description, description_fa, google_maps_url, lat, lng, is_featured, is_verified, is_approved)
-            VALUES (:name, :name_fa, :category, :country, :canton, :address, :phone, :website, :email, :instagram, :description, :description_fa, :google_maps_url, :lat, :lng, :is_featured, :is_verified, :is_approved)";
+    // Determine owner_user_id: authenticated user claiming ownership
+    $ownerUserId = null;
+    if ($authUser && !empty($data['is_owner'])) {
+        $ownerUserId = (int)$authUser['sub'];
+    }
+
+    $sql = "INSERT INTO businesses (name, name_fa, category, country, canton, address, phone, website, email, instagram, description, description_fa, google_maps_url, lat, lng, is_featured, is_verified, is_approved, owner_user_id)
+            VALUES (:name, :name_fa, :category, :country, :canton, :address, :phone, :website, :email, :instagram, :description, :description_fa, :google_maps_url, :lat, :lng, :is_featured, :is_verified, :is_approved, :owner_user_id)";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
@@ -171,19 +177,15 @@ if ($method === 'POST') {
         ':is_featured'    => 0,
         ':is_verified'    => 0,
         ':is_approved'    => $isPublicSubmission ? 0 : ($data['is_approved'] ? 1 : 0),
+        ':owner_user_id'  => $ownerUserId,
     ]);
 
     $newId = (int)$pdo->lastInsertId();
 
-    // If the submitter is authenticated and claims ownership, assign them as owner
-    if ($authUser && !empty($data['is_owner'])) {
-        $pdo->prepare("UPDATE businesses SET owner_user_id = :uid WHERE id = :id")
-            ->execute([':uid' => (int)$authUser['sub'], ':id' => $newId]);
-        // Promote to business_owner role if not already admin
-        if (!in_array($authUser['role'] ?? '', ['admin', 'superadmin'])) {
-            $pdo->prepare("UPDATE users SET role = 'business_owner' WHERE id = :uid AND role = 'user'")
-                ->execute([':uid' => (int)$authUser['sub']]);
-        }
+    // Promote user to business_owner role if they claimed ownership
+    if ($ownerUserId && !in_array($authUser['role'] ?? '', ['admin', 'superadmin'])) {
+        $pdo->prepare("UPDATE users SET role = 'business_owner' WHERE id = :uid AND role = 'user'")
+            ->execute([':uid' => $ownerUserId]);
     }
 
     if ($isAdmin) {

@@ -226,18 +226,23 @@ function BizFormPanel({ title, form, setForm, onSubmit, loading, success, onClos
         </div>
 
         {/* Business Owner */}
-        {isEdit && ownerUsers.length >= 0 && (
-          <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Business Owner</p>
-            <select value={assignOwner} onChange={(e) => setAssignOwner(e.target.value)} className={inp}>
-              <option value="">— No owner assigned —</option>
-              {ownerUsers.map((u) => (
-                <option key={u.id} value={u.id}>{u.name} ({u.email}) · {u.role}</option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-400 mt-1">Assigning promotes the user to &ldquo;Business Owner&rdquo; role automatically.</p>
-          </div>
-        )}
+        <div className="border-t border-gray-100 pt-5">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Managed by</p>
+          {assignOwner ? (
+            <p className="text-xs font-semibold mb-2" style={{ color: "#15803d" }}>
+              Currently assigned to: {ownerUsers.find(u => String(u.id) === String(assignOwner))?.name ?? `User #${assignOwner}`}
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400 mb-2">Currently managed by BiruniMap (no owner assigned)</p>
+          )}
+          <select value={assignOwner} onChange={(e) => setAssignOwner(e.target.value)} className={inp}>
+            <option value="">— Managed by BiruniMap —</option>
+            {ownerUsers.map((u) => (
+              <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-400 mt-1.5">Assigning a user promotes them to Business Owner role automatically.</p>
+        </div>
 
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={loading || !form.name}
@@ -488,7 +493,7 @@ export default function AdminPage() {
         // Pre-fetch users for owner assignment
         const ur = await fetch(`${API}/users.php`, { headers: authHeaders(token) });
         const all = await ur.json();
-        setOwnerUsers(Array.isArray(all) ? all.filter((u: UserRow) => u.role === "user" || u.role === "business_owner") : []);
+        setOwnerUsers(Array.isArray(all) ? all : []);
       }
       if (tab === "users") {
         const [ur, br] = await Promise.all([
