@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { getBlogPost, BlogPost } from "@/lib/api";
+import { getBlogPost, getBlogPosts, BlogPost } from "@/lib/api";
 import { useAuth, authHeaders } from "@/lib/auth";
 import DOMPurify from "isomorphic-dompurify";
 import { ArrowLeft, Trash2, Edit2 } from "lucide-react";
@@ -16,6 +16,71 @@ interface Comment {
   user_id: number;
   user_name: string;
   avatar?: string;
+}
+
+function RelatedCard({ post }: { post: BlogPost }) {
+  return (
+    <Link href={`/blog/post?slug=${post.slug}`}>
+      <article className="group flex gap-3 p-3 rounded-xl hover:bg-white hover:shadow-sm transition-all duration-200 border border-transparent hover:border-gray-100">
+        {post.cover_image ? (
+          <img src={post.cover_image} alt={post.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+        ) : (
+          <div className="w-16 h-16 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl" style={{ backgroundColor: "#EEF2FF" }}>
+            📄
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="text-xs text-gray-400 mb-1">
+            {new Date(post.created_at).toLocaleDateString("en-CH", { month: "short", day: "numeric", year: "numeric" })}
+          </p>
+          <h3 className="text-sm font-semibold text-gray-800 line-clamp-3 group-hover:text-[#1B3A6B] transition-colors leading-snug">
+            {post.title}
+          </h3>
+          {post.tags && (
+            <span className="inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize" style={{ backgroundColor: "#EEF2FF", color: "#1B3A6B" }}>
+              {post.tags.split(",")[0].trim()}
+            </span>
+          )}
+        </div>
+      </article>
+    </Link>
+  );
+}
+
+function RelatedSidebar({ post, side }: { post: BlogPost; side: "left" | "right" }) {
+  const [related, setRelated] = useState<BlogPost[]>([]);
+
+  useEffect(() => {
+    const tag   = post.tags?.split(",")[0]?.trim();
+    const fetch1 = tag
+      ? getBlogPosts({ tag }).then((r) => r.filter((p) => p.id !== post.id))
+      : Promise.resolve([] as BlogPost[]);
+    const fetch2 = post.country
+      ? getBlogPosts({ country: post.country }).then((r) => r.filter((p) => p.id !== post.id))
+      : Promise.resolve([] as BlogPost[]);
+
+    Promise.all([fetch1, fetch2]).then(([byTag, byCountry]) => {
+      const seen = new Set<number>();
+      const merged: BlogPost[] = [];
+      for (const p of [...byTag, ...byCountry]) {
+        if (!seen.has(p.id)) { seen.add(p.id); merged.push(p); }
+      }
+      setRelated(merged.slice(0, 6));
+    });
+  }, [post.id, post.tags, post.country]);
+
+  if (related.length === 0) return null;
+
+  const half = Math.ceil(related.length / 2);
+  const items = side === "left" ? related.slice(0, half) : related.slice(half);
+  if (items.length === 0) return null;
+
+  return (
+    <aside className="space-y-1">
+      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 mb-3">Related Posts</p>
+      {items.map((p) => <RelatedCard key={p.id} post={p} />)}
+    </aside>
+  );
 }
 
 function Comments({ postId }: { postId: number }) {
@@ -140,7 +205,7 @@ function BlogPostContent() {
 
   if (loading) {
     return (
-      <main className="max-w-3xl mx-auto px-4 py-20 text-center text-gray-400">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-gray-400">
         <div className="text-4xl mb-4">⏳</div>
         <p>Loading article...</p>
       </main>
@@ -149,7 +214,7 @@ function BlogPostContent() {
 
   if (!post) {
     return (
-      <main className="max-w-3xl mx-auto px-4 py-20 text-center text-gray-500">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-gray-500">
         <p className="text-4xl mb-4">🔍</p>
         <p className="font-medium">Article not found.</p>
         <Link href="/blog" className="hover:underline mt-4 inline-block" style={{ color: "#1B3A6B" }}>
@@ -159,8 +224,11 @@ function BlogPostContent() {
     );
   }
 
+  const isFarsi = (post as any).language === "fa";
+
   return (
-    <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* Top bar */}
       <div className="flex items-center justify-between mb-8">
         <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors">
           <ArrowLeft size={16} /> Back to Blog
@@ -172,55 +240,82 @@ function BlogPostContent() {
         )}
       </div>
 
-      {(post as any).status && (post as any).status !== "approved" && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs font-semibold px-4 py-2.5 rounded-xl mb-6 flex items-center gap-2">
-          <span className="uppercase tracking-wide">{(post as any).status}</span>
-          <span className="font-normal text-yellow-700">— This post is not yet published. Only admins can see it.</span>
+      {/* 3-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_220px] gap-8 items-start">
+
+        {/* Left sidebar — hidden on mobile, shown above content on md */}
+        <div className="hidden lg:block sticky top-24">
+          <RelatedSidebar post={post} side="left" />
         </div>
-      )}
 
-      {post.cover_image && (
-        <div className="rounded-2xl overflow-hidden mb-8 h-64">
-          <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
+        {/* Main article */}
+        <article>
+          {(post as any).status && (post as any).status !== "approved" && (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs font-semibold px-4 py-2.5 rounded-xl mb-6 flex items-center gap-2">
+              <span className="uppercase tracking-wide">{(post as any).status}</span>
+              <span className="font-normal text-yellow-700">— This post is not yet published. Only admins can see it.</span>
+            </div>
+          )}
+
+          {post.cover_image && (
+            <div className="rounded-2xl overflow-hidden mb-8 h-64 sm:h-80">
+              <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
+            </div>
+          )}
+
+          <p className="text-xs text-gray-400 mb-3">
+            {new Date(post.created_at).toLocaleDateString("en-CH", { year: "numeric", month: "long", day: "numeric" })}
+            {(post.city || post.country) && (
+              <span className="ml-2">· {[post.city, post.country].filter(Boolean).join(", ")}</span>
+            )}
+            {post.author_name && <span className="ml-2">· by {post.author_name}</span>}
+          </p>
+
+          {post.tags && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {post.tags.split(",").map((t) => (
+                <span key={t} className="text-xs px-2.5 py-1 rounded-full font-medium capitalize" style={{ backgroundColor: "#EEF2FF", color: "#1B3A6B" }}>{t.trim()}</span>
+              ))}
+            </div>
+          )}
+
+          {isFarsi && (
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" />
+          )}
+
+          <h1
+            className="text-3xl font-bold text-gray-900 mb-8 gold-underline inline-block"
+            dir={isFarsi ? "rtl" : "ltr"}
+            style={isFarsi ? { fontFamily: "'Vazirmatn', sans-serif", width: "100%" } : {}}
+          >
+            {post.title}
+          </h1>
+
+          <div
+            className="blog-content text-gray-700 mt-8"
+            dir={isFarsi ? "rtl" : "ltr"}
+            style={isFarsi ? { fontFamily: "'Vazirmatn', sans-serif", fontSize: "1.05rem", lineHeight: "2" } : {}}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content ?? "") }}
+          />
+
+          {/* Related posts on mobile — below article */}
+          <div className="lg:hidden mt-12 pt-8 border-t border-gray-100">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Related Posts</p>
+            <div className="space-y-1">
+              <RelatedSidebar post={post} side="left" />
+              <RelatedSidebar post={post} side="right" />
+            </div>
+          </div>
+
+          <Comments postId={post.id} />
+        </article>
+
+        {/* Right sidebar */}
+        <div className="hidden lg:block sticky top-24">
+          <RelatedSidebar post={post} side="right" />
         </div>
-      )}
 
-      <p className="text-xs text-gray-400 mb-3">
-        {new Date(post.created_at).toLocaleDateString("en-CH", { year: "numeric", month: "long", day: "numeric" })}
-        {(post.city || post.country) && (
-          <span className="ml-2">· {[post.city, post.country].filter(Boolean).join(", ")}</span>
-        )}
-        {post.author_name && <span className="ml-2">· by {post.author_name}</span>}
-      </p>
-
-      {post.tags && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {post.tags.split(",").map((t) => (
-            <span key={t} className="text-xs px-2.5 py-1 rounded-full font-medium capitalize" style={{ backgroundColor: "#EEF2FF", color: "#1B3A6B" }}>{t.trim()}</span>
-          ))}
-        </div>
-      )}
-
-      {(post as any).language === "fa" && (
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" />
-      )}
-
-      <h1
-        className="text-3xl font-bold text-gray-900 mb-8 gold-underline inline-block"
-        dir={(post as any).language === "fa" ? "rtl" : "ltr"}
-        style={(post as any).language === "fa" ? { fontFamily: "'Vazirmatn', sans-serif", width: "100%" } : {}}
-      >
-        {post.title}
-      </h1>
-
-      <div
-        className="prose prose-gray max-w-none text-gray-700 leading-relaxed mt-8"
-        dir={(post as any).language === "fa" ? "rtl" : "ltr"}
-        style={(post as any).language === "fa" ? { fontFamily: "'Vazirmatn', sans-serif", fontSize: "1.05rem", lineHeight: "2" } : {}}
-        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content ?? "") }}
-      />
-
-      <Comments postId={post.id} />
+      </div>
     </main>
   );
 }
@@ -228,7 +323,7 @@ function BlogPostContent() {
 export default function BlogPostPage() {
   return (
     <Suspense fallback={
-      <main className="max-w-3xl mx-auto px-4 py-20 text-center text-gray-400">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-gray-400">
         <div className="text-4xl mb-4">⏳</div>
         <p>Loading...</p>
       </main>
