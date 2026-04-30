@@ -44,13 +44,14 @@ export default function BlogPage() {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
       {/* Header */}
+      <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600&display=swap" rel="stylesheet" />
       <div className="flex items-start justify-between mb-6">
         <div>
-          <p className="text-base sm:text-lg font-medium text-gray-800 max-w-2xl leading-relaxed">
-            Learn local tips, rules and survival guides from the Iranian community around the world. Filter by your location and topic.
+          <p className="text-base sm:text-lg font-medium text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis">
+            Learn local tips, rules and survival guides — filter by location and topic.
           </p>
-          <p className="text-sm text-gray-400 mt-1 max-w-xl leading-relaxed" dir="rtl">
-            نکات محلی، قوانین و راهنمای زندگی در کشورهای مختلف — بر اساس موقعیت و موضوع فیلتر کنید.
+          <p className="text-base sm:text-lg mt-1 text-gray-600" dir="rtl" style={{ fontFamily: "'Vazirmatn', sans-serif", fontWeight: 600 }}>
+            نکات محلی، قوانین و راهنمای زندگی — بر اساس موقعیت و موضوع فیلتر کنید.
           </p>
         </div>
         {user && (
