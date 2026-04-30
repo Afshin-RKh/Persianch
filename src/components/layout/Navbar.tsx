@@ -118,10 +118,19 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <button className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors" onClick={() => setOpen(!open)} aria-label="Menu">
-            {open ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          {/* Mobile: CTA + hamburger */}
+          <div className="md:hidden flex items-center gap-2">
+            <Link
+              href="/contact"
+              className="text-xs font-bold px-3 py-2 rounded-xl text-white transition-all hover:opacity-90 shadow-sm"
+              style={{ backgroundColor: "#8B1A1A" }}
+            >
+              + Add to Map
+            </Link>
+            <button className="p-2 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors" onClick={() => setOpen(!open)} aria-label="Menu">
+              {open ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -155,11 +164,6 @@ export default function Navbar() {
             </>
           )}
           <div className="pt-2 space-y-2">
-            <Link href="/contact" onClick={() => setOpen(false)}
-              className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-bold text-white"
-              style={{ backgroundColor: "#8B1A1A" }}>
-              + Add to Map
-            </Link>
             {user ? (
               <button onClick={() => { logout(); setOpen(false); }}
                 className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600">
