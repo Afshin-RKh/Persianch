@@ -64,7 +64,7 @@ export default function ContactPage() {
             className="mt-7 block text-center text-white font-semibold px-6 py-3 rounded-xl text-sm transition-all hover:opacity-90"
             style={{ backgroundColor: red }}
           >
-            Add Your Business
+            Add Business
           </Link>
         </div>
 
@@ -87,7 +87,7 @@ export default function ContactPage() {
             className="mt-7 block text-center text-white font-semibold px-6 py-3 rounded-xl text-sm transition-all hover:opacity-90"
             style={{ backgroundColor: red }}
           >
-            Submit an Event
+            Add Event
           </Link>
         </div>
 
