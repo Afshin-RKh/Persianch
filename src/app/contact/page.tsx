@@ -95,17 +95,15 @@ export default function ContactPage() {
 
       {/* Join the team */}
       <div className="rounded-2xl border border-[#1B3A6B]/15 bg-white p-8 mb-14">
-        <div className="max-w-xl">
-          <h2 className="text-xl font-bold mb-3" style={{ color: navy }}>Join us</h2>
-          <p className="text-gray-500 text-sm leading-relaxed">We&apos;re a small, driven team building something the Iranian diaspora actually needs. If you want to contribute — as a developer, designer, translator, content writer, or community ambassador — send us a message below and tell us how you&apos;d like to help.</p>
-        </div>
+        <h2 className="text-xl font-bold mb-3" style={{ color: navy }}>Join us</h2>
+        <p className="text-gray-500 text-sm leading-relaxed">We&apos;re a small, driven team building something the Iranian diaspora actually needs. If you want to contribute — as a developer, designer, translator, content writer, or community ambassador — send us a message below and tell us how you&apos;d like to help.</p>
       </div>
 
       {/* Contact form */}
       <section>
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-1.5" style={{ color: navy }}>Send us a message</h2>
-          <p className="text-gray-400 text-sm">Questions, ideas, feedback — we read everything.</p>
+          <p className="text-gray-400 text-sm">Have questions, ideas, or want to join us? Send us a message.</p>
         </div>
 
         {contactSent ? (
