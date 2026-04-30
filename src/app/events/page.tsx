@@ -170,7 +170,7 @@ export default function EventsPage() {
 
         {/* Row 1: Search + Dates */}
         <div className="pointer-events-auto flex gap-2">
-          <div className="relative flex-1">
+          <div className="relative" style={{ flex: "0 0 65%" }}>
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
               ref={searchInputRef}
@@ -225,10 +225,10 @@ export default function EventsPage() {
           </div>
 
           {/* Dates button */}
-          <div className="relative flex-shrink-0" ref={datePickerRef}>
+          <div className="relative" style={{ flex: "0 0 35%" }} ref={datePickerRef}>
             <button
               onClick={openPicker}
-              className="flex items-center gap-2 pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white shadow-sm whitespace-nowrap min-w-[140px]"
+              className="w-full flex items-center gap-2 pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white shadow-sm whitespace-nowrap"
               style={{ color: isDefault ? "#9ca3af" : "#8B1A1A" }}
             >
               <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: isDefault ? "#9ca3af" : "#8B1A1A" }} />
