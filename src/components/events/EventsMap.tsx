@@ -131,18 +131,20 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
 
           const popupRows = group.map((ev) => {
             const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
-            const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-            return `<div style="padding:6px 0;border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location.href='/events/detail?id=${ev.id}'">
-              <span style="font-size:14px;">${meta.icon}</span>
-              <strong style="font-size:12px;margin-left:4px;">${ev.title}</strong>
-              <div style="color:#6b7280;font-size:11px;margin-top:2px;">📅 ${dateStr}</div>
-            </div>`;
+            const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+            return `<a href="/events/detail?id=${ev.id}" style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-bottom:1px solid #f3f4f6;text-decoration:none;color:inherit;transition:background 0.15s;" onmouseover="this.style.background='#fef9f0'" onmouseout="this.style.background='transparent'">
+              <span style="font-size:20px;flex-shrink:0;line-height:1.2;">${meta.icon}</span>
+              <div style="min-width:0;">
+                <div style="font-size:12px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;">${ev.title}</div>
+                <div style="font-size:11px;color:#6b7280;margin-top:2px;">📅 ${dateStr}</div>
+              </div>
+            </a>`;
           }).join("");
 
-          const popup = L.popup({ maxWidth: 220, className: "events-group-popup" }).setContent(
-            `<div style="font-family:system-ui,sans-serif;">
-              <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">${group.length} events here</div>
-              ${popupRows}
+          const popup = L.popup({ maxWidth: 240, className: "events-group-popup" }).setContent(
+            `<div style="font-family:system-ui,sans-serif;margin:-6px -12px;">
+              <div style="padding:8px 10px 6px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;">${group.length} events at this location</div>
+              <div style="max-height:180px;overflow-y:auto;overscroll-behavior:contain;">${popupRows}</div>
             </div>`
           );
 
