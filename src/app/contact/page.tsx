@@ -96,11 +96,8 @@ export default function ContactPage() {
       {/* Join the team */}
       <div className="rounded-2xl border border-[#1B3A6B]/15 bg-white p-8 mb-14">
         <div className="max-w-xl">
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: gold }}>Volunteer</p>
-          <h2 className="text-xl font-bold mb-3" style={{ color: navy }}>Join the team</h2>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            We&apos;re a small, driven team building something the Iranian diaspora actually needs. If you want to contribute — as a developer, designer, translator, content writer, or community ambassador — send us a message below and tell us how you&apos;d like to help.
-          </p>
+          <h2 className="text-xl font-bold mb-3" style={{ color: navy }}>Join us</h2>
+          <p className="text-gray-500 text-sm leading-relaxed">We&apos;re a small, driven team building something the Iranian diaspora actually needs. If you want to contribute — as a developer, designer, translator, content writer, or community ambassador — send us a message below and tell us how you&apos;d like to help.</p>
         </div>
       </div>
 
