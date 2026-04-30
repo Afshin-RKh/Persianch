@@ -93,60 +93,51 @@ export default function ContactPage() {
 
       </div>
 
-      {/* Join the team */}
-      <div className="rounded-2xl border border-[#1B3A6B]/15 bg-white p-8 mb-14">
-        <h2 className="text-xl font-bold mb-3" style={{ color: navy }}>Join us</h2>
-        <p className="text-gray-500 text-sm leading-relaxed">We&apos;re a small, driven team building something the Iranian diaspora actually needs. If you want to contribute — as a developer, designer, translator, content writer, or community ambassador — send us a message below and tell us how you&apos;d like to help.</p>
-      </div>
-
-      {/* Contact form */}
-      <section>
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-1.5" style={{ color: navy }}>Send us a message</h2>
-          <p className="text-gray-400 text-sm">Have questions, ideas, or want to join us? Send us a message.</p>
-        </div>
-
-        {contactSent ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-14 text-center">
-            <div className="w-12 h-12 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ backgroundColor: "#EEF2FF" }}>
-              <svg className="w-6 h-6" fill="none" stroke="#1B3A6B" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-2" style={{ color: navy }}>Message received</h3>
-            <p className="text-gray-400 text-sm">We&apos;ll get back to you as soon as we can.</p>
+      {/* Join us + contact form combined */}
+      {contactSent ? (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-14 text-center">
+          <div className="w-12 h-12 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ backgroundColor: "#EEF2FF" }}>
+            <svg className="w-6 h-6" fill="none" stroke="#1B3A6B" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-        ) : (
-          <form onSubmit={handleContactSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Name</label>
-                <input type="text" required value={contactForm.name}
-                  onChange={e => setContactForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="Your name" className={inp} />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
-                <input type="email" required value={contactForm.email}
-                  onChange={e => setContactForm(f => ({ ...f, email: e.target.value }))}
-                  placeholder="your@email.com" className={inp} />
-              </div>
+          <h3 className="text-xl font-bold mb-2" style={{ color: navy }}>Message received</h3>
+          <p className="text-gray-400 text-sm">We&apos;ll get back to you as soon as we can.</p>
+        </div>
+      ) : (
+        <form onSubmit={handleContactSubmit} className="bg-white rounded-2xl border border-[#1B3A6B]/15 shadow-sm p-8 space-y-5">
+          <div>
+            <h2 className="text-xl font-bold mb-2" style={{ color: navy }}>Join us</h2>
+            <p className="text-gray-500 text-sm leading-relaxed">We&apos;re a small, driven team building something the Iranian diaspora actually needs. If you want to contribute — as a developer, designer, translator, content writer, or community ambassador — send us a message and tell us how you&apos;d like to help.</p>
+          </div>
+          <div className="border-t border-gray-100 pt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Name</label>
+              <input type="text" required value={contactForm.name}
+                onChange={e => setContactForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="Your name" className={inp} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Message</label>
-              <textarea required rows={5} value={contactForm.message}
-                onChange={e => setContactForm(f => ({ ...f, message: e.target.value }))}
-                placeholder="How can we help, or how would you like to get involved?"
-                className={inp + " resize-none"} />
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
+              <input type="email" required value={contactForm.email}
+                onChange={e => setContactForm(f => ({ ...f, email: e.target.value }))}
+                placeholder="your@email.com" className={inp} />
             </div>
-            <button type="submit" disabled={submitting}
-              className="w-full text-white font-semibold py-3 rounded-xl text-sm transition-all hover:opacity-90 disabled:opacity-60"
-              style={{ backgroundColor: red }}>
-              {submitting ? "Sending…" : "Send Message"}
-            </button>
-          </form>
-        )}
-      </section>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Message</label>
+            <textarea required rows={4} value={contactForm.message}
+              onChange={e => setContactForm(f => ({ ...f, message: e.target.value }))}
+              placeholder="How would you like to get involved?"
+              className={inp + " resize-none"} />
+          </div>
+          <button type="submit" disabled={submitting}
+            className="w-full text-white font-semibold py-3 rounded-xl text-sm transition-all hover:opacity-90 disabled:opacity-60"
+            style={{ backgroundColor: red }}>
+            {submitting ? "Sending…" : "Send Message"}
+          </button>
+        </form>
+      )}
 
     </main>
   );
