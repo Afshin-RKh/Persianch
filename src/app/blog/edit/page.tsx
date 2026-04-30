@@ -44,10 +44,9 @@ function EditForm() {
     if (!post || !window.confirm(`Delete "${post.title}"? This cannot be undone.`)) return;
     setDeleting(true);
     try {
-      const res = await fetch(`${API}/blog.php`, {
+      const res = await fetch(`${API}/blog.php?id=${post.id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json", ...authHeaders(token) },
-        body: JSON.stringify({ id: post.id }),
+        headers: authHeaders(token),
       });
       if (!res.ok) throw new Error("Failed to delete");
       router.push("/admin");
