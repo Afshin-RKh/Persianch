@@ -44,7 +44,7 @@ export default function BlogPage() {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
       {/* Header */}
-      <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet" />
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
         <div className="min-w-0">
           <p className="text-base sm:text-lg font-medium text-gray-800 sm:whitespace-nowrap">
@@ -179,9 +179,17 @@ export default function BlogPage() {
                     )}
                   </div>
 
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 line-clamp-2">{post.title}</h2>
+                  <h2
+                    className="text-lg sm:text-xl font-bold text-gray-900 mb-2 line-clamp-2"
+                    dir={post.language === "fa" ? "rtl" : "ltr"}
+                    style={post.language === "fa" ? { fontFamily: "'Vazirmatn', sans-serif" } : {}}
+                  >{post.title}</h2>
 
-                  <p className="text-sm text-gray-500 line-clamp-2 flex-1">
+                  <p
+                    className="text-sm text-gray-500 line-clamp-2 flex-1"
+                    dir={post.language === "fa" ? "rtl" : "ltr"}
+                    style={post.language === "fa" ? { fontFamily: "'Vazirmatn', sans-serif", lineHeight: "1.9" } : {}}
+                  >
                     {post.content?.replace(/<[^>]+>/g, "").slice(0, 200)}
                   </p>
 
