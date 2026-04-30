@@ -67,6 +67,7 @@ interface Props {
   onChange: (html: string) => void;
   placeholder?: string;
   minHeight?: number;
+  dir?: "ltr" | "rtl";
 }
 
 const COLORS = [

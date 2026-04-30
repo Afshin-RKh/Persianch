@@ -201,10 +201,22 @@ function BlogPostContent() {
         </div>
       )}
 
-      <h1 className="text-3xl font-bold text-gray-900 mb-8 gold-underline inline-block">{post.title}</h1>
+      {(post as any).language === "fa" && (
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" />
+      )}
+
+      <h1
+        className="text-3xl font-bold text-gray-900 mb-8 gold-underline inline-block"
+        dir={(post as any).language === "fa" ? "rtl" : "ltr"}
+        style={(post as any).language === "fa" ? { fontFamily: "'Vazirmatn', sans-serif", width: "100%" } : {}}
+      >
+        {post.title}
+      </h1>
 
       <div
         className="prose prose-gray max-w-none text-gray-700 leading-relaxed mt-8"
+        dir={(post as any).language === "fa" ? "rtl" : "ltr"}
+        style={(post as any).language === "fa" ? { fontFamily: "'Vazirmatn', sans-serif", fontSize: "1.05rem", lineHeight: "2" } : {}}
         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content ?? "") }}
       />
 
