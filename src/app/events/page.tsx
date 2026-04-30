@@ -170,7 +170,7 @@ export default function EventsPage() {
 
         {/* Row 1: Search + Dates */}
         <div className="pointer-events-auto flex gap-2">
-          <div className="relative" style={{ flex: "0 0 65%" }}>
+          <div className="relative" style={{ flex: "0 0 50%" }}>
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
               ref={searchInputRef}
@@ -225,7 +225,7 @@ export default function EventsPage() {
           </div>
 
           {/* Dates button */}
-          <div className="relative" style={{ flex: "0 0 35%" }} ref={datePickerRef}>
+          <div className="relative" style={{ flex: "0 0 50%" }} ref={datePickerRef}>
             <button
               onClick={openPicker}
               className="w-full flex items-center gap-2 pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white shadow-sm whitespace-nowrap"
