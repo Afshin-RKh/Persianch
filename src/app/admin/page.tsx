@@ -14,7 +14,7 @@ import {
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white";
 
-type Tab = "posts" | "businesses" | "users" | "squares" | "events";
+type Tab = "posts" | "businesses" | "users" | "squares" | "events" | "trash";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type BizForm = {
@@ -35,6 +35,7 @@ const EMPTY_BIZ: BizForm = {
 interface BlogPost {
   id: number; title: string; slug: string; status: string;
   author_name: string; created_at: string; tags?: string; country?: string; city?: string;
+  cover_image?: string; deleted_at?: string; deleted_by?: number; deleted_by_name?: string;
 }
 interface BusinessRow {
   id: number; name: string; name_fa?: string; category: string; canton: string; country: string;
@@ -425,6 +426,9 @@ export default function AdminPage() {
   const [assignBizUser, setAssignBizUser]   = useState<number | null>(null);
   const [assignBizId, setAssignBizId]       = useState("");
 
+  // Trash
+  const [trashedPosts, setTrashedPosts] = useState<BlogPost[]>([]);
+
   // Events
   const [events, setEvents]           = useState<EventRow[]>([]);
   const [editEvent, setEditEvent]     = useState<EventRow | null>(null);
@@ -484,6 +488,11 @@ export default function AdminPage() {
         const data = await r.json();
         setSquares(Array.isArray(data) ? data : []);
       }
+      if (tab === "trash") {
+        const r = await fetch(`${API}/blog.php?trash=1`, { headers: authHeaders(token) });
+        const data = await r.json();
+        setTrashedPosts(Array.isArray(data) ? data : []);
+      }
       if (tab === "events") {
         const [r1, r2] = await Promise.all([
           fetch(`${API}/events.php?pending=1`, { headers: authHeaders(token) }),
@@ -507,8 +516,17 @@ export default function AdminPage() {
     loadData();
   };
   const deletePost = async (id: number) => {
-    if (!confirm("Delete this post?")) return;
+    if (!confirm("Move this post to trash?")) return;
     await fetch(`${API}/blog.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
+    loadData();
+  };
+  const restorePost = async (id: number) => {
+    await fetch(`${API}/blog.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, action: "restore" }) });
+    loadData();
+  };
+  const permanentDeletePost = async (id: number, title: string) => {
+    if (!confirm(`Permanently delete "${title}"? This cannot be undone.`)) return;
+    await fetch(`${API}/blog.php?id=${id}&permanent=1`, { method: "DELETE", headers: authHeaders(token) });
     loadData();
   };
 
@@ -666,6 +684,7 @@ export default function AdminPage() {
     { key: "users",      label: "Users",        icon: <Users size={15} /> },
     { key: "events",     label: "Events",       icon: <span className="text-sm">📅</span> },
     { key: "squares",    label: "City Squares", icon: <MapPin size={15} />, superOnly: true },
+    { key: "trash",      label: "Trash",        icon: <Trash2 size={15} /> },
   ];
 
   const POST_TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
@@ -1402,6 +1421,58 @@ export default function AdminPage() {
                 ))}
               </div>
             }
+          </div>
+        )}
+
+        {/* Trash */}
+        {tab === "trash" && !dataLoading && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-gray-800">Deleted Blog Posts ({trashedPosts.length})</h2>
+              <p className="text-xs text-gray-400">Posts here are hidden from the site. Restore or permanently delete.</p>
+            </div>
+            {trashedPosts.length === 0 ? (
+              <div className="text-center py-16 text-gray-400">
+                <div className="text-4xl mb-3">🗑</div>
+                <p className="text-sm font-medium">Trash is empty</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {trashedPosts.map((p) => (
+                  <div key={p.id} className="bg-white rounded-xl border border-red-100 p-4 flex items-start justify-between gap-4">
+                    <div className="flex gap-3 min-w-0">
+                      {p.cover_image && <img src={p.cover_image} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />}
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-700 line-clamp-1">{p.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          By {p.author_name ?? "unknown"}
+                          {p.country && ` · ${[p.city, p.country].filter(Boolean).join(", ")}`}
+                        </p>
+                        <p className="text-xs text-red-400 mt-0.5">
+                          Deleted {p.deleted_at ? new Date(p.deleted_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" }) : ""}
+                          {p.deleted_by_name && ` by ${p.deleted_by_name}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => restorePost(p.id)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors hover:bg-green-50"
+                        style={{ color: "#059669", borderColor: "#059669" }}
+                      >
+                        Restore
+                      </button>
+                      <button
+                        onClick={() => permanentDeletePost(p.id, p.title)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        Delete Forever
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

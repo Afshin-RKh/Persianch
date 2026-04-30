@@ -4,10 +4,10 @@ require_once 'jwt.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Auto-migrate: add language column if missing
-try {
-    $pdo->exec("ALTER TABLE blog_posts ADD COLUMN language VARCHAR(32) DEFAULT NULL");
-} catch (PDOException $e) { /* column already exists */ }
+// Auto-migrate
+try { $pdo->exec("ALTER TABLE blog_posts ADD COLUMN language VARCHAR(32) DEFAULT NULL"); } catch (PDOException $e) {}
+try { $pdo->exec("ALTER TABLE blog_posts ADD COLUMN deleted_at DATETIME DEFAULT NULL"); } catch (PDOException $e) {}
+try { $pdo->exec("ALTER TABLE blog_posts ADD COLUMN deleted_by INT DEFAULT NULL"); } catch (PDOException $e) {}
 
 function optional_auth(): ?array {
     $token = bearer_token();
@@ -48,20 +48,27 @@ if ($method === 'GET') {
     }
 
     if (!empty($_GET['slug'])) {
-        $stmt = $pdo->prepare("SELECT p.*, u.name as author_name FROM blog_posts p LEFT JOIN users u ON p.author_id = u.id WHERE p.slug = :slug AND p.status = 'approved'");
+        $stmt = $pdo->prepare("SELECT p.*, u.name as author_name FROM blog_posts p LEFT JOIN users u ON p.author_id = u.id WHERE p.slug = :slug AND p.status = 'approved' AND p.deleted_at IS NULL");
         $stmt->execute([':slug' => $_GET['slug']]);
         echo json_encode($stmt->fetch() ?: null);
         exit();
     }
 
+    // Trash listing (admin only)
+    if (!empty($_GET['trash']) && $isAdmin) {
+        $stmt = $pdo->query("SELECT p.*, u.name as author_name, d.name as deleted_by_name FROM blog_posts p LEFT JOIN users u ON p.author_id = u.id LEFT JOIN users d ON p.deleted_by = d.id WHERE p.deleted_at IS NOT NULL ORDER BY p.deleted_at DESC");
+        echo json_encode($stmt->fetchAll());
+        exit();
+    }
+
     if (!empty($_GET['pending']) && $isAdmin) {
-        $stmt = $pdo->query("SELECT p.*, u.name as author_name FROM blog_posts p LEFT JOIN users u ON p.author_id = u.id WHERE p.status = 'pending' ORDER BY p.created_at DESC");
+        $stmt = $pdo->query("SELECT p.*, u.name as author_name FROM blog_posts p LEFT JOIN users u ON p.author_id = u.id WHERE p.status = 'pending' AND p.deleted_at IS NULL ORDER BY p.created_at DESC");
         echo json_encode($stmt->fetchAll());
         exit();
     }
 
     // Public listing with optional tag / country / city filter
-    $where  = ["p.status = 'approved'"];
+    $where  = ["p.status = 'approved'", "p.deleted_at IS NULL"];
     $params = [];
 
     if (!empty($_GET['tag'])) {
@@ -162,11 +169,21 @@ if ($method === 'PATCH') {
 
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
 
-    // Fetch post to check its location
-    $postRow = $pdo->prepare("SELECT title, country, city, status FROM blog_posts WHERE id = :id");
+    // Fetch post to check its location (handle restore action on trashed posts too)
+    $isRestore = ($data['action'] ?? '') === 'restore';
+    $trashFilter = $isRestore ? "p.deleted_at IS NOT NULL" : "p.deleted_at IS NULL";
+    $postRow = $pdo->prepare("SELECT p.title, p.country, p.city, p.status FROM blog_posts p WHERE p.id = :id AND $trashFilter");
     $postRow->execute([':id' => $id]);
     $post = $postRow->fetch(PDO::FETCH_ASSOC);
     if (!$post) { http_response_code(404); echo json_encode(['error' => 'Post not found']); exit(); }
+
+    // Restore from trash
+    if ($isRestore) {
+        $pdo->prepare("UPDATE blog_posts SET deleted_at = NULL, deleted_by = NULL WHERE id = :id")->execute([':id' => $id]);
+        log_blog_activity($pdo, $adminId, 'restore', $id, $post['title'], "$adminName restored blog post \"{$post['title']}\"");
+        echo json_encode(['success' => true]);
+        exit();
+    }
 
     // Location enforcement for non-superadmin
     if ($adminRole === 'admin') {
@@ -239,7 +256,9 @@ if ($method === 'DELETE') {
 
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
 
-    // Fetch post for location check and log
+    $isPermanent = !empty($_GET['permanent']);
+
+    // For permanent delete, post may already be soft-deleted — fetch without filter
     $postRow = $pdo->prepare("SELECT title, country, city FROM blog_posts WHERE id = :id");
     $postRow->execute([':id' => $id]);
     $post = $postRow->fetch(PDO::FETCH_ASSOC);
@@ -252,9 +271,17 @@ if ($method === 'DELETE') {
         }
     }
 
-    log_blog_activity($pdo, $adminId, 'delete', $id, $post['title'],
-        "$adminName deleted blog post \"{$post['title']}\"");
-    $pdo->prepare("DELETE FROM blog_posts WHERE id = :id")->execute([':id' => $id]);
+    if ($isPermanent) {
+        log_blog_activity($pdo, $adminId, 'delete_permanent', $id, $post['title'],
+            "$adminName permanently deleted blog post \"{$post['title']}\"");
+        $pdo->prepare("DELETE FROM blog_posts WHERE id = :id")->execute([':id' => $id]);
+    } else {
+        log_blog_activity($pdo, $adminId, 'delete', $id, $post['title'],
+            "$adminName moved blog post \"{$post['title']}\" to trash");
+        $pdo->prepare("UPDATE blog_posts SET deleted_at = NOW(), deleted_by = :uid WHERE id = :id")
+            ->execute([':uid' => $adminId, ':id' => $id]);
+    }
+
     echo json_encode(['success' => true]);
     exit();
 }
