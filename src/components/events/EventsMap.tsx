@@ -117,7 +117,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
           const marker = L.marker([lat, lng], { icon })
             .addTo(mapInstanceRef.current!)
             .bindTooltip(`<strong>${ev.title}</strong><br/><span style="color:#6b7280;font-size:12px;">📅 ${dateStr}</span>`, { className: "persian-hub-tooltip", direction: "top" })
-            .on("click", () => onSelectEvent(ev));
+            .on("click", () => { window.location.href = `/events/detail?id=${ev.id}`; });
           markersRef.current.push(marker);
         } else {
           // Multiple events — badge marker with popup list
@@ -144,7 +144,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
           const popup = L.popup({ maxWidth: 240, className: "events-group-popup" }).setContent(
             `<div style="font-family:system-ui,sans-serif;margin:-6px -12px;">
               <div style="padding:8px 10px 6px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;">${group.length} events at this location</div>
-              <div style="max-height:180px;overflow-y:auto;overscroll-behavior:contain;">${popupRows}</div>
+              <div style="max-height:180px;overflow-y:auto;overscroll-behavior:contain;mask-image:linear-gradient(to bottom,transparent,black 20px,black calc(100% - 20px),transparent);-webkit-mask-image:linear-gradient(to bottom,transparent,black 20px,black calc(100% - 20px),transparent);">${popupRows}</div>
             </div>`
           );
 
