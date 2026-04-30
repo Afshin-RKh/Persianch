@@ -63,7 +63,7 @@ interface EventRow {
   venue?: string; start_date: string; end_date: string; is_recurring: boolean;
   recurrence_type?: string; recurrence_end_date?: string;
   external_link?: string; description?: string; organizer_name?: string; organizer_email?: string;
-  status: string; created_at: string;
+  status: string; created_at: string; lat?: number | null; lng?: number | null;
 }
 
 const EVENT_TYPE_ICONS: Record<string, string> = {
@@ -1347,6 +1347,14 @@ export default function AdminPage() {
                             <label className="block text-xs font-semibold text-gray-500 mb-1">External Link</label>
                             <input value={editEvent.external_link ?? ""} onChange={(e) => setEditEvent({ ...editEvent, external_link: e.target.value })} className={inp} />
                           </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Latitude</label>
+                            <input type="number" step="any" placeholder="e.g. 47.3769" value={editEvent.lat ?? ""} onChange={(e) => setEditEvent({ ...editEvent, lat: e.target.value ? parseFloat(e.target.value) : null })} className={inp} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Longitude</label>
+                            <input type="number" step="any" placeholder="e.g. 8.5417" value={editEvent.lng ?? ""} onChange={(e) => setEditEvent({ ...editEvent, lng: e.target.value ? parseFloat(e.target.value) : null })} className={inp} />
+                          </div>
                         </div>
                         <div className="flex gap-2">
                           <button onClick={async () => {
@@ -1374,6 +1382,9 @@ export default function AdminPage() {
                             {ev.venue && ` · ${ev.venue}`}
                           </p>
                           {ev.organizer_name && <p className="text-xs text-gray-400 mt-0.5">By: {ev.organizer_name}{ev.organizer_email ? ` (${ev.organizer_email})` : ""}</p>}
+                          <p className="text-xs mt-0.5" style={{ color: ev.lat && ev.lng ? "#6b7280" : "#f59e0b" }}>
+                            📍 {ev.lat && ev.lng ? `${ev.lat.toFixed(5)}, ${ev.lng.toFixed(5)}` : "No coordinates — won't appear on map"}
+                          </p>
                         </div>
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           {ev.status === "pending" && <>
