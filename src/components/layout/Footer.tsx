@@ -11,12 +11,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🗺️</span>
-              <div>
-                <span className="font-bold text-xl text-white">Biruni</span>
-                <span className="font-bold text-xl" style={{ color: "#C9A84C" }}>Map</span>
-              </div>
+            <div className="mb-4">
+              <img src="/logotype.svg" alt="BiruniMap" className="h-9 w-auto" />
             </div>
             <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
               The global map of the Iranian diaspora — 3,000+ businesses across 50+ countries, inspired by Al-Biruni, the Persian scholar who mapped the world.

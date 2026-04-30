@@ -48,13 +48,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-2xl">🗺️</span>
-            <div>
-              <span className="font-bold text-xl" style={{ color: "#1B3A6B" }}>Biruni</span>
-              <span className="font-bold text-xl" style={{ color: "#C9A84C" }}>Map</span>
-            </div>
-            <span className="hidden lg:inline text-xs text-gray-300 font-medium ml-1">· Global</span>
+          <Link href="/" className="flex items-center flex-shrink-0">
+            <img src="/logotype.svg" alt="BiruniMap" className="h-9 w-auto" />
           </Link>
 
           {/* Desktop nav */}
