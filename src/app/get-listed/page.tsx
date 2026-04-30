@@ -86,9 +86,9 @@ export default function GetListedPage() {
       {/* Header */}
       <div className="mb-12">
         <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: gold }}>Add to Map</p>
-        <h1 className="text-4xl font-bold mb-4" style={{ color: navy }}>List your business.</h1>
+        <h1 className="text-4xl font-bold mb-4" style={{ color: navy }}>Add a business.</h1>
         <p className="text-gray-500 text-base leading-relaxed">
-          Iranian-run businesses are the backbone of our community abroad. Fill in the form — we&apos;ll review your submission and put you on the map within a few days.
+          Iranian-run businesses are the backbone of our community abroad. Fill in the form — we&apos;ll review the submission and put it on the map within a few days.
         </p>
         <div className="flex flex-wrap gap-6 mt-6">
           {["Open to all Iranian businesses", "Listed within a few days", "Visible across Europe & beyond"].map((t) => (

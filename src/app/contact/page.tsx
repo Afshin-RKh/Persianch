@@ -38,7 +38,7 @@ export default function ContactPage() {
         <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: gold }}>Get Involved</p>
         <h1 className="text-4xl font-bold mb-4" style={{ color: navy }}>Help BiruniMap grow.</h1>
         <p className="text-gray-500 text-base leading-relaxed max-w-xl">
-          BiruniMap is built by Iranians, for Iranians. Add your business, share an event, or reach out and tell us how you&apos;d like to contribute.
+          BiruniMap is built by Iranians, for Iranians. Add a business, share an event, or reach out and tell us how you&apos;d like to contribute.
         </p>
       </div>
 
@@ -47,7 +47,7 @@ export default function ContactPage() {
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 flex flex-col group hover:border-[#1B3A6B]/30 hover:shadow-md transition-all duration-200">
           <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: gold }}>Businesses</p>
-          <h2 className="text-xl font-bold mb-3" style={{ color: navy }}>List Your Business</h2>
+          <h2 className="text-xl font-bold mb-3" style={{ color: navy }}>Add a Business</h2>
           <p className="text-gray-500 text-sm leading-relaxed flex-1">
             Own or know an Iranian business? Getting listed takes a few minutes and puts you in front of thousands of Iranians searching for community services abroad.
           </p>
