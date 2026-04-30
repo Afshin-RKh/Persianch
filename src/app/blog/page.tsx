@@ -45,9 +45,9 @@ export default function BlogPage() {
 
       {/* Header */}
       <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600&display=swap" rel="stylesheet" />
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <p className="text-base sm:text-lg font-medium text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+        <div className="min-w-0">
+          <p className="text-base sm:text-lg font-medium text-gray-800 sm:whitespace-nowrap">
             Learn local tips, rules and survival guides — filter by location and topic.
           </p>
           <p className="text-base sm:text-lg mt-1 text-gray-600" dir="rtl" style={{ fontFamily: "'Vazirmatn', sans-serif", fontWeight: 600 }}>
@@ -55,7 +55,7 @@ export default function BlogPage() {
           </p>
         </div>
         {user && (
-          <Link href="/blog/write" className="text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:opacity-90 flex-shrink-0 ml-6 mt-1" style={{ backgroundColor: "#8B1A1A" }}>
+          <Link href="/blog/write" className="text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:opacity-90 flex-shrink-0 self-start sm:mt-1" style={{ backgroundColor: "#8B1A1A" }}>
             ✍️ Write a Post
           </Link>
         )}
