@@ -47,11 +47,11 @@ function RelatedCard({ post }: { post: BlogPost }) {
   );
 }
 
-function RelatedSidebar({ post, side }: { post: BlogPost; side: "left" | "right" }) {
+function RelatedSidebar({ post }: { post: BlogPost }) {
   const [related, setRelated] = useState<BlogPost[]>([]);
 
   useEffect(() => {
-    const tag   = post.tags?.split(",")[0]?.trim();
+    const tag    = post.tags?.split(",")[0]?.trim();
     const fetch1 = tag
       ? getBlogPosts({ tag }).then((r) => r.filter((p) => p.id !== post.id))
       : Promise.resolve([] as BlogPost[]);
@@ -71,14 +71,10 @@ function RelatedSidebar({ post, side }: { post: BlogPost; side: "left" | "right"
 
   if (related.length === 0) return null;
 
-  const half = Math.ceil(related.length / 2);
-  const items = side === "left" ? related.slice(0, half) : related.slice(half);
-  if (items.length === 0) return null;
-
   return (
     <aside className="space-y-1">
       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 mb-3">Related Posts</p>
-      {items.map((p) => <RelatedCard key={p.id} post={p} />)}
+      {related.map((p) => <RelatedCard key={p.id} post={p} />)}
     </aside>
   );
 }
@@ -240,13 +236,8 @@ function BlogPostContent() {
         )}
       </div>
 
-      {/* 3-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_220px] gap-8 items-start">
-
-        {/* Left sidebar — hidden on mobile, shown above content on md */}
-        <div className="hidden lg:block sticky top-24">
-          <RelatedSidebar post={post} side="left" />
-        </div>
+      {/* 2-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-10 items-start">
 
         {/* Main article */}
         <article>
@@ -300,11 +291,7 @@ function BlogPostContent() {
 
           {/* Related posts on mobile — below article */}
           <div className="lg:hidden mt-12 pt-8 border-t border-gray-100">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Related Posts</p>
-            <div className="space-y-1">
-              <RelatedSidebar post={post} side="left" />
-              <RelatedSidebar post={post} side="right" />
-            </div>
+            <RelatedSidebar post={post} />
           </div>
 
           <Comments postId={post.id} />
@@ -312,7 +299,7 @@ function BlogPostContent() {
 
         {/* Right sidebar */}
         <div className="hidden lg:block sticky top-24">
-          <RelatedSidebar post={post} side="right" />
+          <RelatedSidebar post={post} />
         </div>
 
       </div>
