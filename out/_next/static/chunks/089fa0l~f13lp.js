@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,44805,t=>{"use strict";let e=null,l=null;t.s(["getIPLocation",0,function(){return e?Promise.resolve(e):l||(l=fetch("https://ipapi.co/json/").then(t=>t.json()).then(t=>t.latitude&&t.longitude?e=[t.latitude,t.longitude]:null).catch(()=>null))}])}]);

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, useMemo, useRef, Suspense, lazy } from "react";
-import { Search, X, Globe, MapPin, Calendar } from "lucide-react";
+import { Search, X, Globe, MapPin, Calendar, List } from "lucide-react";
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
 import { useAuth } from "@/lib/auth";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
@@ -46,6 +46,7 @@ export default function EventsPage() {
   const [dateFrom, setDateFrom] = useState(defaultStart);
   const [dateTo,   setDateTo]   = useState(defaultEnd);
   const [dateOpen, setDateOpen] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
   // Temp state while picker is open
   const [tempFrom, setTempFrom] = useState(defaultStart);
   const [tempTo,   setTempTo]   = useState(defaultEnd);
@@ -104,7 +105,10 @@ export default function EventsPage() {
   const handleSearchChange = (val: string) => {
     setSearchInput(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => setSearch(val.trim()), 220);
+    searchTimer.current = setTimeout(() => {
+      setSearch(val.trim());
+      if (val.trim()) setListOpen(true);
+    }, 220);
   };
 
   const openPicker = () => {
@@ -302,8 +306,59 @@ export default function EventsPage() {
         </div>
       </div>
 
+      {/* List toggle button */}
+      <button
+        onClick={() => setListOpen((v) => !v)}
+        className="absolute bottom-6 left-3 z-[1000] flex items-center gap-2 bg-white border border-gray-200 shadow-md rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+      >
+        <List size={15} />
+        {listOpen ? "Hide list" : `List (${events.length})`}
+      </button>
+
+      {/* Events list panel */}
+      {listOpen && (
+        <div className="absolute left-3 bottom-20 z-[1000] w-80 max-h-[60vh] flex flex-col bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <p className="text-sm font-bold text-gray-800">{events.length} event{events.length !== 1 ? "s" : ""}</p>
+            <button onClick={() => setListOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
+          </div>
+          <div className="overflow-y-auto flex-1">
+            {events.length === 0 ? (
+              <p className="text-center text-gray-400 text-sm py-8">No events found</p>
+            ) : (
+              events.map((ev) => {
+                const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
+                const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", {
+                  weekday: "short", day: "numeric", month: "short",
+                });
+                return (
+                  <Link
+                    key={ev.id}
+                    href={`/events/detail?id=${ev.id}`}
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-50 transition-colors"
+                    onClick={() => setSelected(ev)}
+                  >
+                    <span className="text-2xl flex-shrink-0 mt-0.5">{meta.icon}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{ev.title}</p>
+                      {ev.title_fa && <p className="text-xs text-gray-400 truncate" dir="rtl">{ev.title_fa}</p>}
+                      <p className="text-xs text-gray-500 mt-0.5">📅 {dateStr}</p>
+                      <p className="text-xs text-gray-400 truncate">{ev.venue || ev.city}{ev.city && ev.venue ? `, ${ev.city}` : ""}</p>
+                    </div>
+                    <span
+                      className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full mt-0.5 ml-auto"
+                      style={{ backgroundColor: meta.color + "18", color: meta.color }}
+                    >{meta.label}</span>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Selected event card */}
-      {selected && (
+      {selected && !listOpen && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-[1000]">
           <button
             onClick={() => setSelected(null)}
