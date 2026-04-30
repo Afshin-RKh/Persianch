@@ -84,7 +84,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
   // Update event markers with clustering
   useEffect(() => {
     if (!mapInstanceRef.current) return;
-    Promise.all([import("leaflet"), import("leaflet.markercluster")]).then(([L]) => {
+    import("leaflet").then((L) => import("leaflet.markercluster").then(() => L)).then((L) => {
       // Remove old cluster group
       if (clusterGroupRef.current) {
         mapInstanceRef.current!.removeLayer(clusterGroupRef.current);
