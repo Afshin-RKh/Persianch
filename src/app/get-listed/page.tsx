@@ -14,8 +14,7 @@ export default function GetListedPage() {
 
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [isOwner, setIsOwner]           = useState(false);
-  const [wantsAccount, setWantsAccount] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
 
   const [form, setForm] = useState({
     businessName: "", category: "", country: "", city: "",
@@ -61,7 +60,7 @@ export default function GetListedPage() {
           instagram: form.instagram?.replace(/^@/, "") || null,
           email: form.email || null, description: form.description || null,
           lat, lng, is_featured: false, is_verified: false, is_approved: false,
-          is_owner: isOwner && !!user,
+          is_owner: isOwner && !!user,  // only assign if signed in
         }),
       });
       setSent(true);
@@ -114,36 +113,28 @@ export default function GetListedPage() {
 
         <label className="flex items-start gap-3 cursor-pointer">
           <input type="checkbox" checked={isOwner}
-            onChange={e => { setIsOwner(e.target.checked); if (!e.target.checked) setWantsAccount(false); }}
+            onChange={e => setIsOwner(e.target.checked)}
             className="mt-0.5 w-4 h-4 accent-[#1B3A6B] cursor-pointer" />
-          <span className="text-sm text-gray-700">I am the owner of this business</span>
+          <span className="text-sm text-gray-700">I am the owner and want to manage this page myself</span>
         </label>
 
         {isOwner && (
-          <div className="ml-7 space-y-3">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" checked={wantsAccount} onChange={e => setWantsAccount(e.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-[#1B3A6B] cursor-pointer" />
-              <span className="text-sm text-gray-700">I want to manage this page myself</span>
-            </label>
-
-            {wantsAccount && (
-              user ? (
-                <div className="flex items-center gap-2.5 text-sm text-gray-600 bg-green-50 border border-green-100 rounded-xl px-4 py-3">
-                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Signed in as <strong className="ml-0.5">{user.name}</strong> — your account will be linked as the owner.
-                </div>
-              ) : (
-                <div className="border border-[#1B3A6B]/20 rounded-xl px-5 py-4 bg-[#f8faff] text-sm text-gray-600 leading-relaxed">
-                  To manage your own page you need a BiruniMap account.{" "}
-                  <Link href="/auth/signin" className="font-semibold underline underline-offset-2 hover:opacity-75" style={{ color: navy }}>Sign in</Link>
-                  {" "}or{" "}
-                  <Link href="/auth/signup" className="font-semibold underline underline-offset-2 hover:opacity-75" style={{ color: navy }}>create an account</Link>
-                  , then come back to submit your business.
-                </div>
-              )
+          <div className="ml-7">
+            {user ? (
+              <div className="flex items-center gap-2.5 text-sm text-gray-600 bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+                <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Signed in as <strong className="ml-0.5">{user.name}</strong> — your account will be linked as the owner.
+              </div>
+            ) : (
+              <div className="border border-[#1B3A6B]/20 rounded-xl px-5 py-4 bg-[#f8faff] text-sm text-gray-600 leading-relaxed">
+                To manage your own page you need a BiruniMap account.{" "}
+                <Link href="/auth/signin" className="font-semibold underline underline-offset-2 hover:opacity-75" style={{ color: navy }}>Sign in</Link>
+                {" "}or{" "}
+                <Link href="/auth/signup" className="font-semibold underline underline-offset-2 hover:opacity-75" style={{ color: navy }}>create an account</Link>
+                , then come back to submit your business.
+              </div>
             )}
           </div>
         )}
