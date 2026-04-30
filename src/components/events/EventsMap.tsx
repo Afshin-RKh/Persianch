@@ -93,7 +93,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
       const groups = new Map<string, EventRow[]>();
       events.forEach((ev) => {
         if (ev.lat == null || ev.lng == null) return;
-        const key = `${ev.lat.toFixed(4)},${ev.lng.toFixed(4)}`;
+        const key = `${ev.lat.toFixed(3)},${ev.lng.toFixed(3)}`;
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key)!.push(ev);
       });
