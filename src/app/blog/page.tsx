@@ -44,7 +44,6 @@ export default function BlogPage() {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
       {/* Header */}
-      <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet" />
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
         <div className="min-w-0">
           <p className="text-base sm:text-lg font-medium text-gray-800 sm:whitespace-nowrap">

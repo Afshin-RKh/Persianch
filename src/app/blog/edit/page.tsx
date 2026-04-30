@@ -225,9 +225,6 @@ function EditForm() {
           <label className="block text-xs font-semibold text-gray-600 mb-1.5">
             Content {isFarsi && <span className="text-gray-400 font-normal">(راست به چپ)</span>}
           </label>
-          {isFarsi && (
-            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" />
-          )}
           <RichTextEditor
             value={form.content}
             onChange={(html) => setForm({ ...form, content: html })}

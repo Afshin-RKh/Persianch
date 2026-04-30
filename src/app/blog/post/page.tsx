@@ -270,9 +270,7 @@ function BlogPostContent() {
             </div>
           )}
 
-          {isFarsi && (
-            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" />
-          )}
+
 
           <h1
             className="text-3xl font-bold text-gray-900 mb-8 gold-underline inline-block"
