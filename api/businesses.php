@@ -90,7 +90,7 @@ if ($method === 'GET') {
                        u.name AS owner_name
                 FROM businesses b
                 LEFT JOIN users u ON u.id = b.owner_user_id
-                $whereClause ORDER BY b.is_featured DESC, b.created_at DESC LIMIT 1000";
+                $whereClause ORDER BY b.is_featured DESC, b.created_at DESC";
     } elseif ($isBoundsQuery) {
         $sql = "SELECT b.id, b.name, b.category, b.lat, b.lng, b.is_featured, b.is_approved
                 FROM businesses b
