@@ -5,7 +5,7 @@ import { getBlogPosts, BlogPost, BlogFilters } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 
-const TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
+const TAGS = ["survival guides", "legal", "transportation", "travel guides"];
 
 const LANGUAGES = [
   { value: "en", label: "English" },

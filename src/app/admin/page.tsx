@@ -687,7 +687,7 @@ export default function AdminPage() {
     { key: "trash",      label: "Trash",        icon: <Trash2 size={15} /> },
   ];
 
-  const POST_TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
+  const POST_TAGS = ["survival guides", "legal", "transportation", "travel guides"];
   const postCountries = [...new Set(posts.map((p) => p.country).filter(Boolean))] as string[];
 
   const filteredPosts = posts.filter((p) => {

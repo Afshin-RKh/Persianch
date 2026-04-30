@@ -7,7 +7,7 @@ import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 import RichTextEditor from "@/components/RichTextEditor";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
-const TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
+const TAGS = ["survival guides", "legal", "transportation", "travel guides"];
 
 export default function WriteBlogPage() {
   const { user, token, isAdmin } = useAuth();
