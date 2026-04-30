@@ -17,7 +17,7 @@ interface Props {
 export default function EventsMap({ events, userLocation, onSelectEvent, onBoundsChange, focusCountry, focusRegion }: Props) {
   const mapRef            = useRef<HTMLDivElement>(null);
   const mapInstanceRef    = useRef<import("leaflet").Map | null>(null);
-  const clusterGroupRef   = useRef<any>(null);
+  const markersRef        = useRef<import("leaflet").Layer[]>([]);
   const userMarkerRef     = useRef<import("leaflet").Marker | null>(null);
   const onBoundsChangeRef = useRef(onBoundsChange);
   useEffect(() => { onBoundsChangeRef.current = onBoundsChange; }, [onBoundsChange]);
@@ -81,62 +81,77 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
     };
   }, []);
 
-  // Update event markers with clustering
+  // Update event markers
   useEffect(() => {
     if (!mapInstanceRef.current) return;
-    import("leaflet").then((L) => import("leaflet.markercluster").then(() => L)).then((L) => {
-      // Remove old cluster group
-      if (clusterGroupRef.current) {
-        mapInstanceRef.current!.removeLayer(clusterGroupRef.current);
-        clusterGroupRef.current = null;
-      }
+    import("leaflet").then((L) => {
+      // Clear old markers
+      markersRef.current.forEach((m) => mapInstanceRef.current!.removeLayer(m));
+      markersRef.current = [];
 
-      const cluster = (L as any).markerClusterGroup({
-        maxClusterRadius: 50,
-        spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false,
-        iconCreateFunction: (c: any) => {
-          const count = c.getChildCount();
-          return L.divIcon({
-            html: `<div style="
-              background:#1B3A6B;color:white;border-radius:50%;
-              width:38px;height:38px;display:flex;align-items:center;
-              justify-content:center;font-size:13px;font-weight:700;
-              border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);
-            ">${count}</div>`,
-            className: "", iconSize: [38, 38], iconAnchor: [19, 19],
-          });
-        },
-      });
-
+      // Group events by rounded location
+      const groups = new Map<string, EventRow[]>();
       events.forEach((ev) => {
         if (ev.lat == null || ev.lng == null) return;
-        const meta    = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
-        const pending = ev.status === "pending";
-        const icon = L.divIcon({
-          html: pending
-            ? `<div style="font-size:24px;line-height:1;background:#fefce8;border:2.5px solid #eab308;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(234,179,8,0.4));">${meta.icon}</div>`
-            : `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${meta.icon}</div>`,
-          className: "", iconSize: [36, 36], iconAnchor: [18, 18],
-        });
-
-        const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", {
-          weekday: "short", day: "numeric", month: "short",
-        });
-        const pendingBadge = pending ? `<br/><span style="color:#B45309;font-size:11px;font-weight:600;">⏳ Pending</span>` : "";
-
-        const marker = L.marker([ev.lat!, ev.lng!], { icon })
-          .bindTooltip(
-            `<strong>${ev.title}</strong>${pendingBadge}<br/><span style="color:#6b7280;font-size:12px;">📅 ${dateStr}</span>`,
-            { className: "persian-hub-tooltip", direction: "top" }
-          )
-          .on("click", () => onSelectEvent(ev));
-
-        cluster.addLayer(marker);
+        const key = `${ev.lat.toFixed(4)},${ev.lng.toFixed(4)}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(ev);
       });
 
-      mapInstanceRef.current!.addLayer(cluster);
-      clusterGroupRef.current = cluster;
+      groups.forEach((group, _key) => {
+        const lat = group[0].lat!;
+        const lng = group[0].lng!;
+
+        if (group.length === 1) {
+          // Single event — simple emoji marker
+          const ev = group[0];
+          const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
+          const pending = ev.status === "pending";
+          const icon = L.divIcon({
+            html: pending
+              ? `<div style="font-size:24px;line-height:1;background:#fefce8;border:2.5px solid #eab308;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(234,179,8,0.4));">${meta.icon}</div>`
+              : `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${meta.icon}</div>`,
+            className: "", iconSize: [36, 36], iconAnchor: [18, 18],
+          });
+          const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+          const marker = L.marker([lat, lng], { icon })
+            .addTo(mapInstanceRef.current!)
+            .bindTooltip(`<strong>${ev.title}</strong><br/><span style="color:#6b7280;font-size:12px;">📅 ${dateStr}</span>`, { className: "persian-hub-tooltip", direction: "top" })
+            .on("click", () => onSelectEvent(ev));
+          markersRef.current.push(marker);
+        } else {
+          // Multiple events — badge marker with popup list
+          const icons = [...new Set(group.map((ev) => (EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other).icon))].slice(0, 2).join("");
+          const badgeIcon = L.divIcon({
+            html: `<div style="background:#1B3A6B;color:white;border-radius:14px;padding:2px 8px 2px 4px;display:flex;align-items:center;gap:3px;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.25);border:2px solid white;white-space:nowrap;">
+              <span style="font-size:15px;">${icons}</span>${group.length}
+            </div>`,
+            className: "", iconSize: [54, 28], iconAnchor: [27, 14],
+          });
+
+          const popupRows = group.map((ev) => {
+            const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
+            const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+            return `<div style="padding:6px 0;border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location.href='/events/detail?id=${ev.id}'">
+              <span style="font-size:14px;">${meta.icon}</span>
+              <strong style="font-size:12px;margin-left:4px;">${ev.title}</strong>
+              <div style="color:#6b7280;font-size:11px;margin-top:2px;">📅 ${dateStr}</div>
+            </div>`;
+          }).join("");
+
+          const popup = L.popup({ maxWidth: 220, className: "events-group-popup" }).setContent(
+            `<div style="font-family:system-ui,sans-serif;">
+              <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">${group.length} events here</div>
+              ${popupRows}
+            </div>`
+          );
+
+          const marker = L.marker([lat, lng], { icon: badgeIcon })
+            .addTo(mapInstanceRef.current!)
+            .bindPopup(popup);
+          markersRef.current.push(marker);
+        }
+      });
     });
   }, [events, onSelectEvent]);
 
@@ -204,8 +219,6 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
   return (
     <>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-      <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-      <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
       <style>{`
         .persian-hub-tooltip {
           background: white !important;
