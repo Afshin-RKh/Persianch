@@ -123,10 +123,11 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
           // Multiple events — badge marker with popup list
           const icons = [...new Set(group.map((ev) => (EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other).icon))].slice(0, 2).join("");
           const badgeIcon = L.divIcon({
-            html: `<div style="background:#1B3A6B;color:white;border-radius:14px;padding:2px 8px 2px 4px;display:flex;align-items:center;gap:3px;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.25);border:2px solid white;white-space:nowrap;">
-              <span style="font-size:15px;">${icons}</span>${group.length}
+            html: `<div style="background:white;border-radius:50%;width:48px;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.22);border:2.5px solid #1B3A6B;line-height:1;">
+              <span style="font-size:18px;font-weight:800;color:#1B3A6B;line-height:1.1;">${group.length}</span>
+              <span style="font-size:9px;font-weight:600;color:#6b7280;letter-spacing:0.02em;">events</span>
             </div>`,
-            className: "", iconSize: [54, 28], iconAnchor: [27, 14],
+            className: "", iconSize: [48, 48], iconAnchor: [24, 24],
           });
 
           const popupRows = group.map((ev) => {
@@ -143,8 +144,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
 
           const popup = L.popup({ maxWidth: 240, className: "events-group-popup" }).setContent(
             `<div style="font-family:system-ui,sans-serif;margin:-6px -12px;">
-              <div style="padding:8px 10px 6px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;">${group.length} events at this location</div>
-              <div style="max-height:180px;overflow-y:auto;overscroll-behavior:contain;mask-image:linear-gradient(to bottom,transparent,black 20px,black calc(100% - 20px),transparent);-webkit-mask-image:linear-gradient(to bottom,transparent,black 20px,black calc(100% - 20px),transparent);">${popupRows}</div>
+              <div style="max-height:200px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;-ms-overflow-style:none;mask-image:linear-gradient(to bottom,transparent,black 20px,black calc(100% - 24px),transparent);-webkit-mask-image:linear-gradient(to bottom,transparent,black 20px,black calc(100% - 24px),transparent);" onscroll="this.style.cssText=this.style.cssText">${popupRows}</div>
             </div>`
           );
 
@@ -231,6 +231,7 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
           font-size: 13px;
         }
         .persian-hub-tooltip::before { border-top-color: #e8d5b0 !important; }
+        .events-group-popup div::-webkit-scrollbar { display: none; }
         @keyframes heartbeat {
           0%, 100% { transform: scale(1); }
           14% { transform: scale(1.3); }
