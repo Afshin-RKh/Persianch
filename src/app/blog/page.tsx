@@ -8,11 +8,11 @@ import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 const TAGS = ["restaurant", "cafe", "survival guides", "legal", "transportation"];
 
 const LANGUAGES = [
-  { value: "en", label: "🇬🇧 English" },
-  { value: "fa", label: "🇮🇷 فارسی" },
-  { value: "de", label: "🇩🇪 Deutsch" },
-  { value: "fr", label: "🇫🇷 Français" },
-  { value: "other", label: "🌐 Other" },
+  { value: "en", label: "English" },
+  { value: "fa", label: "فارسی" },
+  { value: "de", label: "Deutsch" },
+  { value: "fr", label: "Français" },
+  { value: "other", label: "Other" },
 ];
 
 export default function BlogPage() {
@@ -41,7 +41,7 @@ export default function BlogPage() {
   const langLabel = (v: string) => LANGUAGES.find((l) => l.value === v)?.label ?? v;
 
   return (
-    <main className="w-full px-4 sm:px-6 lg:px-10 py-10">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
       {/* Header */}
       <div className="flex items-start justify-between mb-6">

@@ -137,7 +137,7 @@ export default function WriteBlogPage() {
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1.5">Language</label>
           <div className="flex flex-wrap gap-2">
-            {[{ value: "en", label: "🇬🇧 English" }, { value: "fa", label: "🇮🇷 فارسی" }, { value: "de", label: "🇩🇪 Deutsch" }, { value: "fr", label: "🇫🇷 Français" }, { value: "other", label: "🌐 Other" }].map(({ value, label }) => (
+            {[{ value: "en", label: "English" }, { value: "fa", label: "فارسی" }, { value: "de", label: "Deutsch" }, { value: "fr", label: "Français" }, { value: "other", label: "Other" }].map(({ value, label }) => (
               <button
                 key={value}
                 type="button"
