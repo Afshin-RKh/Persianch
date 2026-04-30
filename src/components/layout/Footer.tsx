@@ -28,6 +28,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               {[
                 ["/businesses", "All Businesses"],
+                ["/blog", "Blog"],
                 ["/about", "About Us"],
                 ["/contact", "Contact Us"],
               ].map(([href, label]) => (

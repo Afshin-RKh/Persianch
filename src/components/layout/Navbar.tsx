@@ -61,6 +61,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-7">
             {navLink("/businesses", "Businesses")}
             {navLink("/events", "Events")}
+            {navLink("/blog", "Blog")}
             {navLink("/about", "About Us")}
           </div>
 
@@ -130,6 +131,7 @@ export default function Navbar() {
           {[
             ["/businesses", "🏪 Businesses"],
             ["/events", "📅 Events"],
+            ["/blog", "📝 Blog"],
             ["/about", "🦁 About Us"],
           ].map(([href, label]) => (
             <Link key={href} href={href}
