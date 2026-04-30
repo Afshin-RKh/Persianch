@@ -170,7 +170,7 @@ export default function AboutPage() {
           </a>
 
           <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-gray-100">
-            <img src="/team/Atefeh Mohammadi.png" alt="Atefeh Mohammadi"
+            <img src="/team/atefeh.png" alt="Atefeh Mohammadi"
               className="w-14 h-14 rounded-full object-cover mb-3"
               style={{ filter: "grayscale(100%)" }} />
             <p className="text-sm font-semibold text-gray-900">Atefeh Mohammadi</p>
