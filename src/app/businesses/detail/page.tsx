@@ -146,6 +146,8 @@ function ContactRow({ icon, label, children }: { icon: React.ReactNode; label: s
   );
 }
 
+interface UserOption { id: number; name: string; email: string; }
+
 function AdminEditPanel({ business, token, onSaved }: { business: Business; token: string | null; onSaved: (b: Business) => void }) {
   const [form, setForm] = React.useState({
     name: business.name ?? "", name_fa: business.name_fa ?? "",
@@ -160,15 +162,27 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
     is_featured: !!business.is_featured, is_verified: !!business.is_verified,
     is_approved: !!(business as any).is_approved,
   });
+  const [assignOwner, setAssignOwner] = React.useState<string>(
+    business.owner_user_id ? String(business.owner_user_id) : ""
+  );
+  const [users, setUsers] = React.useState<UserOption[]>([]);
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved]   = React.useState(false);
+
+  React.useEffect(() => {
+    if (!token) return;
+    fetch(`${API}/users.php`, { headers: authHeaders(token) })
+      .then(r => r.json())
+      .then(data => setUsers(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, [token]);
   const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]";
   const regions = REGIONS_BY_COUNTRY[form.country] ?? [];
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const body = { id: business.id, ...form, lat: form.lat ? parseFloat(form.lat) : null, lng: form.lng ? parseFloat(form.lng) : null };
+    const body = { id: business.id, ...form, lat: form.lat ? parseFloat(form.lat) : null, lng: form.lng ? parseFloat(form.lng) : null, owner_user_id: assignOwner ? parseInt(assignOwner) : null };
     const res = await fetch(`${API}/businesses.php`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...authHeaders(token) },
@@ -282,6 +296,25 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
             </label>
           ))}
         </div>
+
+        {/* Managed by */}
+        <div className="border-t border-amber-200 pt-4">
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Managed by</label>
+          {assignOwner ? (
+            <p className="text-xs font-semibold mb-1.5" style={{ color: "#15803d" }}>
+              Currently: {users.find(u => String(u.id) === assignOwner)?.name ?? `User #${assignOwner}`}
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400 mb-1.5">Currently managed by BiruniMap</p>
+          )}
+          <select value={assignOwner} onChange={e => setAssignOwner(e.target.value)} className={inp}>
+            <option value="">— Managed by BiruniMap —</option>
+            {users.map(u => (
+              <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+            ))}
+          </select>
+        </div>
+
         <button type="submit" disabled={saving} className="text-white font-semibold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
           {saving ? "Saving..." : "Save Changes"}
         </button>
