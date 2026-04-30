@@ -65,8 +65,8 @@ export default function BusinessesContent() {
   }, [token]);
 
   const activePill = "text-white font-medium text-xs px-3 py-1.5 rounded-full shadow-sm";
-  const inactivePill = "font-medium text-xs px-3 py-1.5 rounded-full transition-colors shadow-sm text-gray-700 hover:bg-white/90"
-    + " bg-white/70 backdrop-blur-sm border border-white/50";
+  const inactivePill = "font-medium text-xs px-3 py-1.5 rounded-full transition-colors shadow-sm text-gray-700 hover:bg-gray-50"
+    + " bg-white border border-gray-200";
 
   return (
     <div className="relative" style={{ height: "calc(100vh - 64px)" }}>
