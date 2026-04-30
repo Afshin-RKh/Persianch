@@ -154,7 +154,10 @@ export default function AboutPage() {
 
       {/* Team */}
       <Section>
-        <h2 className="text-lg font-bold mb-6" style={{ color: navy }}>The Team / تیم</h2>
+        <div className="flex items-center gap-4 mb-6">
+          <h2 className="text-lg font-bold" style={{ color: navy }}>The Team</h2>
+          <span className="text-lg font-bold" dir="rtl" style={{ color: navy, fontFamily: "'Vazirmatn', sans-serif" }}>/ تیم ما</span>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
 
           <a href="https://afshin.ch" target="_blank" rel="noopener noreferrer"
@@ -167,9 +170,10 @@ export default function AboutPage() {
           </a>
 
           <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-gray-100">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white mb-3"
-              style={{ backgroundColor: "#5B7FA6" }}>AT</div>
-            <p className="text-sm font-semibold text-gray-900">Atefeh</p>
+            <img src="/team/Atefeh Mohammadi.png" alt="Atefeh Mohammadi"
+              className="w-14 h-14 rounded-full object-cover mb-3"
+              style={{ filter: "grayscale(100%)" }} />
+            <p className="text-sm font-semibold text-gray-900">Atefeh Mohammadi</p>
           </div>
 
           <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-dashed border-gray-200">
@@ -182,7 +186,7 @@ export default function AboutPage() {
             <p className="text-sm text-gray-300">Coming soon</p>
           </div>
 
-          <div className="col-span-2 sm:col-span-3 md:col-span-4 flex items-center gap-4 p-4 rounded-2xl bg-amber-50 border border-amber-100 mt-2">
+          <div className="col-span-2 sm:col-span-3 md:col-span-4 flex items-center gap-4 p-4 rounded-2xl bg-blue-50 border border-blue-100 mt-2">
             <div className="flex -space-x-2 shrink-0">
               {["#8B1A1A","#1B3A6B","#C9A84C","#5B7FA6","#2D6A4F"].map((c, i) => (
                 <div key={i} className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-xs text-white"
@@ -190,8 +194,8 @@ export default function AboutPage() {
               ))}
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-800">+1,000 Volunteers</p>
-              <p className="text-xs text-gray-500">Iranians around the world who contribute, share and keep this community alive.</p>
+              <p className="text-sm font-semibold text-gray-800">+10 Active Admins</p>
+              <p className="text-xs text-gray-500">Iranians around the world who manage, curate and grow this community.</p>
             </div>
           </div>
 
@@ -199,30 +203,47 @@ export default function AboutPage() {
       </Section>
 
       {/* Join us */}
-      <section className="rounded-3xl p-8 mb-6 text-center" style={{ background: `linear-gradient(135deg, ${dark} 0%, ${navy} 100%)` }}>
-        <h2 className="text-xl font-bold text-white mb-2">Want to help build BiruniMap?</h2>
-        <p className="text-blue-200 text-sm mb-8 max-w-lg mx-auto">
-          Every contribution — big or small — makes this community stronger. Pick what fits you.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-          <Link href="/contact"
-            className="flex flex-col items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl px-5 py-5 transition-all group">
-            <span className="text-2xl">🤝</span>
-            <p className="text-white font-bold text-sm">Join Us</p>
-            <p className="text-blue-200 text-xs">Help us grow the platform as a volunteer or contributor</p>
-          </Link>
-          <Link href="/get-listed"
-            className="flex flex-col items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl px-5 py-5 transition-all group">
-            <span className="text-2xl">🗺️</span>
-            <p className="text-white font-bold text-sm">Add to Map</p>
-            <p className="text-blue-200 text-xs">Own or know an Iranian business? Put it on the map</p>
-          </Link>
-          <Link href="/events/submit"
-            className="flex flex-col items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl px-5 py-5 transition-all group">
-            <span className="text-2xl">📅</span>
-            <p className="text-white font-bold text-sm">Submit Event</p>
-            <p className="text-blue-200 text-xs">Organising an event? Share it and get more people to show up</p>
-          </Link>
+      <section className="rounded-3xl p-8 mb-6" style={{ background: `linear-gradient(135deg, ${dark} 0%, ${navy} 100%)` }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+          {/* English side */}
+          <div>
+            <h2 className="text-lg font-bold text-white mb-5">Want to help build BiruniMap?</h2>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/contact"
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-5 py-3 transition-all text-white font-semibold text-sm">
+                🤝 Join Us
+              </Link>
+              <Link href="/get-listed"
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-5 py-3 transition-all text-white font-semibold text-sm">
+                🗺️ Add Business
+              </Link>
+              <Link href="/events/submit"
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-5 py-3 transition-all text-white font-semibold text-sm">
+                📅 Add Event
+              </Link>
+            </div>
+          </div>
+
+          {/* Persian side */}
+          <div dir="rtl" style={{ fontFamily: "'Vazirmatn', sans-serif" }}>
+            <h2 className="text-lg font-bold text-white mb-5">می‌خواهی در ساخت بیرونی‌مپ کمک کنی؟</h2>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/contact"
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-5 py-3 transition-all text-white font-semibold text-sm">
+                🤝 به ما بپیوند
+              </Link>
+              <Link href="/get-listed"
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-5 py-3 transition-all text-white font-semibold text-sm">
+                🗺️ اضافه کردن کسب‌وکار
+              </Link>
+              <Link href="/events/submit"
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-5 py-3 transition-all text-white font-semibold text-sm">
+                📅 اضافه کردن رویداد
+              </Link>
+            </div>
+          </div>
+
         </div>
       </section>
 
