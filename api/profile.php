@@ -45,11 +45,13 @@ if ($method === 'GET') {
         $user['activity_log'] = $s->fetchAll();
     }
 
-    // Business owner: all assigned businesses
-    if ($dbRole === 'business_owner') {
+    // Fetch owned businesses for any user who has them assigned
+    if (true) {
         $s = $pdo->prepare("SELECT id, name, name_fa, category, country, canton, address, phone, website, email, instagram, description, description_fa, google_maps_url, image_url, logo_url, is_approved FROM businesses WHERE owner_user_id = :uid ORDER BY name");
         $s->execute([':uid' => $userId]);
-        $user['owned_businesses'] = $s->fetchAll();
+        $rows = $s->fetchAll();
+        foreach ($rows as &$row) { $row['is_approved'] = (int)$row['is_approved']; }
+        $user['owned_businesses'] = $rows;
     }
 
     echo json_encode($user);
