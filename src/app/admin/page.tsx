@@ -426,8 +426,11 @@ export default function AdminPage() {
   const [assignBizId, setAssignBizId]       = useState("");
 
   // Events
-  const [events, setEvents]         = useState<EventRow[]>([]);
-  const [editEvent, setEditEvent]   = useState<EventRow | null>(null);
+  const [events, setEvents]           = useState<EventRow[]>([]);
+  const [editEvent, setEditEvent]     = useState<EventRow | null>(null);
+  const [eventSearch, setEventSearch] = useState("");
+  const [eventStatus, setEventStatus] = useState("");
+  const [eventType,   setEventType]   = useState("");
 
   // Squares
   const [squares, setSquares]       = useState<CitySquare[]>([]);
@@ -711,6 +714,14 @@ export default function AdminPage() {
       return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
     }
     return true;
+  });
+
+  const filteredEvents = events.filter((ev) => {
+    const q = eventSearch.toLowerCase();
+    const matchSearch = !q || ev.title.toLowerCase().includes(q) || (ev.city ?? "").toLowerCase().includes(q) || (ev.country ?? "").toLowerCase().includes(q) || (ev.organizer_name ?? "").toLowerCase().includes(q);
+    const matchStatus = !eventStatus || ev.status === eventStatus;
+    const matchType   = !eventType   || ev.event_type === eventType;
+    return matchSearch && matchStatus && matchType;
   });
 
   return (
@@ -1236,15 +1247,43 @@ export default function AdminPage() {
         {tab === "events" && !dataLoading && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-900">Events <span className="text-gray-400 font-normal text-sm">({events.length})</span></h2>
+              <h2 className="font-bold text-gray-900">Events <span className="text-gray-400 font-normal text-sm">({filteredEvents.length}/{events.length})</span></h2>
               <a href="/events/submit" className="flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-2 rounded-xl hover:opacity-90" style={{ backgroundColor: "#059669" }}>
                 + Submit Event
               </a>
             </div>
-            {events.length === 0
-              ? <p className="text-gray-400 text-sm p-6">No events yet.</p>
+            {/* Filter bar */}
+            <div className="flex flex-wrap gap-2 px-6 py-3 border-b border-gray-100 bg-gray-50/50">
+              <div className="relative flex-1 min-w-[160px]">
+                <input
+                  value={eventSearch}
+                  onChange={(e) => setEventSearch(e.target.value)}
+                  placeholder="Search title, city, organizer…"
+                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
+                />
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
+                {eventSearch && <button onClick={() => setEventSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
+              </div>
+              <select value={eventStatus} onChange={(e) => setEventStatus(e.target.value)} className="text-sm border border-gray-200 rounded-xl px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <select value={eventType} onChange={(e) => setEventType(e.target.value)} className="text-sm border border-gray-200 rounded-xl px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
+                <option value="">All Types</option>
+                {Object.entries(EVENT_TYPE_ICONS).map(([k, icon]) => (
+                  <option key={k} value={k}>{icon} {k.replace(/_/g, " ")}</option>
+                ))}
+              </select>
+              {(eventSearch || eventStatus || eventType) && (
+                <button onClick={() => { setEventSearch(""); setEventStatus(""); setEventType(""); }} className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-white">Clear</button>
+              )}
+            </div>
+            {filteredEvents.length === 0
+              ? <p className="text-gray-400 text-sm p-6">{events.length === 0 ? "No events yet." : "No events match your filters."}</p>
               : <div className="divide-y divide-gray-50">
-                {events.map((ev) => (
+                {filteredEvents.map((ev) => (
                   <div key={ev.id} className="px-6 py-4 hover:bg-gray-50/50 transition-colors">
                     {editEvent?.id === ev.id ? (
                       /* ── Inline edit form ── */
