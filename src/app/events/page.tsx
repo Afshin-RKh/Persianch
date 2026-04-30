@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, useMemo, useRef, Suspense, lazy } from "react";
-import { Search, X, Globe, MapPin, Calendar, List } from "lucide-react";
+import { Search, X, Globe, MapPin, Calendar } from "lucide-react";
 import { EVENT_TYPE_META, EventRow } from "@/lib/eventTypes";
 import { useAuth } from "@/lib/auth";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
@@ -11,7 +11,7 @@ const EventsMap = lazy(() => import("@/components/events/EventsMap"));
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
 function fmt(d: Date) {
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+  return d.toISOString().slice(0, 10);
 }
 
 function fmtDisplay(iso: string) {
@@ -39,29 +39,40 @@ export default function EventsPage() {
   const [region, setRegion] = useState("");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Date range — default: today → 6 months out
   const defaultStart = fmt(new Date());
   const defaultEnd   = fmt(new Date(Date.now() + 180 * 86400000));
   const [dateFrom, setDateFrom] = useState(defaultStart);
   const [dateTo,   setDateTo]   = useState(defaultEnd);
   const [dateOpen, setDateOpen] = useState(false);
-  const [listOpen, setListOpen] = useState(false);
-  // Temp state while picker is open
   const [tempFrom, setTempFrom] = useState(defaultStart);
   const [tempTo,   setTempTo]   = useState(defaultEnd);
-  const datePickerRef = useRef<HTMLDivElement>(null);
 
-  const searchTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const boundsRef     = useRef<{ lat_min: number; lat_max: number; lng_min: number; lng_max: number } | null>(null);
-  const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const datePickerRef   = useRef<HTMLDivElement>(null);
+  const searchInputRef  = useRef<HTMLInputElement>(null);
+  const suggestionsRef  = useRef<HTMLDivElement>(null);
+  const searchTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const boundsRef       = useRef<{ lat_min: number; lat_max: number; lng_min: number; lng_max: number } | null>(null);
+  const fetchTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Close picker on outside click
+  // Close date picker on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node))
         setDateOpen(false);
-      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node) &&
+        searchInputRef.current && !searchInputRef.current.contains(e.target as Node)
+      ) setShowSuggestions(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -104,30 +115,16 @@ export default function EventsPage() {
 
   const handleSearchChange = (val: string) => {
     setSearchInput(val);
+    setShowSuggestions(true);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => {
-      setSearch(val.trim());
-      if (val.trim()) setListOpen(true);
-    }, 220);
+    searchTimer.current = setTimeout(() => setSearch(val.trim()), 220);
   };
 
-  const openPicker = () => {
-    setTempFrom(dateFrom);
-    setTempTo(dateTo);
-    setDateOpen(true);
-  };
-
-  const applyDates = () => {
-    setDateFrom(tempFrom);
-    setDateTo(tempTo || tempFrom);
-    setDateOpen(false);
-  };
-
+  const openPicker = () => { setTempFrom(dateFrom); setTempTo(dateTo); setDateOpen(true); };
+  const applyDates = () => { setDateFrom(tempFrom); setDateTo(tempTo || tempFrom); setDateOpen(false); };
   const clearDates = () => {
-    setDateFrom(defaultStart);
-    setDateTo(defaultEnd);
-    setTempFrom(defaultStart);
-    setTempTo(defaultEnd);
+    setDateFrom(defaultStart); setDateTo(defaultEnd);
+    setTempFrom(defaultStart); setTempTo(defaultEnd);
     setDateOpen(false);
   };
 
@@ -144,6 +141,13 @@ export default function EventsPage() {
     return out;
   }, [allEvents, typeFilter, search]);
 
+  // Suggestions: top 8 matches from allEvents (not filtered, so user sees options)
+  const suggestions = useMemo(() => {
+    const q = searchInput.trim();
+    if (!q) return [];
+    return allEvents.filter((ev) => matchesSearch(ev, q)).slice(0, 8);
+  }, [allEvents, searchInput]);
+
   const handleSelectEvent = useCallback((ev: EventRow) => setSelected(ev), []);
 
   const activePill   = "text-white font-medium text-xs px-3 py-1.5 rounded-full shadow-sm";
@@ -152,7 +156,7 @@ export default function EventsPage() {
   return (
     <div className="relative" style={{ height: "calc(100vh - 64px)" }}>
 
-      {/* Map — fills entire container */}
+      {/* Map */}
       <Suspense fallback={
         <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
           <p>Loading map...</p>
@@ -164,24 +168,59 @@ export default function EventsPage() {
       {/* Floating search + filters overlay */}
       <div className="absolute top-3 left-3 right-3 z-[1000] flex flex-col gap-2 pointer-events-none">
 
-        {/* Row 1: Search + Dates side by side */}
+        {/* Row 1: Search + Dates */}
         <div className="pointer-events-auto flex gap-2">
           <div className="relative flex-1">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
+              ref={searchInputRef}
               type="text"
               value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
+              onFocus={() => setShowSuggestions(true)}
               placeholder="Search artist, event, city…"
               className="w-full pl-9 pr-9 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-transparent bg-white shadow-sm placeholder-gray-400"
             />
             {searchInput && (
               <button
-                onClick={() => { setSearchInput(""); setSearch(""); }}
+                onClick={() => { setSearchInput(""); setSearch(""); setShowSuggestions(false); }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <X size={14} />
               </button>
+            )}
+
+            {/* Suggestions dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div ref={suggestionsRef} className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden">
+                {suggestions.map((ev) => {
+                  const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
+                  const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", {
+                    day: "numeric", month: "short",
+                  });
+                  return (
+                    <Link
+                      key={ev.id}
+                      href={`/events/detail?id=${ev.id}`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setSearchInput(ev.title);
+                        setSearch(ev.title);
+                        setShowSuggestions(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors"
+                    >
+                      <span className="text-lg flex-shrink-0">{meta.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-gray-800 truncate">{ev.title}</p>
+                        {ev.title_fa && <p className="text-xs text-gray-400 truncate" dir="rtl">{ev.title_fa}</p>}
+                      </div>
+                      <span className="text-xs text-gray-400 flex-shrink-0">📅 {dateStr}</span>
+                      <span className="text-xs text-gray-300 flex-shrink-0">{ev.city}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             )}
           </div>
 
@@ -204,7 +243,6 @@ export default function EventsPage() {
               )}
             </button>
 
-            {/* Dropdown calendar — right edge aligned with button's right edge */}
             {dateOpen && (
               <div className="absolute top-full right-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 w-80">
                 <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Select date range</p>
@@ -215,10 +253,7 @@ export default function EventsPage() {
                       type="date"
                       value={tempFrom}
                       min={fmt(new Date())}
-                      onChange={(e) => {
-                        setTempFrom(e.target.value);
-                        if (tempTo < e.target.value) setTempTo(e.target.value);
-                      }}
+                      onChange={(e) => { setTempFrom(e.target.value); if (tempTo < e.target.value) setTempTo(e.target.value); }}
                       className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
                     />
                   </div>
@@ -234,26 +269,15 @@ export default function EventsPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={clearDates}
-                    className="flex-1 py-2 text-xs font-semibold rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
-                  >
-                    Clear
-                  </button>
-                  <button
-                    onClick={applyDates}
-                    className="flex-1 py-2 text-xs font-semibold rounded-xl text-white"
-                    style={{ backgroundColor: "#8B1A1A" }}
-                  >
-                    Apply
-                  </button>
+                  <button onClick={clearDates} className="flex-1 py-2 text-xs font-semibold rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">Clear</button>
+                  <button onClick={applyDates} className="flex-1 py-2 text-xs font-semibold rounded-xl text-white" style={{ backgroundColor: "#8B1A1A" }}>Apply</button>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Row 3: Country + Region side by side */}
+        {/* Row 2: Country + Region */}
         <div className="pointer-events-auto flex gap-2">
           <div className="relative flex-1">
             <Globe size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -279,7 +303,7 @@ export default function EventsPage() {
           </div>
         </div>
 
-        {/* Row 4: Type pills — swipeable */}
+        {/* Row 3: Type pills */}
         <div className="pointer-events-auto">
           <div
             className="flex gap-2 overflow-x-auto"
@@ -306,59 +330,8 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* List toggle button */}
-      <button
-        onClick={() => setListOpen((v) => !v)}
-        className="absolute bottom-6 left-3 z-[1000] flex items-center gap-2 bg-white border border-gray-200 shadow-md rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-      >
-        <List size={15} />
-        {listOpen ? "Hide list" : `List (${events.length})`}
-      </button>
-
-      {/* Events list panel */}
-      {listOpen && (
-        <div className="absolute left-3 bottom-20 z-[1000] w-80 max-h-[60vh] flex flex-col bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <p className="text-sm font-bold text-gray-800">{events.length} event{events.length !== 1 ? "s" : ""}</p>
-            <button onClick={() => setListOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
-          </div>
-          <div className="overflow-y-auto flex-1">
-            {events.length === 0 ? (
-              <p className="text-center text-gray-400 text-sm py-8">No events found</p>
-            ) : (
-              events.map((ev) => {
-                const meta = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
-                const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", {
-                  weekday: "short", day: "numeric", month: "short",
-                });
-                return (
-                  <Link
-                    key={ev.id}
-                    href={`/events/detail?id=${ev.id}`}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-50 transition-colors"
-                    onClick={() => setSelected(ev)}
-                  >
-                    <span className="text-2xl flex-shrink-0 mt-0.5">{meta.icon}</span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{ev.title}</p>
-                      {ev.title_fa && <p className="text-xs text-gray-400 truncate" dir="rtl">{ev.title_fa}</p>}
-                      <p className="text-xs text-gray-500 mt-0.5">📅 {dateStr}</p>
-                      <p className="text-xs text-gray-400 truncate">{ev.venue || ev.city}{ev.city && ev.venue ? `, ${ev.city}` : ""}</p>
-                    </div>
-                    <span
-                      className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full mt-0.5 ml-auto"
-                      style={{ backgroundColor: meta.color + "18", color: meta.color }}
-                    >{meta.label}</span>
-                  </Link>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Selected event card */}
-      {selected && !listOpen && (
+      {selected && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-[1000]">
           <button
             onClick={() => setSelected(null)}
