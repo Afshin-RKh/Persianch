@@ -31,7 +31,7 @@ function BilingualBlock({
 
 export default function AboutPage() {
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 fade-up">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 fade-up">
 
       {/* Header */}
       <div className="text-center mb-12">
