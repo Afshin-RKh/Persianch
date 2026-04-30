@@ -17,7 +17,7 @@ interface Props {
 export default function EventsMap({ events, userLocation, onSelectEvent, onBoundsChange, focusCountry, focusRegion }: Props) {
   const mapRef            = useRef<HTMLDivElement>(null);
   const mapInstanceRef    = useRef<import("leaflet").Map | null>(null);
-  const markersRef        = useRef<import("leaflet").Marker[]>([]);
+  const clusterGroupRef   = useRef<any>(null);
   const userMarkerRef     = useRef<import("leaflet").Marker | null>(null);
   const onBoundsChangeRef = useRef(onBoundsChange);
   useEffect(() => { onBoundsChangeRef.current = onBoundsChange; }, [onBoundsChange]);
@@ -81,56 +81,62 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
     };
   }, []);
 
-  // Update event markers — same pattern as MapView's business markers
+  // Update event markers with clustering
   useEffect(() => {
     if (!mapInstanceRef.current) return;
-    import("leaflet").then((L) => {
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current = [];
+    Promise.all([import("leaflet"), import("leaflet.markercluster")]).then(([L]) => {
+      // Remove old cluster group
+      if (clusterGroupRef.current) {
+        mapInstanceRef.current!.removeLayer(clusterGroupRef.current);
+        clusterGroupRef.current = null;
+      }
 
-      const groups = new Map<string, typeof events>();
+      const cluster = (L as any).markerClusterGroup({
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        iconCreateFunction: (c: any) => {
+          const count = c.getChildCount();
+          return L.divIcon({
+            html: `<div style="
+              background:#1B3A6B;color:white;border-radius:50%;
+              width:38px;height:38px;display:flex;align-items:center;
+              justify-content:center;font-size:13px;font-weight:700;
+              border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);
+            ">${count}</div>`,
+            className: "", iconSize: [38, 38], iconAnchor: [19, 19],
+          });
+        },
+      });
+
       events.forEach((ev) => {
         if (ev.lat == null || ev.lng == null) return;
-        const key = `${ev.lat.toFixed(4)},${ev.lng.toFixed(4)}`;
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key)!.push(ev);
-      });
-
-      const SPREAD = 0.0006;
-      groups.forEach((group) => {
-        group.forEach((ev, i) => {
-          let lat = ev.lat!;
-          let lng = ev.lng!;
-          if (group.length > 1) {
-            const angle = (2 * Math.PI * i) / group.length;
-            lat += Math.sin(angle) * SPREAD;
-            lng += Math.cos(angle) * SPREAD;
-          }
-
-          const meta    = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
-          const pending = ev.status === "pending";
-          const icon = L.divIcon({
-            html: pending
-              ? `<div style="font-size:24px;line-height:1;background:#fefce8;border:2.5px solid #eab308;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(234,179,8,0.4));">${meta.icon}</div>`
-              : `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${meta.icon}</div>`,
-            className: "", iconSize: [36, 36], iconAnchor: [18, 18],
-          });
-
-          const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", {
-            weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
-          });
-
-          const pendingBadge = pending ? `<br/><span style="color:#B45309;font-size:11px;font-weight:600;">⏳ Pending approval</span>` : "";
-          const marker = L.marker([lat, lng], { icon })
-            .addTo(mapInstanceRef.current!)
-            .bindTooltip(
-              `<strong>${ev.title}</strong>${pendingBadge}<br/><span style="color:#6b7280;font-size:12px;">📅 ${dateStr}</span>`,
-              { className: "persian-hub-tooltip", direction: "top" }
-            )
-            .on("click", () => onSelectEvent(ev));
-          markersRef.current.push(marker);
+        const meta    = EVENT_TYPE_META[ev.event_type] ?? EVENT_TYPE_META.other;
+        const pending = ev.status === "pending";
+        const icon = L.divIcon({
+          html: pending
+            ? `<div style="font-size:24px;line-height:1;background:#fefce8;border:2.5px solid #eab308;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(234,179,8,0.4));">${meta.icon}</div>`
+            : `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${meta.icon}</div>`,
+          className: "", iconSize: [36, 36], iconAnchor: [18, 18],
         });
+
+        const dateStr = new Date(ev.next_occurrence ?? ev.start_date).toLocaleDateString("en-GB", {
+          weekday: "short", day: "numeric", month: "short",
+        });
+        const pendingBadge = pending ? `<br/><span style="color:#B45309;font-size:11px;font-weight:600;">⏳ Pending</span>` : "";
+
+        const marker = L.marker([ev.lat!, ev.lng!], { icon })
+          .bindTooltip(
+            `<strong>${ev.title}</strong>${pendingBadge}<br/><span style="color:#6b7280;font-size:12px;">📅 ${dateStr}</span>`,
+            { className: "persian-hub-tooltip", direction: "top" }
+          )
+          .on("click", () => onSelectEvent(ev));
+
+        cluster.addLayer(marker);
       });
+
+      mapInstanceRef.current!.addLayer(cluster);
+      clusterGroupRef.current = cluster;
     });
   }, [events, onSelectEvent]);
 
@@ -198,6 +204,8 @@ export default function EventsMap({ events, userLocation, onSelectEvent, onBound
   return (
     <>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+      <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
       <style>{`
         .persian-hub-tooltip {
           background: white !important;
