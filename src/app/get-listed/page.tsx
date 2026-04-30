@@ -115,7 +115,7 @@ export default function GetListedPage() {
           <input type="checkbox" checked={isOwner}
             onChange={e => setIsOwner(e.target.checked)}
             className="mt-0.5 w-4 h-4 accent-[#1B3A6B] cursor-pointer" />
-          <span className="text-sm text-gray-700">I am the owner and want to manage this page myself</span>
+          <span className="text-sm text-gray-700">I am the owner and want to manage this business page myself</span>
         </label>
 
         {isOwner && (
