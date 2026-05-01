@@ -327,7 +327,7 @@ function BusinessDetailContent() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const { isAdmin, token } = useAuth();
+  const { user, isAdmin, token } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -657,13 +657,22 @@ function BusinessDetailContent() {
                   </a>
                 )}
 
-                {/* Get listed CTA */}
-                <div className="mt-6 p-4 rounded-2xl text-center" style={{ backgroundColor: "#EEF2F9" }}>
-                  <p className="text-xs text-gray-500 mb-2">Own a business?</p>
-                  <Link href="/get-listed" className="text-sm font-bold hover:underline" style={{ color: "#1B3A6B" }}>
-                    Get listed on BiruniMap →
-                  </Link>
-                </div>
+                {/* Claim / report CTA — only if no owner */}
+                {!business.owner_user_id && (
+                  <div className="mt-6 p-4 rounded-2xl text-sm text-gray-500" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+                    <p className="mb-1">Do you own this business or spot an issue?</p>
+                    {user ? (
+                      <Link href="/contact" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
+                        Send us a message →
+                      </Link>
+                    ) : (
+                      <span>
+                        <Link href="/auth/signin" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>Sign in</Link>
+                        {" "}and send us a message.
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
