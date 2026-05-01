@@ -46,6 +46,7 @@ export default function BlogPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
         <div className="min-w-0">
+          <h1 className="sr-only">Blog &amp; Community Guides</h1>
           <p className="text-base sm:text-lg font-medium text-gray-800 sm:whitespace-nowrap">
             Learn local tips, rules and survival guides — filter by location and topic.
           </p>

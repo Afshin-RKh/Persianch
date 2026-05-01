@@ -155,6 +155,7 @@ export default function EventsPage() {
 
   return (
     <div className="relative" style={{ height: "calc(100vh - 64px)" }}>
+      <h1 className="sr-only">Iranian Community Events Worldwide — BiruniMap</h1>
 
       {/* Map */}
       <Suspense fallback={

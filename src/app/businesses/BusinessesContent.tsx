@@ -70,6 +70,7 @@ export default function BusinessesContent() {
 
   return (
     <div className="relative" style={{ height: "calc(100vh - 64px)" }}>
+      <h1 className="sr-only">Iranian Businesses Worldwide — BiruniMap</h1>
 
       {/* Map — fills entire container */}
       <Suspense fallback={
