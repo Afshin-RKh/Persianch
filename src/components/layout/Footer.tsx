@@ -19,7 +19,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
-              The global map of the Iranian diaspora — 3,000+ businesses across 50+ countries, inspired by Al-Biruni, the Persian scholar who mapped the world.
+              Businesses, events and community for the Iranian diaspora — mapped across 50+ countries, inspired by Al-Biruni, the Persian scholar who mapped the world.
             </p>
           </div>
 
@@ -27,7 +27,8 @@ export default function Footer() {
             <h3 className="font-semibold mb-4" style={{ color: "#C9A84C" }}>Quick Links</h3>
             <ul className="space-y-2 text-sm">
               {[
-                ["/businesses", "All Businesses"],
+                ["/businesses", "Businesses"],
+                ["/events", "Events"],
                 ["/blog", "Blog"],
                 ["/about", "About Us"],
                 ["/contact", "Contact Us"],

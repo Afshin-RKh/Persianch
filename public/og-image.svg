@@ -1,0 +1,34 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D1B2E"/>
+      <stop offset="100%" style="stop-color:#1B3A6B"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#C9A84C;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#8B1A1A;stop-opacity:0.1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="1050" cy="120" r="200" fill="#C9A84C" opacity="0.06"/>
+  <circle cx="150" cy="520" r="160" fill="#8B1A1A" opacity="0.08"/>
+
+  <!-- Logo text -->
+  <text x="100" y="260" font-family="Georgia, serif" font-size="96" font-weight="bold" fill="#FFFFFF">Biruni</text>
+  <text x="456" y="260" font-family="Georgia, serif" font-size="96" font-weight="bold" fill="#C9A84C">Map</text>
+
+  <!-- Tagline -->
+  <text x="100" y="330" font-family="Georgia, serif" font-size="32" fill="#8BA4C8" letter-spacing="2">Businesses, Events &amp; Community for the Iranian Diaspora</text>
+
+  <!-- Stats row -->
+  <text x="100" y="430" font-family="Arial, sans-serif" font-size="22" fill="#C9A84C">Businesses · Events · Blog · 50+ countries · Iranian community worldwide</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="570" width="1200" height="60" fill="#0D1B2E" opacity="0.6"/>
+  <text x="100" y="606" font-family="Arial, sans-serif" font-size="20" fill="#5B7FA6">birunimap.com · Inspired by Al-Biruni, 973 CE</text>
+</svg>

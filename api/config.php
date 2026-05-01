@@ -19,6 +19,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Global rate limit: 120 requests per IP per minute (file-based, no Redis needed)
+(function () {
+    $ip       = $_SERVER['HTTP_CF_CONNECTING_IP']   // real IP when behind Cloudflare
+             ?? $_SERVER['HTTP_X_FORWARDED_FOR']
+             ?? $_SERVER['REMOTE_ADDR']
+             ?? 'unknown';
+    $ip       = preg_replace('/[^a-fA-F0-9:.]/', '', explode(',', $ip)[0]);
+    $window   = 60;   // seconds
+    $limit    = 120;  // requests per window
+    $dir      = sys_get_temp_dir() . '/api_rl';
+    if (!is_dir($dir)) @mkdir($dir, 0700, true);
+    $file = $dir . '/' . md5($ip) . '.json';
+    $now  = time();
+    $data = ['ts' => $now, 'count' => 0];
+    if (file_exists($file)) {
+        $raw = @json_decode(file_get_contents($file), true);
+        if ($raw && ($now - $raw['ts']) < $window) {
+            $data = $raw;
+        }
+    }
+    $data['count']++;
+    file_put_contents($file, json_encode($data), LOCK_EX);
+    if ($data['count'] > $limit) {
+        header('Retry-After: ' . ($window - ($now - $data['ts'])));
+        http_response_code(429);
+        echo json_encode(['error' => 'Too many requests. Please slow down.']);
+        exit();
+    }
+})();
+
 // .env.php sits at public_html/.env.php (one level up from public_html/api/)
 $envFile = dirname(__DIR__) . '/.env.php';
 if (file_exists($envFile)) {
@@ -44,6 +74,7 @@ try {
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_TIMEOUT            => 5,
+        PDO::ATTR_PERSISTENT         => true,
         PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
     ]);
 } catch (PDOException $e) {

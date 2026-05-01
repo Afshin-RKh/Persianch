@@ -39,6 +39,12 @@ if ($method === 'GET') {
     $viewer  = optional_auth();
     $isAdmin = in_array($viewer['role'] ?? '', ['admin', 'superadmin']);
 
+    if ($isAdmin) {
+        header("Cache-Control: no-store");
+    } else {
+        header("Cache-Control: public, max-age=300");
+    }
+
     if (!empty($_GET['id'])) {
         if (!$isAdmin) { http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit(); }
         $stmt = $pdo->prepare("SELECT p.*, u.name as author_name FROM blog_posts p LEFT JOIN users u ON p.author_id = u.id WHERE p.id = :id");

@@ -1584,7 +1584,7 @@ export default function AdminPage() {
                 {trashedPosts.map((p) => (
                   <div key={p.id} className="bg-white rounded-xl border border-red-100 p-4 flex items-start justify-between gap-4">
                     <div className="flex gap-3 min-w-0">
-                      {p.cover_image && <img src={p.cover_image} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />}
+                      {p.cover_image && <img src={p.cover_image} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" loading="lazy" decoding="async" />}
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-700 line-clamp-1">{p.title}</p>
                         <p className="text-xs text-gray-400 mt-0.5">

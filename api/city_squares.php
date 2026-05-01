@@ -19,6 +19,7 @@ function sq_require_superadmin(): array {
 
 // ── GET — public listing with links ──────────────────────────────────────────
 if ($method === 'GET') {
+    header("Cache-Control: public, max-age=600");
     $where  = ['s.is_active = 1'];
     $params = [];
 

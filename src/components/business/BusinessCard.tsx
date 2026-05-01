@@ -32,7 +32,7 @@ export default function BusinessCard({ business }: Props) {
         {/* Image / placeholder */}
         <div className={`h-44 bg-gradient-to-br ${gradient} flex items-center justify-center relative flex-shrink-0`}>
           {business.image_url ? (
-            <img src={business.image_url} alt={business.name} className="w-full h-full object-cover" />
+            <img src={business.image_url} alt={business.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
           ) : (
             <span className="text-6xl opacity-80 group-hover:scale-110 transition-transform duration-300">
               {category?.icon ?? "🏪"}

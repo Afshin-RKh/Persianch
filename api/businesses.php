@@ -20,7 +20,6 @@ function log_activity(PDO $pdo, int $userId, string $action, string $entityType,
 }
 
 if ($method === 'GET') {
-    // Admins can see unapproved businesses
     require_once 'jwt.php';
     $token     = bearer_token();
     $authUser  = $token ? jwt_verify($token) : null;
@@ -76,9 +75,24 @@ if ($method === 'GET') {
     }
 
     $whereClause = count($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-    // For map view (bounds query) return only columns the map needs — much smaller payload
     $isBoundsQuery = isset($_GET['lat_min']);
     $isListQuery   = $isAdmin && !empty($_GET['list']);
+
+    // File-based cache for public bounds queries (5-minute TTL, same as HTTP header)
+    $cacheKey  = null;
+    $cachePath = null;
+    $cacheTTL  = 300;
+    if (!$isAdmin && $isBoundsQuery && empty($_GET['id'])) {
+        $cacheDir = sys_get_temp_dir() . '/biz_cache';
+        if (!is_dir($cacheDir)) @mkdir($cacheDir, 0700, true);
+        $cacheKey  = md5(serialize($_GET));
+        $cachePath = $cacheDir . '/' . $cacheKey . '.json';
+        if (file_exists($cachePath) && (time() - filemtime($cachePath)) < $cacheTTL) {
+            echo file_get_contents($cachePath);
+            exit();
+        }
+    }
+
     if ($isAdmin && !$isListQuery) {
         $sql = "SELECT b.*, u.name AS owner_name, u.email AS owner_email
                 FROM businesses b
@@ -112,11 +126,13 @@ if ($method === 'GET') {
         $b['lng'] = $b['lng'] ? (float)$b['lng'] : null;
     }
 
-    if (!empty($_GET['id'])) {
-        echo json_encode($businesses[0] ?? null);
-    } else {
-        echo json_encode($businesses);
+    $output = !empty($_GET['id']) ? json_encode($businesses[0] ?? null) : json_encode($businesses);
+
+    if ($cachePath) {
+        file_put_contents($cachePath, $output, LOCK_EX);
     }
+
+    echo $output;
 }
 
 if ($method === 'POST') {

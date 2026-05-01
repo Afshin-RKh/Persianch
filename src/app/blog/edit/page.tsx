@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, authHeaders } from "@/lib/auth";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
-import RichTextEditor from "@/components/RichTextEditor";
+const RichTextEditor = lazy(() => import("@/components/RichTextEditor"));
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const TAGS = ["survival guides", "legal", "transportation", "travel guides"];
@@ -225,11 +225,13 @@ function EditForm() {
           <label className="block text-xs font-semibold text-gray-600 mb-1.5">
             Content {isFarsi && <span className="text-gray-400 font-normal">(راست به چپ)</span>}
           </label>
-          <RichTextEditor
-            value={form.content}
-            onChange={(html) => setForm({ ...form, content: html })}
-            dir={isFarsi ? "rtl" : "ltr"}
-          />
+          <Suspense fallback={<div className="h-48 bg-gray-100 rounded-xl animate-pulse" />}>
+            <RichTextEditor
+              value={form.content}
+              onChange={(html) => setForm({ ...form, content: html })}
+              dir={isFarsi ? "rtl" : "ltr"}
+            />
+          </Suspense>
         </div>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}

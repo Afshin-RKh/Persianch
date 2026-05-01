@@ -1,10 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, authHeaders } from "@/lib/auth";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
-import RichTextEditor from "@/components/RichTextEditor";
+const RichTextEditor = lazy(() => import("@/components/RichTextEditor"));
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const TAGS = ["survival guides", "legal", "transportation", "travel guides"];
@@ -190,11 +190,13 @@ export default function WriteBlogPage() {
 
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1.5">Content *</label>
-          <RichTextEditor
-            value={form.content}
-            onChange={(html) => setForm({ ...form, content: html })}
-            placeholder="Write your post here…"
-          />
+          <Suspense fallback={<div className="h-48 bg-gray-100 rounded-xl animate-pulse" />}>
+            <RichTextEditor
+              value={form.content}
+              onChange={(html) => setForm({ ...form, content: html })}
+              placeholder="Write your post here…"
+            />
+          </Suspense>
         </div>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
