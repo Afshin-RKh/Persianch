@@ -131,6 +131,7 @@ if ($method === 'POST') {
     $token    = bearer_token();
     $authUser = $token ? jwt_verify($token) : null;
     $isAdmin  = $authUser && in_array($authUser['role'] ?? '', ['admin', 'superadmin']);
+    sanitize_urls_in_array($data, ['website', 'google_maps_url', 'image_url', 'logo_url']);
 
     // Public submissions: always unapproved, no auth required
     $isPublicSubmission = !$isAdmin;
@@ -203,6 +204,7 @@ if ($method === 'PATCH') {
     if (!$authUser) { http_response_code(401); echo json_encode(['error' => 'Unauthorized']); exit(); }
 
     $data   = json_decode(file_get_contents('php://input'), true);
+    sanitize_urls_in_array($data, ['website', 'google_maps_url', 'image_url', 'logo_url']);
     $id     = (int)($data['id'] ?? 0);
     $role   = $authUser['role'] ?? '';
     $userId = (int)$authUser['sub'];

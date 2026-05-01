@@ -50,6 +50,9 @@ if ($method === 'POST') {
 
     $business_id = (int)($body['business_id'] ?? 0);
     if (!$business_id) { http_response_code(400); echo json_encode(['error' => 'Missing business_id']); exit(); }
+    $exists = $pdo->prepare("SELECT 1 FROM businesses WHERE id = :id AND is_approved = 1");
+    $exists->execute([':id' => $business_id]);
+    if (!$exists->fetch()) { http_response_code(404); echo json_encode(['error' => 'Business not found']); exit(); }
 
     $is_owner = !empty($body['is_owner']) ? 1 : 0;
     $message  = trim($body['message'] ?? '');

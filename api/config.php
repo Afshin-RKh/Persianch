@@ -1,8 +1,18 @@
 <?php
-header('Access-Control-Allow-Origin: *');
+$allowedOrigins = ['https://birunimap.com', 'https://www.birunimap.com'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowedOrigins, true)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else {
+    header('Access-Control-Allow-Origin: https://birunimap.com');
+}
 header('Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: strict-origin-when-cross-origin');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -40,4 +50,19 @@ try {
     http_response_code(500);
     echo json_encode(['error' => 'Database connection failed']);
     exit();
+}
+
+function sanitize_url(?string $url): ?string {
+    if (!$url) return null;
+    $url = trim($url);
+    if (!preg_match('/^https?:\/\//i', $url)) return null;
+    return filter_var($url, FILTER_VALIDATE_URL) ? $url : null;
+}
+
+function sanitize_urls_in_array(array &$data, array $fields): void {
+    foreach ($fields as $field) {
+        if (isset($data[$field]) && $data[$field] !== '') {
+            $data[$field] = sanitize_url($data[$field]);
+        }
+    }
 }

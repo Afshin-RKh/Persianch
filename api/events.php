@@ -150,6 +150,7 @@ if ($method === 'GET') {
 // ── POST — public submission ──────────────────────────────────────────────────
 if ($method === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
+    sanitize_urls_in_array($data, ['external_link', 'cover_image']);
 
     $title      = trim($data['title'] ?? '');
     $eventType  = $data['event_type'] ?? 'other';
@@ -224,6 +225,7 @@ if ($method === 'PATCH') {
     if (!is_admin_ev($viewer)) { http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit(); }
 
     $data = json_decode(file_get_contents('php://input'), true);
+    sanitize_urls_in_array($data, ['external_link', 'cover_image']);
     $id   = (int)($data['id'] ?? 0);
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
 

@@ -46,6 +46,37 @@ if ($method === 'POST') {
     $data   = json_decode(file_get_contents('php://input'), true);
     $action = $data['action'] ?? '';
 
+    // Rate limiting: max 10 auth attempts per IP per 15 minutes
+    $rateLimitedActions = ['login', 'register', 'verify_otp', 'forgot_password', 'reset_password'];
+    if (in_array($action, $rateLimitedActions, true)) {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $window = 15 * 60; // 15 minutes
+        $maxAttempts = 10;
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS rate_limit (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                ip VARCHAR(45) NOT NULL,
+                action VARCHAR(50) NOT NULL,
+                attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_ip_action (ip, action, attempted_at)
+            )");
+            // Clean old entries
+            $pdo->prepare("DELETE FROM rate_limit WHERE attempted_at < DATE_SUB(NOW(), INTERVAL :w SECOND)")
+                ->execute([':w' => $window]);
+            // Count recent attempts
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM rate_limit WHERE ip = :ip AND action = :action");
+            $stmt->execute([':ip' => $ip, ':action' => $action]);
+            if ((int)$stmt->fetchColumn() >= $maxAttempts) {
+                http_response_code(429);
+                echo json_encode(['error' => 'Too many attempts. Please wait 15 minutes and try again.']);
+                exit();
+            }
+            // Log this attempt
+            $pdo->prepare("INSERT INTO rate_limit (ip, action) VALUES (:ip, :action)")
+                ->execute([':ip' => $ip, ':action' => $action]);
+        } catch (\Exception $e) { /* non-fatal: don't block on rate limit errors */ }
+    }
+
     // -----------------------------------------------------------------------
     // REGISTER — store pending, send OTP (user NOT inserted yet)
     // -----------------------------------------------------------------------
@@ -172,6 +203,12 @@ if ($method === 'POST') {
         $row = $stmt->fetch();
 
         if (!$row || !$row['password_hash'] || !password_verify($pass, $row['password_hash'])) {
+            // Log failed attempt
+            try {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS security_log (id INT AUTO_INCREMENT PRIMARY KEY, ip VARCHAR(45), action VARCHAR(50), detail VARCHAR(255), created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
+                $pdo->prepare("INSERT INTO security_log (ip, action, detail) VALUES (:ip, 'login_failed', :detail)")
+                    ->execute([':ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown', ':detail' => $email ?: $phone]);
+            } catch (\Exception $e) {}
             http_response_code(401);
             echo json_encode(['error' => 'Invalid email or password']);
             exit();

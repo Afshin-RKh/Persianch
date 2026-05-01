@@ -101,6 +101,7 @@ if ($method === 'GET') {
 if ($method === 'POST') {
     $authUser = auth_required('user');
     $data     = json_decode(file_get_contents('php://input'), true);
+    sanitize_urls_in_array($data, ['cover_image']);
 
     $title = trim($data['title'] ?? '');
     if (!$title) { http_response_code(400); echo json_encode(['error' => 'Title required']); exit(); }
@@ -162,6 +163,7 @@ if ($method === 'POST') {
 if ($method === 'PATCH') {
     $authUser  = auth_required('admin');
     $data      = json_decode(file_get_contents('php://input'), true);
+    sanitize_urls_in_array($data, ['cover_image']);
     $id        = (int)($data['id'] ?? 0);
     $adminRole = $authUser['role'] ?? '';
     $adminId   = (int)$authUser['sub'];

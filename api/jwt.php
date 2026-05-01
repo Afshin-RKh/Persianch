@@ -1,6 +1,12 @@
 <?php
 if (!defined('JWT_SECRET')) {
-    define('JWT_SECRET', defined('JWT_SECRET_KEY') ? JWT_SECRET_KEY : 'replace-in-env');
+    $jwtKey = defined('JWT_SECRET_KEY') ? JWT_SECRET_KEY : '';
+    if (!$jwtKey || $jwtKey === 'replace-in-env' || strlen($jwtKey) < 32) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Server misconfiguration']);
+        exit();
+    }
+    define('JWT_SECRET', $jwtKey);
 }
 define('JWT_TTL', 7 * 24 * 3600);
 
