@@ -193,6 +193,19 @@ if ($method === 'POST') {
 
         if ((!$email && !$phone) || !$pass) { http_response_code(400); echo json_encode(['error' => 'Email/phone and password are required']); exit(); }
 
+        // Account lockout: block after 10 failed attempts on this identifier within 1 hour
+        $lockIdentifier = $email ?: $phone;
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS security_log (id INT AUTO_INCREMENT PRIMARY KEY, ip VARCHAR(45), action VARCHAR(50), detail VARCHAR(255), created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
+            $lockStmt = $pdo->prepare("SELECT COUNT(*) FROM security_log WHERE action = 'login_failed' AND detail = :id AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+            $lockStmt->execute([':id' => $lockIdentifier]);
+            if ((int)$lockStmt->fetchColumn() >= 10) {
+                http_response_code(429);
+                echo json_encode(['error' => 'Account temporarily locked due to too many failed attempts. Try again in 1 hour.']);
+                exit();
+            }
+        } catch (\Exception $e) {}
+
         if ($email) {
             $stmt = $pdo->prepare("SELECT id, name, email, phone, role, password_hash, avatar, is_verified FROM users WHERE email = :email");
             $stmt->execute([':email' => $email]);
@@ -202,8 +215,13 @@ if ($method === 'POST') {
         }
         $row = $stmt->fetch();
 
-        if (!$row || !$row['password_hash'] || !password_verify($pass, $row['password_hash'])) {
-            // Log failed attempt
+        // Always run password_verify to prevent timing-based email enumeration.
+        // Use a dummy hash when no row found so the timing is identical.
+        $dummyHash = '$2y$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+        $hashToCheck = ($row && $row['password_hash']) ? $row['password_hash'] : $dummyHash;
+        $passwordOk = password_verify($pass, $hashToCheck);
+
+        if (!$row || !$passwordOk) {
             try {
                 $pdo->exec("CREATE TABLE IF NOT EXISTS security_log (id INT AUTO_INCREMENT PRIMARY KEY, ip VARCHAR(45), action VARCHAR(50), detail VARCHAR(255), created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
                 $pdo->prepare("INSERT INTO security_log (ip, action, detail) VALUES (:ip, 'login_failed', :detail)")

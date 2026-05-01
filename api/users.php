@@ -73,7 +73,7 @@ if ($method === 'GET') {
 }
 
 if ($method === 'PATCH') {
-    $authUser = auth_required('superadmin');
+    $authUser = auth_required_db($pdo, 'superadmin');
     $data     = json_decode(file_get_contents('php://input'), true);
     $id       = (int)($data['id'] ?? 0);
     $role     = $data['role'] ?? '';
@@ -102,11 +102,21 @@ if ($method === 'PATCH') {
 }
 
 if ($method === 'DELETE') {
-    $authUser = auth_required('superadmin');
+    $authUser = auth_required_db($pdo, 'superadmin');
     $id       = (int)($_GET['id'] ?? 0);
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
     if ($id === (int)$authUser['sub']) { http_response_code(400); echo json_encode(['error' => 'Cannot delete yourself']); exit(); }
 
+    // Explicitly remove all user-owned data (GDPR compliance / no orphaned rows)
+    $pdo->prepare("DELETE FROM comments        WHERE user_id   = :id")->execute([':id' => $id]);
+    $pdo->prepare("DELETE FROM business_claims WHERE user_id   = :id")->execute([':id' => $id]);
+    $pdo->prepare("DELETE FROM user_locations  WHERE user_id   = :id")->execute([':id' => $id]);
+    $pdo->prepare("DELETE FROM admin_locations WHERE user_id   = :id")->execute([':id' => $id]);
+    $pdo->prepare("DELETE FROM activity_log    WHERE user_id   = :id")->execute([':id' => $id]);
+    $pdo->prepare("DELETE FROM rate_limit      WHERE ip IN (SELECT ip FROM security_log WHERE detail IN (SELECT email FROM users WHERE id = :id2))")->execute([':id2' => $id]);
+    // Soft-orphan blog posts and businesses (preserve content, remove authorship link)
+    $pdo->prepare("UPDATE blog_posts  SET author_id      = NULL WHERE author_id      = :id")->execute([':id' => $id]);
+    $pdo->prepare("UPDATE businesses  SET owner_user_id  = NULL WHERE owner_user_id  = :id")->execute([':id' => $id]);
     $pdo->prepare("DELETE FROM users WHERE id = :id")->execute([':id' => $id]);
     echo json_encode(['success' => true]);
     exit();

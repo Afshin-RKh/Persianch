@@ -37,13 +37,14 @@ function next_occurrence(array $ev, DateTimeImmutable $from, DateTimeImmutable $
 
     $type = $ev['recurrence_type'];
     $cur  = $start;
+    $cap  = 0;
 
-    while ($cur <= $to && $cur <= $recEnd) {
+    while ($cur <= $to && $cur <= $recEnd && $cap++ < 500) {
         $curEnd = $cur->add($duration);
         if ($curEnd >= $from && $cur <= $to) return $cur;
 
         // Advance to next occurrence
-        if ($type === 'weekly')   $cur = $cur->modify('+7 days');
+        if ($type === 'weekly')       $cur = $cur->modify('+7 days');
         elseif ($type === 'biweekly') $cur = $cur->modify('+14 days');
         elseif ($type === 'monthly')  $cur = $cur->modify('+1 month');
         else break;

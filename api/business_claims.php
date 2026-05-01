@@ -47,6 +47,16 @@ if ($method === 'GET') {
 if ($method === 'POST') {
     $body = json_decode(file_get_contents('php://input'), true);
     $user = auth_user();
+    if (!$user) { http_response_code(401); echo json_encode(['error' => 'Sign in to submit a claim']); exit(); }
+
+    // Rate limit: max 3 claims per user per hour
+    $rateStmt = $pdo->prepare("SELECT COUNT(*) FROM business_claims WHERE user_id = :uid AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+    $rateStmt->execute([':uid' => $user['id']]);
+    if ((int)$rateStmt->fetchColumn() >= 3) {
+        http_response_code(429);
+        echo json_encode(['error' => 'Too many submissions. Please wait before submitting again.']);
+        exit();
+    }
 
     $business_id = (int)($body['business_id'] ?? 0);
     if (!$business_id) { http_response_code(400); echo json_encode(['error' => 'Missing business_id']); exit(); }

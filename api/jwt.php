@@ -37,6 +37,7 @@ function jwt_verify(string $token): ?array {
 
 function bearer_token(): ?string {
     $h = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+    if (strlen($h) > 2048) return null; // reject oversized headers
     return (substr($h, 0, 7) === 'Bearer ') ? substr($h, 7) : null;
 }
 
