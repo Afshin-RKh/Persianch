@@ -15,7 +15,7 @@ import {
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white";
 
-type Tab = "posts" | "businesses" | "users" | "squares" | "events" | "trash" | "about";
+type Tab = "posts" | "businesses" | "users" | "squares" | "events" | "trash" | "about" | "claims";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type BizForm = {
@@ -457,6 +457,15 @@ export default function AdminPage() {
   const [aboutSaving, setAboutSaving]     = useState(false);
   const [aboutSuccess, setAboutSuccess]   = useState(false);
 
+  // Claims
+  interface ClaimRow {
+    id: number; business_id: number; business_name: string; category: string; country: string; canton: string;
+    user_id?: number; user_name?: string; user_email?: string;
+    is_owner: boolean; message?: string; status: string; created_at: string;
+  }
+  const [claims, setClaims] = useState<ClaimRow[]>([]);
+  const [claimLoading, setClaimLoading] = useState(false);
+
   // Squares
   const [squares, setSquares]       = useState<CitySquare[]>([]);
   const [editSquare, setEditSquare] = useState<CitySquare | null>(null);
@@ -534,12 +543,26 @@ export default function AdminPage() {
         const seen = new Set<number>();
         setEvents(combined.filter((e) => { if (seen.has(e.id)) return false; seen.add(e.id); return true; }));
       }
+      if (tab === "claims") {
+        const r = await fetch(`${API}/business_claims.php?status=pending`, { headers: authHeaders(token) });
+        const data = await r.json();
+        setClaims(Array.isArray(data) ? data : []);
+      }
     } finally {
       setDataLoading(false);
     }
   }, [tab, token, isAdmin]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Load claims count on mount for badge
+  useEffect(() => {
+    if (!token || !isAdmin) return;
+    fetch(`${API}/business_claims.php?status=pending`, { headers: authHeaders(token) })
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setClaims(data); })
+      .catch(() => {});
+  }, [token, isAdmin]);
 
   // ── Blog actions ───────────────────────────────────────────────────────────
   const updatePostStatus = async (id: number, status: string) => {
@@ -733,6 +756,7 @@ export default function AdminPage() {
     { key: "users",      label: "Users",        icon: <Users size={15} /> },
     { key: "events",     label: "Events",       icon: <span className="text-sm">📅</span> },
     { key: "squares",    label: "City Squares", icon: <MapPin size={15} />, superOnly: true },
+    { key: "claims",     label: "Claims",       icon: <span className="text-sm">🚩</span> },
     { key: "trash",      label: "Trash",        icon: <Trash2 size={15} /> },
     { key: "about",      label: "About Page",   icon: <Shield size={15} />, superOnly: true },
   ];
@@ -844,6 +868,9 @@ export default function AdminPage() {
               }`}
               style={tab === t.key ? { backgroundColor: "#1B3A6B" } : {}}>
               {t.icon}{t.label}
+              {t.key === "claims" && claims.length > 0 && (
+                <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">{claims.length}</span>
+              )}
             </button>
           ))}
         </div>
@@ -1473,6 +1500,70 @@ export default function AdminPage() {
                 ))}
               </div>
             }
+          </div>
+        )}
+
+        {/* Claims */}
+        {tab === "claims" && !dataLoading && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-gray-800">Business Claims & Reports ({claims.length})</h2>
+              <p className="text-xs text-gray-400">Submitted by users — ownership claims and issue reports.</p>
+            </div>
+            {claims.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-400">
+                <p className="text-3xl mb-2">🚩</p>
+                <p className="font-medium">No pending claims</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {claims.map((c) => (
+                  <div key={c.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          {c.is_owner && (
+                            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">🏠 Claims ownership</span>
+                          )}
+                          {c.message && (
+                            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">⚠ Reports issue</span>
+                          )}
+                        </div>
+                        <Link href={`/businesses/detail?id=${c.business_id}`} target="_blank"
+                          className="font-bold text-gray-900 hover:underline text-sm" style={{ color: "#1B3A6B" }}>
+                          {c.business_name || `Business #${c.business_id}`}
+                        </Link>
+                        <p className="text-xs text-gray-400 mt-0.5">{c.category} · {c.canton}, {c.country}</p>
+                        {c.message && (
+                          <p className="mt-3 text-sm text-gray-700 bg-gray-50 rounded-xl px-4 py-3 leading-relaxed">{c.message}</p>
+                        )}
+                        <div className="mt-3 text-xs text-gray-400">
+                          {c.user_name ? (
+                            <span>Submitted by <strong className="text-gray-600">{c.user_name}</strong>{c.user_email ? ` (${c.user_email})` : ""}</span>
+                          ) : (
+                            <span>Anonymous submission</span>
+                          )}
+                          {" · "}{new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          await fetch(`${API}/business_claims.php`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json", ...authHeaders(token) },
+                            body: JSON.stringify({ id: c.id, status: "resolved" }),
+                          });
+                          setClaims((prev) => prev.filter((x) => x.id !== c.id));
+                        }}
+                        className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-xl border border-gray-200 text-gray-500 hover:border-green-300 hover:text-green-600 hover:bg-green-50 transition-colors"
+                      >
+                        Mark resolved
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

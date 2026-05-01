@@ -661,16 +661,13 @@ function BusinessDetailContent() {
                 {!business.owner_user_id && (
                   <div className="mt-6 p-4 rounded-2xl text-sm text-gray-500" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
                     <p className="mb-1">Do you own this business or spot an issue?</p>
-                    {user ? (
-                      <Link href="/contact" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
-                        Send us a message →
-                      </Link>
-                    ) : (
-                      <span>
-                        <Link href="/auth/signin" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>Sign in</Link>
-                        {" "}and send us a message.
-                      </span>
-                    )}
+                    <Link
+                      href={slug ? `/businesses/claim?slug=${slug}` : `/businesses/claim?id=${id}`}
+                      className="font-semibold hover:underline"
+                      style={{ color: "#1B3A6B" }}
+                    >
+                      Let us know →
+                    </Link>
                   </div>
                 )}
               </div>
