@@ -142,13 +142,19 @@ export default function Navbar() {
             ["/events", "📅 Events"],
             ["/blog", "📝 Blog"],
             ["/about", "🦁 About Us"],
-          ].map(([href, label]) => (
-            <Link key={href} href={href}
-              className="flex items-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              onClick={() => setOpen(false)}>
-              {label}
-            </Link>
-          ))}
+          ].map(([href, label]) => {
+            const active = pathname === href;
+            return (
+              <Link key={href} href={href}
+                className={`flex items-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors ${
+                  active ? "text-white" : "text-gray-700 hover:bg-gray-50"
+                }`}
+                style={active ? { backgroundColor: "#1B3A6B" } : {}}
+                onClick={() => setOpen(false)}>
+                {label}
+              </Link>
+            );
+          })}
           {user && (
             <>
               <Link href="/profile" onClick={() => setOpen(false)}
