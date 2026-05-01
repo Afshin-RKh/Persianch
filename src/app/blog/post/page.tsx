@@ -243,7 +243,7 @@ function BlogPostContent() {
     "url": `https://birunimap.com/blog/post?slug=${post.slug}`,
     ...(post.cover_image ? { "image": post.cover_image } : {}),
     "datePublished": post.created_at,
-    ...(post.updated_at ? { "dateModified": post.updated_at } : {}),
+    ...((post as any).updated_at ? { "dateModified": (post as any).updated_at } : {}),
     ...(post.author_name ? { "author": { "@type": "Person", "name": post.author_name } } : {}),
     "publisher": { "@type": "Organization", "name": "BiruniMap", "url": "https://birunimap.com" },
     ...(post.tags ? { "keywords": post.tags } : {}),
