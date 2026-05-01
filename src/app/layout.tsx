@@ -9,7 +9,7 @@ import { AuthProvider } from "@/lib/auth";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "BiruniMap — Businesses, Events & Community for the Iranian Diaspora",
+  title: "BiruniMap — Iranian Businesses & Events Worldwide",
   description:
     "Discover Iranian-owned businesses, community events and resources worldwide — restaurants, doctors, lawyers, concerts and more. The global map of the Iranian diaspora, inspired by Al-Biruni.",
   keywords: ["Iranian businesses worldwide", "Persian diaspora map", "Iranian community events", "Farsi speaking businesses", "BiruniMap", "Al-Biruni", "Iranian events Europe", "Persian community"],
@@ -36,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${geist.variable} h-full antialiased`}>
       <head>
         {/* Persian & Arabic Google Fonts for the rich text editor */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&family=Estedad:wght@100..900&family=Lalezar&display=swap" rel="stylesheet" />
