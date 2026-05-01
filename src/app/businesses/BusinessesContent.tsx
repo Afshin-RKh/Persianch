@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback, useRef, Suspense, lazy } from "react";
 import { useSearchParams } from "next/navigation";
+import { businessSlug } from "@/lib/businessSlug";
 import SearchBar from "@/components/business/SearchBar";
 import { getBusinesses } from "@/lib/api";
 import { CATEGORIES, Category, Business } from "@/types";
@@ -141,7 +142,7 @@ export default function BusinessesContent() {
           )}
           <p className="text-xs text-gray-400 mt-1">{selected.address || selected.canton}</p>
           <Link
-            href={`/businesses/detail?id=${selected.id}`}
+            href={`/businesses/detail?slug=${businessSlug(selected)}`}
             className="mt-3 block text-center text-white text-xs font-semibold py-2 rounded-xl"
             style={{ backgroundColor: "#8B1A1A" }}
           >

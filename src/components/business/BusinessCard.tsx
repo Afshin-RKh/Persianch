@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Business, CATEGORIES } from "@/types";
 import { MapPin, CheckCircle } from "lucide-react";
+import { businessSlug } from "@/lib/businessSlug";
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
   restaurant:   "from-orange-100 to-red-100",
@@ -25,7 +26,7 @@ export default function BusinessCard({ business }: Props) {
   const gradient = CATEGORY_GRADIENTS[business.category] ?? "from-gray-100 to-slate-100";
 
   return (
-    <Link href={`/businesses/detail?id=${business.id}`} className="block group">
+    <Link href={`/businesses/detail?slug=${businessSlug(business)}`} className="block group">
       <div className="card-hover bg-white rounded-2xl border border-gray-100 overflow-hidden h-full flex flex-col">
 
         {/* Image / placeholder */}

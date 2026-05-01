@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, authHeaders } from "@/lib/auth";
+import { businessSlug } from "@/lib/businessSlug";
 import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY, CitySquare, SquareLink, SQUARE_LINK_CATEGORIES, SquareLinkCategory } from "@/types";
 import LocationSelector, { type Location } from "@/components/LocationSelector";
 import {
@@ -987,7 +988,7 @@ export default function AdminPage() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <Link href={`/businesses/detail?id=${b.id}`} className="text-xs text-[#1B3A6B] hover:underline font-medium">View</Link>
+                          <Link href={`/businesses/detail?slug=${businessSlug(b)}`} className="text-xs text-[#1B3A6B] hover:underline font-medium">View</Link>
                           <button onClick={() => { openEdit(b); setShowAddBiz(false); }}
                             className={`transition-colors p-1 rounded-lg hover:bg-gray-100 ${editBiz?.id === b.id ? "text-[#1B3A6B]" : "text-gray-400 hover:text-[#1B3A6B]"}`} title="Edit">
                             <Edit2 size={14} />

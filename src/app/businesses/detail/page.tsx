@@ -3,6 +3,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { getBusinessById } from "@/lib/api";
+import { idFromSlug } from "@/lib/businessSlug";
 import { Business, CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2, Pencil, X, AlertTriangle } from "lucide-react";
 import Link from "next/link";
@@ -326,7 +327,8 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
 
 function BusinessDetailContent() {
   const searchParams = useSearchParams();
-  const id = searchParams.get("id");
+  const slug = searchParams.get("slug");
+  const id = slug ? String(idFromSlug(slug)) : searchParams.get("id");
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -364,13 +366,14 @@ function BusinessDetailContent() {
   }, [business?.name]);
 
   // Build BreadcrumbList JSON-LD
+  const bSlug = business ? `${business.category}-${business.name}-${business.country ?? ""}-${business.canton ?? ""}-${business.id}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") : null;
   const breadcrumbLd = business ? JSON.stringify({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://birunimap.com" },
       { "@type": "ListItem", "position": 2, "name": "Businesses", "item": "https://birunimap.com/businesses" },
-      { "@type": "ListItem", "position": 3, "name": business.name, "item": `https://birunimap.com/businesses/detail?id=${business.id}` },
+      { "@type": "ListItem", "position": 3, "name": business.name, "item": `https://birunimap.com/businesses/detail?slug=${bSlug}` },
     ],
   }) : null;
 
@@ -387,7 +390,7 @@ function BusinessDetailContent() {
     ...(business.website ? { "url": business.website } : {}),
     ...(business.lat && business.lng ? { "geo": { "@type": "GeoCoordinates", "latitude": business.lat, "longitude": business.lng } } : {}),
     ...(business.image_url ? { "image": business.image_url } : {}),
-    "url": `https://birunimap.com/businesses/detail?id=${business.id}`,
+    "url": `https://birunimap.com/businesses/detail?slug=${bSlug}`,
   }) : null;
 
   if (loading) {

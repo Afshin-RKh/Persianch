@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Business, CATEGORIES, CitySquare } from "@/types";
 import { CANTON_COORDS, COUNTRY_COORDS } from "@/lib/mapCoords";
+import { businessSlug } from "@/lib/businessSlug";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
@@ -165,7 +166,7 @@ export default function MapView({ businesses, onSelect, selected, focusCountry, 
           })
           .on("click", () => {
             onSelect(business);
-            router.push(`/businesses/detail?id=${business.id}`);
+            router.push(`/businesses/detail?slug=${businessSlug(business)}`);
           });
 
         markersRef.current.push(marker);

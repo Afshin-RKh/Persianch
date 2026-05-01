@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Business, CATEGORIES } from "@/types";
 import { getBusinesses } from "@/lib/api";
+import { businessSlug } from "@/lib/businessSlug";
 import { useAuth } from "@/lib/auth";
 
 const FALLBACK_CENTER: [number, number] = [48.8566, 2.3522]; // Paris as world fallback
@@ -131,7 +132,7 @@ export default function HomeMap() {
             className: "persian-hub-tooltip",
           })
           .on("click", () => {
-            router.push(`/businesses/detail?id=${business.id}`);
+            router.push(`/businesses/detail?slug=${businessSlug(business)}`);
           });
       });
     });
