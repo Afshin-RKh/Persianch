@@ -9,6 +9,8 @@ import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2, Pencil, X, 
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAuth, authHeaders } from "@/lib/auth";
+import { useToast } from "@/components/ui/Toast";
+import { ConfirmModal } from "@/components/ui/Skeletons";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 
@@ -23,11 +25,15 @@ interface Comment {
   avatar?: string;
 }
 
+const MAX_COMMENT = 500;
+
 function BusinessComments({ businessId }: { businessId: number }) {
   const { user, token, isAdmin } = useAuth();
-  const [comments, setComments] = React.useState<Comment[]>([]);
-  const [text, setText]         = React.useState("");
-  const [loading, setLoading]   = React.useState(false);
+  const { error: toastError, success: toastSuccess } = useToast();
+  const [comments, setComments]         = React.useState<Comment[]>([]);
+  const [text, setText]                 = React.useState("");
+  const [loading, setLoading]           = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     fetch(`${API}/comments.php?entity_type=business&entity_id=${businessId}`)
@@ -47,19 +53,38 @@ function BusinessComments({ businessId }: { businessId: number }) {
         body: JSON.stringify({ entity_type: "business", entity_id: businessId, content: text }),
       });
       const c = await res.json();
-      if (res.ok) { setComments((prev) => [...prev, c]); setText(""); }
+      if (res.ok) { setComments((prev) => [...prev, c]); setText(""); toastSuccess("Comment posted!"); }
+      else toastError(c?.error || "Failed to post comment.");
+    } catch {
+      toastError("Failed to post comment. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteComment = async (id: number) => {
-    await fetch(`${API}/comments.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
-    setComments((prev) => prev.filter((c) => c.id !== id));
+  const confirmDelete = async () => {
+    if (deleteTarget === null) return;
+    try {
+      await fetch(`${API}/comments.php?id=${deleteTarget}`, { method: "DELETE", headers: authHeaders(token) });
+      setComments((prev) => prev.filter((c) => c.id !== deleteTarget));
+    } catch {
+      toastError("Failed to delete comment.");
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   return (
     <section className="mt-10 pt-8 border-t border-gray-100">
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="Delete comment"
+        message="Are you sure you want to delete this comment? This cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
       <h2 className="text-base font-bold text-gray-900 mb-5 flex items-center gap-2">
         Comments
         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">{comments.length}</span>
@@ -89,7 +114,11 @@ function BusinessComments({ businessId }: { businessId: number }) {
                 </div>
               </div>
               {(user?.id === c.user_id || isAdmin) && (
-                <button onClick={() => deleteComment(c.id)} className="text-gray-300 hover:text-red-400 transition-colors p-1">
+                <button
+                  onClick={() => setDeleteTarget(c.id)}
+                  aria-label="Delete comment"
+                  className="text-gray-300 hover:text-red-400 transition-colors p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300"
+                >
                   <Trash2 size={13} />
                 </button>
               )}
@@ -101,17 +130,23 @@ function BusinessComments({ businessId }: { businessId: number }) {
 
       {user ? (
         <form onSubmit={submit} className="space-y-2">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Share your experience…"
-            rows={3}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-none bg-gray-50"
-          />
+          <div className="relative">
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value.slice(0, MAX_COMMENT))}
+              placeholder="Share your experience…"
+              rows={3}
+              aria-label="Write a comment"
+              className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-none bg-gray-50"
+            />
+            <span className={`absolute bottom-3 right-3 text-xs ${text.length >= MAX_COMMENT ? "text-red-400" : "text-gray-300"}`}>
+              {text.length}/{MAX_COMMENT}
+            </span>
+          </div>
           <button
             type="submit"
             disabled={loading || !text.trim()}
-            className="text-white font-semibold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50 transition-opacity"
+            className="text-white font-semibold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#1B3A6B]"
             style={{ backgroundColor: "#1B3A6B" }}
           >
             {loading ? "Posting…" : "Post comment"}
@@ -119,7 +154,7 @@ function BusinessComments({ businessId }: { businessId: number }) {
         </form>
       ) : (
         <div className="bg-gray-50 rounded-2xl p-4 text-sm text-gray-500">
-          <Link href="/auth/signin" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>Sign in</Link> to leave a comment.
+          <Link href="/auth/signin" className="font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] rounded" style={{ color: "#1B3A6B" }}>Sign in</Link> to leave a comment.
         </div>
       )}
     </section>
@@ -323,11 +358,13 @@ function BusinessDetailContent() {
   const searchParams = useSearchParams();
   const slug = searchParams.get("slug");
   const id = slug ? String(idFromSlug(slug)) : searchParams.get("id");
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const { user, isAdmin, token } = useAuth();
+  const [business, setBusiness]         = useState<Business | null>(null);
+  const [loading, setLoading]           = useState(true);
+  const [editing, setEditing]           = useState(false);
+  const [deleting, setDeleting]         = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const { user, isAdmin, token }        = useAuth();
+  const { error: toastError }           = useToast();
   const router = useRouter();
 
   useEffect(() => {
@@ -337,18 +374,25 @@ function BusinessDetailContent() {
     fetch(`${API}/businesses.php?id=${id}`, { headers })
       .then((r) => r.ok ? r.json() : null)
       .then(setBusiness)
+      .catch(() => toastError("Failed to load business details."))
       .finally(() => setLoading(false));
   }, [id, token]);
 
   const handleDelete = async () => {
-    if (!business || !confirm(`Delete "${business.name}"? This cannot be undone.`)) return;
+    if (!business) return;
     setDeleting(true);
-    await fetch(`${API}/businesses.php`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", ...authHeaders(token) },
-      body: JSON.stringify({ id: business.id }),
-    });
-    router.push("/businesses");
+    setConfirmDelete(false);
+    try {
+      await fetch(`${API}/businesses.php`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", ...authHeaders(token) },
+        body: JSON.stringify({ id: business.id }),
+      });
+      router.push("/businesses");
+    } catch {
+      toastError("Failed to delete business.");
+      setDeleting(false);
+    }
   };
 
   const category = business ? CATEGORIES.find((c) => c.slug === business.category) : null;
@@ -425,10 +469,19 @@ function BusinessDetailContent() {
       {breadcrumbLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbLd }} />}
       {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />}
 
+      <ConfirmModal
+        open={confirmDelete}
+        title={`Delete "${business?.name}"?`}
+        message="This will permanently remove this business listing. This action cannot be undone."
+        confirmLabel={deleting ? "Deleting…" : "Delete"}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
+
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-up">
 
         {/* Top nav row */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
           <Link href="/businesses" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors font-medium">
             <ArrowLeft size={15} /> Back to listings
           </Link>
@@ -436,15 +489,17 @@ function BusinessDetailContent() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setEditing((v) => !v)}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+                aria-label={editing ? "Close edit panel" : "Edit business"}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#1B3A6B]"
                 style={editing ? { backgroundColor: "#f3f4f6", color: "#374151" } : { backgroundColor: "#1B3A6B", color: "#fff" }}
               >
                 {editing ? <><X size={14} /> Close</> : <><Pencil size={14} /> Edit</>}
               </button>
               <button
-                onClick={handleDelete}
+                onClick={() => setConfirmDelete(true)}
                 disabled={deleting}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl disabled:opacity-50"
+                aria-label="Delete business"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-400"
                 style={{ backgroundColor: "#8B1A1A", color: "#fff" }}
               >
                 <Trash2 size={14} /> {deleting ? "Deleting…" : "Delete"}
@@ -581,7 +636,8 @@ function BusinessDetailContent() {
 
                 {business.website && (
                   <a href={business.website} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-[#1B3A6B] hover:bg-blue-50 transition-all group">
+                    aria-label={`Visit ${business.name} website`}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-[#1B3A6B] hover:bg-blue-50 transition-all group focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#EEF2F9]">
                       <Globe size={16} style={{ color: "#1B3A6B" }} />
                     </div>
@@ -597,7 +653,8 @@ function BusinessDetailContent() {
 
                 {business.phone && (
                   <a href={`tel:${business.phone}`}
-                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-[#1B3A6B] hover:bg-blue-50 transition-all group">
+                    aria-label={`Call ${business.name}`}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-[#1B3A6B] hover:bg-blue-50 transition-all group focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#EEF2F9]">
                       <Phone size={16} style={{ color: "#1B3A6B" }} />
                     </div>
@@ -610,7 +667,8 @@ function BusinessDetailContent() {
 
                 {business.email && (
                   <a href={`mailto:${business.email}`}
-                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-[#1B3A6B] hover:bg-blue-50 transition-all group">
+                    aria-label={`Email ${business.name}`}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-[#1B3A6B] hover:bg-blue-50 transition-all group focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#EEF2F9]">
                       <Mail size={16} style={{ color: "#1B3A6B" }} />
                     </div>
@@ -643,7 +701,8 @@ function BusinessDetailContent() {
                 {business.instagram && (
                   <a href={`https://instagram.com/${business.instagram.replace("@", "")}`}
                     target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-pink-300 hover:bg-pink-50 transition-all group">
+                    aria-label={`${business.name} on Instagram`}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-pink-300 hover:bg-pink-50 transition-all group focus:outline-none focus:ring-2 focus:ring-pink-300">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-pink-50">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink-500"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
                     </div>

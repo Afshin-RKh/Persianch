@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, authHeaders } from "@/lib/auth";
+import { useToast } from "@/components/ui/Toast";
+import { SkeletonRows, ConfirmModal } from "@/components/ui/Skeletons";
 import { businessSlug } from "@/lib/businessSlug";
 import { CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY, CitySquare, SquareLink, SQUARE_LINK_CATEGORIES, SquareLinkCategory } from "@/types";
 import LocationSelector, { type Location } from "@/components/LocationSelector";
@@ -397,7 +399,13 @@ function UserProfilePanel({ profile, onClose, token, onSaveAdminLocs }: {
 export default function AdminPage() {
   const { user, token, isAdmin, isSuperAdmin, loading } = useAuth();
   const router = useRouter();
+  const { success: toastSuccess, error: toastError } = useToast();
   const [tab, setTab] = useState<Tab>("posts");
+
+  // Shared confirm modal state
+  const [confirmModal, setConfirmModal] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
+  const showConfirm = (title: string, message: string, onConfirm: () => void) =>
+    setConfirmModal({ open: true, title, message, onConfirm });
 
   const [posts, setPosts]           = useState<BlogPost[]>([]);
   const [businesses, setBusinesses] = useState<BusinessRow[]>([]);
@@ -566,29 +574,50 @@ export default function AdminPage() {
 
   // ── Blog actions ───────────────────────────────────────────────────────────
   const updatePostStatus = async (id: number, status: string) => {
-    await fetch(`${API}/blog.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, status }) });
-    loadData();
+    try {
+      await fetch(`${API}/blog.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, status }) });
+      toastSuccess(status === "approved" ? "Post approved!" : status === "rejected" ? "Post rejected." : "Post updated.");
+      loadData();
+    } catch { toastError("Failed to update post status."); }
   };
-  const deletePost = async (id: number) => {
-    if (!confirm("Move this post to trash?")) return;
-    await fetch(`${API}/blog.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
-    loadData();
+  const deletePost = (id: number) => {
+    showConfirm("Move to trash?", "This post will be moved to the trash and hidden from the public.", async () => {
+      try {
+        await fetch(`${API}/blog.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
+        toastSuccess("Post moved to trash.");
+        loadData();
+      } catch { toastError("Failed to delete post."); }
+      setConfirmModal(null);
+    });
   };
   const restorePost = async (id: number) => {
-    await fetch(`${API}/blog.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, action: "restore" }) });
-    loadData();
+    try {
+      await fetch(`${API}/blog.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, action: "restore" }) });
+      toastSuccess("Post restored.");
+      loadData();
+    } catch { toastError("Failed to restore post."); }
   };
-  const permanentDeletePost = async (id: number, title: string) => {
-    if (!confirm(`Permanently delete "${title}"? This cannot be undone.`)) return;
-    await fetch(`${API}/blog.php?id=${id}&permanent=1`, { method: "DELETE", headers: authHeaders(token) });
-    loadData();
+  const permanentDeletePost = (id: number, title: string) => {
+    showConfirm(`Permanently delete?`, `"${title.slice(0, 60)}" will be permanently removed. This cannot be undone.`, async () => {
+      try {
+        await fetch(`${API}/blog.php?id=${id}&permanent=1`, { method: "DELETE", headers: authHeaders(token) });
+        toastSuccess("Post permanently deleted.");
+        loadData();
+      } catch { toastError("Failed to delete post."); }
+      setConfirmModal(null);
+    });
   };
 
   // ── Business actions ───────────────────────────────────────────────────────
-  const deleteBusiness = async (id: number) => {
-    if (!confirm("Delete this business?")) return;
-    await fetch(`${API}/businesses.php`, { method: "DELETE", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id }) });
-    loadData();
+  const deleteBusiness = (id: number, name: string) => {
+    showConfirm("Delete business?", `"${name}" will be permanently removed from the directory.`, async () => {
+      try {
+        await fetch(`${API}/businesses.php`, { method: "DELETE", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id }) });
+        toastSuccess("Business deleted.");
+        loadData();
+      } catch { toastError("Failed to delete business."); }
+      setConfirmModal(null);
+    });
   };
   const openEdit = async (b: BusinessRow) => {
     setShowAddBiz(false);
@@ -635,20 +664,32 @@ export default function AdminPage() {
       const data = await res.json();
       if (data.success) {
         setBizSuccess(true);
+        toastSuccess(editBiz ? "Business updated!" : "Business added!");
         setTimeout(() => { setBizSuccess(false); setEditBiz(null); setShowAddBiz(false); loadData(); }, 1200);
+      } else {
+        toastError(data.error || "Failed to save business.");
       }
-    } finally { setBizLoading(false); }
+    } catch { toastError("Failed to save business."); }
+    finally { setBizLoading(false); }
   };
 
   // ── User actions ───────────────────────────────────────────────────────────
   const changeUserRole = async (id: number, role: string) => {
-    await fetch(`${API}/users.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, role }) });
-    loadData();
+    try {
+      await fetch(`${API}/users.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, role }) });
+      toastSuccess(`Role updated to ${role}.`);
+      loadData();
+    } catch { toastError("Failed to change role."); }
   };
-  const deleteUser = async (id: number) => {
-    if (!confirm("Delete this user? Cannot be undone.")) return;
-    await fetch(`${API}/users.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
-    loadData();
+  const deleteUser = (id: number, name: string) => {
+    showConfirm("Delete user?", `"${name}" and all their data will be permanently removed. This cannot be undone.`, async () => {
+      try {
+        await fetch(`${API}/users.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
+        toastSuccess("User deleted.");
+        loadData();
+      } catch { toastError("Failed to delete user."); }
+      setConfirmModal(null);
+    });
   };
   const openInspect = async (uid: number) => {
     if (inspectUser === uid) { setInspectUser(null); setInspectProfile(null); return; }
@@ -658,30 +699,39 @@ export default function AdminPage() {
     setInspectProfile(await r.json());
   };
   const saveAdminLocs = async (uid: number, locs: Location[]) => {
-    await fetch(`${API}/locations.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ user_id: uid, locations: locs }) });
-    setInspectUser(null); setInspectProfile(null);
+    try {
+      await fetch(`${API}/locations.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ user_id: uid, locations: locs }) });
+      toastSuccess("Admin locations saved.");
+      setInspectUser(null); setInspectProfile(null);
+    } catch { toastError("Failed to save locations."); }
   };
   const assignBusinessToUser = async (userId: number) => {
     if (!assignBizId) return;
     setAssignBizSaving(true);
-    await fetch(`${API}/businesses.php`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeaders(token) },
-      body: JSON.stringify({ id: parseInt(assignBizId), owner_user_id: userId }),
-    });
-    setAssignBizSaving(false);
-    setAssignBizId("");
-    loadData();
+    try {
+      await fetch(`${API}/businesses.php`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders(token) },
+        body: JSON.stringify({ id: parseInt(assignBizId), owner_user_id: userId }),
+      });
+      toastSuccess("Business assigned.");
+      setAssignBizId("");
+      loadData();
+    } catch { toastError("Failed to assign business."); }
+    finally { setAssignBizSaving(false); }
   };
   const unassignBusinessFromUser = async (bizId: number) => {
     setAssignBizSaving(true);
-    await fetch(`${API}/businesses.php`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeaders(token) },
-      body: JSON.stringify({ id: bizId, owner_user_id: null }),
-    });
-    setAssignBizSaving(false);
-    loadData();
+    try {
+      await fetch(`${API}/businesses.php`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders(token) },
+        body: JSON.stringify({ id: bizId, owner_user_id: null }),
+      });
+      toastSuccess("Business unassigned.");
+      loadData();
+    } catch { toastError("Failed to unassign business."); }
+    finally { setAssignBizSaving(false); }
   };
 
   // ── Squares actions ────────────────────────────────────────────────────────
@@ -704,25 +754,40 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json", ...authHeaders(token) },
         body: JSON.stringify(body),
       });
+      toastSuccess(isEdit ? "City square updated!" : "City square added!");
       setEditSquare(null); setShowAddSq(false); setSqForm({ ...EMPTY_SQ }); loadData();
-    } finally { setSqLoading(false); }
+    } catch { toastError("Failed to save city square."); }
+    finally { setSqLoading(false); }
   };
 
-  const deleteSquare = async (id: number) => {
-    if (!confirm("Delete this city square?")) return;
-    await fetch(`${API}/city_squares.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
-    loadData();
+  const deleteSquare = (id: number) => {
+    showConfirm("Delete city square?", "This city square and all its links will be removed.", async () => {
+      try {
+        await fetch(`${API}/city_squares.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
+        toastSuccess("City square deleted.");
+        loadData();
+      } catch { toastError("Failed to delete city square."); }
+      setConfirmModal(null);
+    });
   };
 
   // ── Event actions ────────────────────────────────────────────────────────────
   const updateEventStatus = async (id: number, status: string) => {
-    await fetch(`${API}/events.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, status }) });
-    loadData();
+    try {
+      await fetch(`${API}/events.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id, status }) });
+      toastSuccess(status === "approved" ? "Event approved!" : status === "rejected" ? "Event rejected." : "Event updated.");
+      loadData();
+    } catch { toastError("Failed to update event."); }
   };
-  const deleteEvent = async (id: number) => {
-    if (!confirm("Delete this event?")) return;
-    await fetch(`${API}/events.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
-    loadData();
+  const deleteEvent = (id: number) => {
+    showConfirm("Delete event?", "This event will be permanently removed.", async () => {
+      try {
+        await fetch(`${API}/events.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
+        toastSuccess("Event deleted.");
+        loadData();
+      } catch { toastError("Failed to delete event."); }
+      setConfirmModal(null);
+    });
   };
 
   // ── About actions ────────────────────────────────────────────────────────────
@@ -737,8 +802,9 @@ export default function AdminPage() {
       });
       setAboutContent(aboutForm);
       setAboutSuccess(true);
+      toastSuccess("About page saved!");
       setTimeout(() => setAboutSuccess(false), 3000);
-    } finally {
+    } catch { toastError("Failed to save about page."); } finally {
       setAboutSaving(false);
     }
   };
@@ -819,6 +885,17 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: "#f5f6fa" }}>
+      {/* Shared confirm modal */}
+      {confirmModal && (
+        <ConfirmModal
+          open={confirmModal.open}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(null)}
+        />
+      )}
+
       {/* Top bar */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
@@ -875,11 +952,7 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {dataLoading && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-            <p className="text-gray-400 text-sm">Loading…</p>
-          </div>
-        )}
+        {dataLoading && <SkeletonRows count={8} />}
 
         {/* ── BLOG POSTS TAB ─────────────────────────────────────────────────── */}
         {tab === "posts" && !dataLoading && (
@@ -1020,7 +1093,7 @@ export default function AdminPage() {
                             className={`transition-colors p-1 rounded-lg hover:bg-gray-100 ${editBiz?.id === b.id ? "text-[#1B3A6B]" : "text-gray-400 hover:text-[#1B3A6B]"}`} title="Edit">
                             <Edit2 size={14} />
                           </button>
-                          <button onClick={() => deleteBusiness(b.id)} className="text-gray-300 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50" title="Delete">
+                          <button onClick={() => deleteBusiness(b.id, b.name)} aria-label={`Delete ${b.name}`} className="text-gray-300 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50" title="Delete">
                             <Trash2 size={14} />
                           </button>
                         </div>
@@ -1113,7 +1186,7 @@ export default function AdminPage() {
                                 </select>
                               )}
                               {isSuperAdmin && (
-                                <button onClick={() => deleteUser(u.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                <button onClick={() => deleteUser(u.id, u.name)} aria-label={`Delete user ${u.name}`} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
                                   <Trash2 size={14} />
                                 </button>
                               )}
@@ -1548,12 +1621,15 @@ export default function AdminPage() {
                       </div>
                       <button
                         onClick={async () => {
-                          await fetch(`${API}/business_claims.php`, {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/json", ...authHeaders(token) },
-                            body: JSON.stringify({ id: c.id, status: "resolved" }),
-                          });
-                          setClaims((prev) => prev.filter((x) => x.id !== c.id));
+                          try {
+                            await fetch(`${API}/business_claims.php`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json", ...authHeaders(token) },
+                              body: JSON.stringify({ id: c.id, status: "resolved" }),
+                            });
+                            toastSuccess("Claim resolved.");
+                            setClaims((prev) => prev.filter((x) => x.id !== c.id));
+                          } catch { toastError("Failed to resolve claim."); }
                         }}
                         className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-xl border border-gray-200 text-gray-500 hover:border-green-300 hover:text-green-600 hover:bg-green-50 transition-colors"
                       >

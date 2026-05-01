@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { getBlogPosts, BlogPost, BlogFilters } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/ui/Toast";
+import { SkeletonPosts } from "@/components/ui/Skeletons";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 
 const TAGS = ["survival guides", "legal", "transportation", "travel guides"];
@@ -17,17 +19,19 @@ const LANGUAGES = [
 ];
 
 export default function BlogPage() {
-  const [posts, setPosts]     = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<BlogFilters>({});
+  const [posts, setPosts]         = useState<BlogPost[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [filters, setFilters]     = useState<BlogFilters>({});
+  const [hasFetched, setHasFetched] = useState(false);
   const { user } = useAuth();
+  const { error: toastError } = useToast();
   const pillsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLoading(true);
     getBlogPosts(filters)
-      .then(setPosts)
-      .catch(() => setPosts([]))
+      .then((data) => { setPosts(data); setHasFetched(true); })
+      .catch(() => { toastError("Failed to load articles. Please refresh."); setPosts([]); })
       .finally(() => setLoading(false));
   }, [filters]);
 
@@ -138,10 +142,7 @@ export default function BlogPage() {
 
       {/* Posts */}
       {loading ? (
-        <div className="text-center py-16 text-gray-400">
-          <div className="text-4xl mb-4">⏳</div>
-          <p>Loading articles...</p>
-        </div>
+        <SkeletonPosts count={6} />
       ) : posts.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <div className="text-4xl mb-4">📝</div>

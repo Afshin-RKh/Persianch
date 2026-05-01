@@ -26,6 +26,20 @@ export default function SignUpPage() {
   const [loading, setLoading]     = useState(false);
   const [resent, setResent]       = useState(false);
 
+  const pwStrength = (pw: string) => {
+    if (pw.length === 0) return 0;
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (pw.length >= 12) score++;
+    if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+    if (/\d/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    return Math.min(score, 4);
+  };
+  const strength = pwStrength(password);
+  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][strength];
+  const strengthColor = ["", "#EF4444", "#F97316", "#EAB308", "#22C55E"][strength];
+
   if (user) { router.replace("/"); return null; }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,8 +166,21 @@ export default function SignUpPage() {
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com" className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 8 characters" className={inputCls} />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-gray-600">Password <span className="font-normal text-gray-400">(min. 8 characters)</span></label>
+                {password.length > 0 && (
+                  <span className="text-xs font-semibold" style={{ color: strengthColor }}>{strengthLabel}</span>
+                )}
+              </div>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="At least 8 characters" className={inputCls} />
+              {password.length > 0 && (
+                <div className="flex gap-1 mt-2">
+                  {[1, 2, 3, 4].map((n) => (
+                    <div key={n} className="h-1 flex-1 rounded-full transition-colors duration-200"
+                      style={{ backgroundColor: strength >= n ? strengthColor : "#E5E7EB" }} />
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <LocationSelector

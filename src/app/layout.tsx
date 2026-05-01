@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Script from "next/script";
 import { AuthProvider } from "@/lib/auth";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
@@ -73,9 +74,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col bg-gray-50">
         <AuthProvider>
-          <Navbar />
-          <div className="flex-1">{children}</div>
-          <Footer />
+          <ToastProvider>
+            <Navbar />
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

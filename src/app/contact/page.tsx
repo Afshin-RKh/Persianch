@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useToast } from "@/components/ui/Toast";
 
 const navy = "#1B3A6B";
 const red  = "#8B1A1A";
@@ -9,20 +10,25 @@ const gold = "#C9A84C";
 export default function ContactPage() {
   const [contactSent, setContactSent] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting]   = useState(false);
+  const { error: toastError } = useToast();
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await fetch("https://formspree.io/f/xbdqkrrp", {
+      const res = await fetch("https://formspree.io/f/xbdqkrrp", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(contactForm),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Failed to send message.");
+      }
       setContactSent(true);
-    } catch {
-      setContactSent(true);
+    } catch (err: unknown) {
+      toastError(err instanceof Error ? err.message : "Something went wrong. Please try again or email us directly.");
     } finally {
       setSubmitting(false);
     }
