@@ -47,33 +47,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           gtag('js', new Date());
           gtag('config', 'G-R71GKWRRVM');
         `}</Script>
-        <Script id="org-jsonld" type="application/ld+json" strategy="afterInteractive">{`
-          {
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": "BiruniMap",
-            "url": "https://birunimap.com",
-            "logo": "https://birunimap.com/og-image.svg",
-            "description": "The global map of the Iranian diaspora — discover Iranian-owned businesses, community events, and resources worldwide.",
-            "sameAs": ["https://instagram.com/birunimap", "https://www.linkedin.com/company/birunimap"]
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "BiruniMap",
+          "url": "https://birunimap.com",
+          "logo": "https://birunimap.com/og-image.svg",
+          "description": "The global map of the Iranian diaspora — discover Iranian-owned businesses, community events, and resources worldwide.",
+          "sameAs": ["https://instagram.com/birunimap", "https://www.linkedin.com/company/birunimap"]
+        }) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "BiruniMap",
+          "url": "https://birunimap.com",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://birunimap.com/businesses?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
           }
-        `}</Script>
-        <Script id="website-jsonld" type="application/ld+json" strategy="afterInteractive">{`
-          {
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            "name": "BiruniMap",
-            "url": "https://birunimap.com",
-            "potentialAction": {
-              "@type": "SearchAction",
-              "target": {
-                "@type": "EntryPoint",
-                "urlTemplate": "https://birunimap.com/businesses?search={search_term_string}"
-              },
-              "query-input": "required name=search_term_string"
-            }
-          }
-        `}</Script>
+        }) }} />
       </head>
       <body className="min-h-full flex flex-col bg-gray-50">
         <AuthProvider>
