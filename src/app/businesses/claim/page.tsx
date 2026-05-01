@@ -61,6 +61,23 @@ function ClaimForm() {
     }
   };
 
+  if (!user) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-5xl mb-4">🔒</p>
+        <h1 className="text-xl font-bold text-gray-900 mb-2">Sign in required</h1>
+        <p className="text-gray-500 text-sm mb-6">You need to be signed in to claim a business or report an issue.</p>
+        <Link
+          href={`/auth/signin?next=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "/businesses")}`}
+          className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl text-white"
+          style={{ backgroundColor: "#1B3A6B" }}
+        >
+          Sign in
+        </Link>
+      </div>
+    );
+  }
+
   if (!id) {
     return (
       <div className="text-center py-20 text-gray-400">
@@ -132,31 +149,6 @@ function ClaimForm() {
           />
         </div>
 
-        {/* Name + email if not logged in */}
-        {!user && (
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Your name</label>
-              <input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
-                placeholder="Name"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]"
-                placeholder="email@example.com"
-              />
-            </div>
-          </div>
-        )}
-
         {error && <p className="text-sm text-red-500">{error}</p>}
 
         <button
@@ -167,12 +159,6 @@ function ClaimForm() {
         >
           {submitting ? "Sending…" : "Send message"}
         </button>
-
-        {!user && (
-          <p className="text-center text-xs text-gray-400">
-            <Link href="/auth/signin" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>Sign in</Link> to submit as a verified user.
-          </p>
-        )}
       </form>
     </main>
   );
