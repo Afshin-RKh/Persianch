@@ -35,6 +35,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./out/
           server-dir: /app/
+          dangerous-clean-slate: true
 
       - name: Deploy PHP API to /api/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
