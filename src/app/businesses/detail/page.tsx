@@ -5,12 +5,14 @@ import Image from "next/image";
 import { getBusinessById } from "@/lib/api";
 import { idFromSlug } from "@/lib/businessSlug";
 import { Business, CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
-import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2, Pencil, X, AlertTriangle } from "lucide-react";
+import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2, Pencil, X, AlertTriangle, Instagram, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAuth, authHeaders } from "@/lib/auth";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
+
+const FARSI_STYLE: React.CSSProperties = { fontFamily: "'Vazirmatn', sans-serif" };
 
 interface Comment {
   id: number;
@@ -57,35 +59,42 @@ function BusinessComments({ businessId }: { businessId: number }) {
   };
 
   return (
-    <section className="mt-8 pt-8 border-t border-gray-100">
-      <h2 className="text-lg font-bold text-gray-900 mb-4">Comments ({comments.length})</h2>
+    <section className="mt-10 pt-8 border-t border-gray-100">
+      <h2 className="text-base font-bold text-gray-900 mb-5 flex items-center gap-2">
+        Comments
+        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">{comments.length}</span>
+      </h2>
 
-      {comments.length === 0 && <p className="text-gray-400 text-sm mb-6">No comments yet.</p>}
+      {comments.length === 0 && (
+        <p className="text-gray-400 text-sm mb-6">No comments yet. Be the first to share your experience.</p>
+      )}
 
       <div className="space-y-3 mb-6">
         {comments.map((c) => (
-          <div key={c.id} className="bg-gray-50 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-2">
+          <div key={c.id} className="bg-gray-50 rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2.5">
                 {c.avatar ? (
-                  <Image src={c.avatar} alt={c.user_name} width={24} height={24} className="w-6 h-6 rounded-full object-cover" />
+                  <Image src={c.avatar} alt={c.user_name} width={32} height={32} className="w-8 h-8 rounded-full object-cover" />
                 ) : (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#1B3A6B" }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#1B3A6B" }}>
                     {c.user_name[0]?.toUpperCase()}
                   </div>
                 )}
-                <span className="text-sm font-semibold text-gray-800">{c.user_name}</span>
-                <span className="text-xs text-gray-400">
-                  {new Date(c.created_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" })}
-                </span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-800 leading-none">{c.user_name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {new Date(c.created_at).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}
+                  </p>
+                </div>
               </div>
               {(user?.id === c.user_id || isAdmin) && (
-                <button onClick={() => deleteComment(c.id)} className="text-gray-300 hover:text-red-500 transition-colors">
+                <button onClick={() => deleteComment(c.id)} className="text-gray-300 hover:text-red-400 transition-colors p-1">
                   <Trash2 size={13} />
                 </button>
               )}
             </div>
-            <p className="text-sm text-gray-700">{c.content}</p>
+            <p className="text-sm text-gray-700 leading-relaxed pl-10">{c.content}</p>
           </div>
         ))}
       </div>
@@ -95,23 +104,23 @@ function BusinessComments({ businessId }: { businessId: number }) {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Write a comment..."
-            rows={2}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-none"
+            placeholder="Share your experience…"
+            rows={3}
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] resize-none bg-gray-50"
           />
           <button
             type="submit"
             disabled={loading || !text.trim()}
-            className="text-white font-semibold px-5 py-2 rounded-xl text-sm disabled:opacity-50 transition-colors"
-            style={{ backgroundColor: "#8B1A1A" }}
+            className="text-white font-semibold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50 transition-opacity"
+            style={{ backgroundColor: "#1B3A6B" }}
           >
-            {loading ? "Posting..." : "Post"}
+            {loading ? "Posting…" : "Post comment"}
           </button>
         </form>
       ) : (
-        <p className="text-sm text-gray-500">
+        <div className="bg-gray-50 rounded-2xl p-4 text-sm text-gray-500">
           <Link href="/auth/signin" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>Sign in</Link> to leave a comment.
-        </p>
+        </div>
       )}
     </section>
   );
@@ -132,21 +141,6 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
   "real-estate":"from-indigo-200 to-blue-200",
   other:        "from-gray-200 to-slate-200",
 };
-
-function ContactRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ backgroundColor: "#FDF0E8" }}>
-        {icon}
-      </div>
-      <div>
-        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">{label}</p>
-        {children}
-      </div>
-    </div>
-  );
-}
 
 interface UserOption { id: number; name: string; email: string; }
 
@@ -178,6 +172,7 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
       .then(data => setUsers(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, [token]);
+
   const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]";
   const regions = REGIONS_BY_COUNTRY[form.country] ?? [];
 
@@ -206,7 +201,7 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Name (Persian)</label>
-            <input value={form.name_fa} onChange={(e) => setForm({ ...form, name_fa: e.target.value })} className={inp} dir="rtl" />
+            <input value={form.name_fa} onChange={(e) => setForm({ ...form, name_fa: e.target.value })} className={inp} dir="rtl" style={FARSI_STYLE} />
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
@@ -263,7 +258,7 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Description (Persian)</label>
-            <textarea value={form.description_fa} onChange={(e) => setForm({ ...form, description_fa: e.target.value })} rows={3} dir="rtl" className={`${inp} resize-none`} />
+            <textarea value={form.description_fa} onChange={(e) => setForm({ ...form, description_fa: e.target.value })} rows={3} dir="rtl" style={FARSI_STYLE} className={`${inp} resize-none`} />
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Cover Image URL</label>
@@ -299,7 +294,6 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
           ))}
         </div>
 
-        {/* Managed by */}
         <div className="border-t border-amber-200 pt-4">
           <label className="block text-xs font-semibold text-gray-600 mb-1">Managed by</label>
           {assignOwner ? (
@@ -318,7 +312,7 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
         </div>
 
         <button type="submit" disabled={saving} className="text-white font-semibold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50" style={{ backgroundColor: "#8B1A1A" }}>
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? "Saving…" : "Save Changes"}
         </button>
       </form>
     </div>
@@ -338,7 +332,6 @@ function BusinessDetailContent() {
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
-    // Pass auth token so admins can view unapproved businesses
     const headers: Record<string, string> = {};
     if (token) Object.assign(headers, authHeaders(token));
     fetch(`${API}/businesses.php?id=${id}`, { headers })
@@ -360,13 +353,12 @@ function BusinessDetailContent() {
 
   const category = business ? CATEGORIES.find((c) => c.slug === business.category) : null;
 
-  // Set page title
   useEffect(() => {
     if (business) document.title = `${business.name} — BiruniMap`;
   }, [business?.name]);
 
-  // Build BreadcrumbList JSON-LD
   const bSlug = business ? `${business.category}-${business.name}-${business.country ?? ""}-${business.canton ?? ""}-${business.id}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") : null;
+
   const breadcrumbLd = business ? JSON.stringify({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -377,7 +369,6 @@ function BusinessDetailContent() {
     ],
   }) : null;
 
-  // Build LocalBusiness JSON-LD
   const jsonLd = business ? JSON.stringify({
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -395,227 +386,291 @@ function BusinessDetailContent() {
 
   if (loading) {
     return (
-      <main className="max-w-4xl mx-auto px-4 py-10">
-        <div className="skeleton h-72 w-full mb-6" />
-        <div className="skeleton h-8 w-64 mb-3" />
-        <div className="skeleton h-4 w-full mb-2" />
-        <div className="skeleton h-4 w-3/4" />
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+        <div className="skeleton h-80 w-full rounded-3xl mb-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="skeleton h-10 w-64" />
+            <div className="skeleton h-4 w-full" />
+            <div className="skeleton h-4 w-3/4" />
+          </div>
+          <div className="space-y-3">
+            <div className="skeleton h-16 w-full rounded-2xl" />
+            <div className="skeleton h-16 w-full rounded-2xl" />
+            <div className="skeleton h-16 w-full rounded-2xl" />
+          </div>
+        </div>
       </main>
     );
   }
 
   if (!business) {
     return (
-      <main className="max-w-4xl mx-auto px-4 py-20 text-center text-gray-500">
-        <p className="text-5xl mb-4">🔍</p>
-        <p className="font-bold text-lg">Business not found.</p>
-        <Link href="/businesses" className="hover:underline mt-4 inline-block text-sm" style={{ color: "#1B3A6B" }}>
-          ← Back to listings
+      <main className="max-w-5xl mx-auto px-4 py-20 text-center text-gray-500">
+        <p className="text-6xl mb-4">🔍</p>
+        <p className="font-bold text-xl text-gray-800 mb-2">Business not found</p>
+        <p className="text-sm text-gray-400 mb-6">This listing may have been removed or doesn&apos;t exist.</p>
+        <Link href="/businesses" className="inline-flex items-center gap-2 font-semibold text-sm px-5 py-2.5 rounded-xl text-white" style={{ backgroundColor: "#1B3A6B" }}>
+          <ArrowLeft size={14} /> Browse all businesses
         </Link>
       </main>
     );
   }
 
   const gradient = CATEGORY_GRADIENTS[business.category] ?? "from-gray-200 to-slate-200";
+  const country = (business as any).country;
 
   return (
     <>
-    {breadcrumbLd && (
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbLd }} />
-    )}
-    {jsonLd && (
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
-    )}
-    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-up">
-      <div className="flex items-center justify-between mb-6">
-        <Link href="/businesses" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors font-medium">
-          <ArrowLeft size={15} /> Back to listings
-        </Link>
-        {isAdmin && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setEditing((v) => !v)}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
-              style={editing ? { backgroundColor: "#f3f4f6", color: "#374151" } : { backgroundColor: "#1B3A6B", color: "#fff" }}
-            >
-              {editing ? <><X size={14} /> Close Editor</> : <><Pencil size={14} /> Edit</>}
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
-              style={{ backgroundColor: "#8B1A1A", color: "#fff" }}
-            >
-              <Trash2 size={14} /> {deleting ? "Deleting…" : "Delete"}
-            </button>
+      {breadcrumbLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbLd }} />}
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />}
+
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-up">
+
+        {/* Top nav row */}
+        <div className="flex items-center justify-between mb-6">
+          <Link href="/businesses" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors font-medium">
+            <ArrowLeft size={15} /> Back to listings
+          </Link>
+          {isAdmin && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setEditing((v) => !v)}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+                style={editing ? { backgroundColor: "#f3f4f6", color: "#374151" } : { backgroundColor: "#1B3A6B", color: "#fff" }}
+              >
+                {editing ? <><X size={14} /> Close</> : <><Pencil size={14} /> Edit</>}
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl disabled:opacity-50"
+                style={{ backgroundColor: "#8B1A1A", color: "#fff" }}
+              >
+                <Trash2 size={14} /> {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Unapproved — block public */}
+        {!(business as any).is_approved && !isAdmin && (
+          <div className="text-center py-20 text-gray-400">
+            <p className="text-5xl mb-3">🔍</p>
+            <p className="font-semibold text-gray-600">This listing is not available.</p>
+            <Link href="/businesses" className="text-sm mt-3 inline-block hover:underline" style={{ color: "#1B3A6B" }}>← Browse all businesses</Link>
           </div>
         )}
-      </div>
 
-      {/* Unapproved — block public entirely */}
-      {!(business as any).is_approved && !isAdmin && (
-        <div className="text-center py-20 text-gray-400">
-          <p className="text-4xl mb-3">🔍</p>
-          <p className="font-semibold text-gray-600">This listing is not available.</p>
-          <Link href="/businesses" className="text-sm mt-3 inline-block hover:underline" style={{ color: "#1B3A6B" }}>← Browse all businesses</Link>
-        </div>
-      )}
+        {(isAdmin || (business as any).is_approved) && (
+          <>
+            {/* Unapproved warning for admins */}
+            {!(business as any).is_approved && isAdmin && (
+              <div className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-2xl px-5 py-3 mb-6 text-yellow-800 text-sm font-medium">
+                <AlertTriangle size={16} className="flex-shrink-0" />
+                This business is <strong>not approved</strong> and is hidden from the public.
+              </div>
+            )}
 
-      {(isAdmin || (business as any).is_approved) && (
-      <>
-      {/* Unapproved warning for admins */}
-      {!(business as any).is_approved && isAdmin && (
-        <div className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-2xl px-5 py-3 mb-6 text-yellow-800 text-sm font-medium">
-          <AlertTriangle size={16} className="flex-shrink-0" />
-          This business is <strong>not approved</strong> and is hidden from the public.
-        </div>
-      )}
+            {editing && isAdmin && (
+              <AdminEditPanel business={business} token={token} onSaved={(updated) => setBusiness(updated)} />
+            )}
 
-      {editing && isAdmin && (
-        <AdminEditPanel business={business} token={token} onSaved={(updated) => setBusiness(updated)} />
-      )}
-
-      {/* Hero banner */}
-      <div className={`relative h-64 sm:h-80 bg-gradient-to-br ${gradient} rounded-3xl overflow-hidden mb-6 flex items-center justify-center`}>
-        {business.image_url ? (
-          <Image src={business.image_url} alt={business.name} fill className="object-cover" sizes="(max-width: 640px) 100vw, 800px" priority />
-        ) : (
-          <span className="text-9xl opacity-60">{category?.icon ?? "🏪"}</span>
-        )}
-        {/* Dark overlay at bottom for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-
-        {/* Badges */}
-        <div className="absolute top-4 right-4 flex gap-2">
-          {business.is_featured && (
-            <span className="text-xs font-bold px-3 py-1.5 rounded-full shadow"
-              style={{ backgroundColor: "#C9A84C", color: "#3a0a0a" }}>
-              ⭐ Featured
-            </span>
-          )}
-          {business.is_verified && (
-            <span className="bg-white text-xs font-bold px-3 py-1.5 rounded-full shadow flex items-center gap-1"
-              style={{ color: "#1B3A6B" }}>
-              <CheckCircle size={12} /> Verified
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main info */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Title card */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <div className="flex items-start gap-4">
-              {business.logo_url && (
-                <Image src={business.logo_url} alt={`${business.name} logo`} width={64} height={64} className="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm flex-shrink-0" />
+            {/* Hero */}
+            <div className={`relative h-56 sm:h-80 bg-gradient-to-br ${gradient} rounded-3xl overflow-hidden mb-8`}>
+              {business.image_url ? (
+                <Image src={business.image_url} alt={business.name} fill className="object-cover" sizes="(max-width: 640px) 100vw, 900px" priority />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-9xl opacity-50">{category?.icon ?? "🏪"}</span>
+                </div>
               )}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{business.name}</h1>
-                {business.name_fa && (
-                  <p className="text-gray-400 text-base mt-0.5" dir="rtl">{business.name_fa}</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+
+              {/* Badges */}
+              <div className="absolute top-4 right-4 flex gap-2">
+                {business.is_featured && (
+                  <span className="text-xs font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm"
+                    style={{ backgroundColor: "#C9A84C", color: "#3a0a0a" }}>
+                    ⭐ Featured
+                  </span>
                 )}
-                <div className="flex items-center gap-2 mt-3 flex-wrap">
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full"
-                    style={{ backgroundColor: "#FDF0E8", color: "#1B3A6B" }}>
-                    {category?.icon} {category?.label_en}
+                {business.is_verified && (
+                  <span className="bg-white/90 backdrop-blur-sm text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1"
+                    style={{ color: "#1B3A6B" }}>
+                    <CheckCircle size={11} /> Verified
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-gray-500">
-                    <MapPin size={12} style={{ color: "#1B3A6B" }} /> {business.canton}
-                  </span>
-                  {business.owner_user_id ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0" }}>
-                      <CheckCircle size={11} /> Managed by owner
-                    </span>
-                  ) : (
-                    <span className="text-xs px-2.5 py-1 rounded-full text-gray-400 border border-gray-200">
-                      Managed by BiruniMap
-                    </span>
+                )}
+              </div>
+
+              {/* Category pill bottom-left */}
+              <div className="absolute bottom-4 left-4">
+                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow"
+                  style={{ color: "#1B3A6B" }}>
+                  {category?.icon} {category?.label_en}
+                </span>
+              </div>
+            </div>
+
+            {/* Content grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+              {/* Left — main info */}
+              <div className="lg:col-span-2 space-y-6">
+
+                {/* Title card */}
+                <div className="flex items-start gap-4">
+                  {business.logo_url && (
+                    <Image
+                      src={business.logo_url}
+                      alt={`${business.name} logo`}
+                      width={72} height={72}
+                      className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover border border-gray-100 shadow-md flex-shrink-0"
+                    />
                   )}
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{business.name}</h1>
+                    {business.name_fa && (
+                      <p className="text-lg text-gray-500 mt-1" dir="rtl" style={FARSI_STYLE}>{business.name_fa}</p>
+                    )}
+                    <div className="flex items-center gap-2 mt-3 flex-wrap text-sm text-gray-500">
+                      {(business.canton || country) && (
+                        <span className="flex items-center gap-1">
+                          <MapPin size={13} /> {[business.canton, country].filter(Boolean).join(", ")}
+                        </span>
+                      )}
+                      {business.owner_user_id ? (
+                        <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full"
+                          style={{ backgroundColor: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0" }}>
+                          <CheckCircle size={11} /> Owner-managed
+                        </span>
+                      ) : (
+                        <span className="text-xs px-2.5 py-1 rounded-full text-gray-400 border border-gray-200">
+                          Managed by BiruniMap
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                {(business.description || business.description_fa) && (
+                  <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                    <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">About</h2>
+                    {business.description && (
+                      <p className="text-gray-700 leading-relaxed text-[15px]">{business.description}</p>
+                    )}
+                    {business.description_fa && (
+                      <p className="text-gray-600 leading-loose text-base mt-4 pt-4 border-t border-gray-100" dir="rtl" style={FARSI_STYLE}>
+                        {business.description_fa}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Map */}
+                <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                  <BusinessMap business={business} />
+                </div>
+
+              </div>
+
+              {/* Right — contact sidebar */}
+              <div className="space-y-3">
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Contact</h2>
+
+                {business.website && (
+                  <a href={business.website} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-[#1B3A6B] hover:bg-blue-50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#EEF2F9]">
+                      <Globe size={16} style={{ color: "#1B3A6B" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-400 font-medium">Website</p>
+                      <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-[#1B3A6B] transition-colors">
+                        {business.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                      </p>
+                    </div>
+                    <ExternalLink size={13} className="text-gray-300 group-hover:text-[#1B3A6B] flex-shrink-0 transition-colors" />
+                  </a>
+                )}
+
+                {business.phone && (
+                  <a href={`tel:${business.phone}`}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-[#1B3A6B] hover:bg-blue-50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#EEF2F9]">
+                      <Phone size={16} style={{ color: "#1B3A6B" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-400 font-medium">Phone</p>
+                      <p className="text-sm font-semibold text-gray-800 group-hover:text-[#1B3A6B] transition-colors">{business.phone}</p>
+                    </div>
+                  </a>
+                )}
+
+                {business.email && (
+                  <a href={`mailto:${business.email}`}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-[#1B3A6B] hover:bg-blue-50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#EEF2F9]">
+                      <Mail size={16} style={{ color: "#1B3A6B" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-400 font-medium">Email</p>
+                      <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-[#1B3A6B] transition-colors">{business.email}</p>
+                    </div>
+                  </a>
+                )}
+
+                {business.address && (
+                  <div className="flex items-start gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#EEF2F9]">
+                      <MapPin size={16} style={{ color: "#1B3A6B" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-400 font-medium">Address</p>
+                      <p className="text-sm font-semibold text-gray-800">{business.address}</p>
+                      {business.canton && <p className="text-xs text-gray-400 mt-0.5">{business.canton}{country ? `, ${country}` : ""}</p>}
+                      {business.google_maps_url && (
+                        <a href={business.google_maps_url} target="_blank" rel="noopener noreferrer"
+                          className="text-xs font-semibold mt-2 inline-flex items-center gap-1 hover:underline" style={{ color: "#1B3A6B" }}>
+                          Open in Maps <ExternalLink size={10} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {business.instagram && (
+                  <a href={`https://instagram.com/${business.instagram.replace("@", "")}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-pink-300 hover:bg-pink-50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-pink-50">
+                      <Instagram size={16} className="text-pink-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-400 font-medium">Instagram</p>
+                      <p className="text-sm font-semibold text-gray-800 group-hover:text-pink-600 transition-colors">
+                        @{business.instagram.replace("@", "")}
+                      </p>
+                    </div>
+                    <ExternalLink size={13} className="text-gray-300 group-hover:text-pink-400 flex-shrink-0 transition-colors" />
+                  </a>
+                )}
+
+                {/* Get listed CTA */}
+                <div className="mt-6 p-4 rounded-2xl text-center" style={{ backgroundColor: "#EEF2F9" }}>
+                  <p className="text-xs text-gray-500 mb-2">Own a business?</p>
+                  <Link href="/get-listed" className="text-sm font-bold hover:underline" style={{ color: "#1B3A6B" }}>
+                    Get listed on BiruniMap →
+                  </Link>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Description */}
-          {(business.description || business.description_fa) && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <h2 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">About</h2>
-              {business.description && (
-                <p className="text-gray-600 leading-relaxed">{business.description}</p>
-              )}
-              {business.description_fa && (
-                <p className="text-gray-500 leading-relaxed mt-3 pt-3 border-t border-gray-50" dir="rtl">
-                  {business.description_fa}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Map */}
-          <BusinessMap business={business} />
-        </div>
-
-        {/* Contact sidebar */}
-        <div className="space-y-3">
-          <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide px-1">Contact</h2>
-
-          {business.phone && (
-            <ContactRow icon={<Phone size={16} style={{ color: "#1B3A6B" }} />} label="Phone">
-              <a href={`tel:${business.phone}`} className="text-sm font-medium text-gray-800 hover:text-[#1B3A6B] transition-colors">
-                {business.phone}
-              </a>
-            </ContactRow>
-          )}
-
-          {business.address && (
-            <ContactRow icon={<MapPin size={16} style={{ color: "#1B3A6B" }} />} label="Address">
-              <p className="text-sm text-gray-700">{business.address}, {business.canton}</p>
-              {business.google_maps_url && (
-                <a href={business.google_maps_url} target="_blank" rel="noopener noreferrer"
-                  className="text-xs font-semibold mt-1 block hover:underline" style={{ color: "#1B3A6B" }}>
-                  Open in Google Maps →
-                </a>
-              )}
-            </ContactRow>
-          )}
-
-          {business.website && (
-            <ContactRow icon={<Globe size={16} style={{ color: "#1B3A6B" }} />} label="Website">
-              <a href={business.website} target="_blank" rel="noopener noreferrer"
-                className="text-sm font-medium hover:underline break-all" style={{ color: "#1B3A6B" }}>
-                {business.website.replace(/^https?:\/\//, "")}
-              </a>
-            </ContactRow>
-          )}
-
-          {business.email && (
-            <ContactRow icon={<Mail size={16} style={{ color: "#1B3A6B" }} />} label="Email">
-              <a href={`mailto:${business.email}`} className="text-sm font-medium text-gray-800 hover:text-[#1B3A6B] transition-colors break-all">
-                {business.email}
-              </a>
-            </ContactRow>
-          )}
-
-          {business.instagram && (
-            <ContactRow icon={<span style={{ color: "#1B3A6B", fontSize: 16 }}>📸</span>} label="Instagram">
-              <a href={`https://instagram.com/${business.instagram.replace("@", "")}`}
-                target="_blank" rel="noopener noreferrer"
-                className="text-sm font-medium hover:underline" style={{ color: "#1B3A6B" }}>
-                @{business.instagram.replace("@", "")}
-              </a>
-            </ContactRow>
-          )}
-
-        </div>
-      </div>
-
-      <BusinessComments businessId={Number(business.id)} />
-      </>
-      )}
-    </main>
+            <BusinessComments businessId={Number(business.id)} />
+          </>
+        )}
+      </main>
     </>
   );
 }
@@ -623,11 +678,20 @@ function BusinessDetailContent() {
 export default function BusinessDetailPage() {
   return (
     <Suspense fallback={
-      <main className="max-w-4xl mx-auto px-4 py-10">
-        <div className="skeleton h-72 w-full mb-6" />
-        <div className="skeleton h-8 w-64 mb-3" />
-        <div className="skeleton h-4 w-full mb-2" />
-        <div className="skeleton h-4 w-3/4" />
+      <main className="max-w-5xl mx-auto px-4 py-10">
+        <div className="skeleton h-80 w-full rounded-3xl mb-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="skeleton h-10 w-64" />
+            <div className="skeleton h-4 w-full" />
+            <div className="skeleton h-4 w-3/4" />
+          </div>
+          <div className="space-y-3">
+            <div className="skeleton h-16 w-full rounded-2xl" />
+            <div className="skeleton h-16 w-full rounded-2xl" />
+            <div className="skeleton h-16 w-full rounded-2xl" />
+          </div>
+        </div>
       </main>
     }>
       <BusinessDetailContent />
