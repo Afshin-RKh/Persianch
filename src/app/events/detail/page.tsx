@@ -164,6 +164,10 @@ function EventDetailContent() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    if (event?.title) document.title = `${event.title} — BiruniMap Events`;
+  }, [event?.title]);
+
+  useEffect(() => {
     if (!id) { setNotFound(true); setLoading(false); return; }
     fetch(`${API}/events.php?id=${id}`, { headers: authHeaders(token) })
       .then((r) => r.json())
@@ -198,11 +202,6 @@ function EventDetailContent() {
   );
 
   const meta = EVENT_TYPE_META[event.event_type] ?? EVENT_TYPE_META.other;
-
-  // Set page title dynamically
-  useEffect(() => {
-    document.title = `${event.title} — BiruniMap Events`;
-  }, [event.title]);
 
   const breadcrumbLd = JSON.stringify({
     "@context": "https://schema.org",
