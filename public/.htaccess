@@ -1,3 +1,8 @@
+# Security headers
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+</IfModule>
+
 # Redirect www to non-www
 RewriteEngine On
 RewriteCond %{HTTP_HOST} ^www\.birunimap\.com [NC]

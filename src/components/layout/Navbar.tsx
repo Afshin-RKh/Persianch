@@ -81,7 +81,7 @@ export default function Navbar() {
                   className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-[#1B3A6B] transition-colors"
                 >
                   {user.avatar ? (
-                    <img src={user.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                    <img src={user.avatar} alt={user.name ? `${user.name} avatar` : "User avatar"} className="w-8 h-8 rounded-full object-cover" />
                   ) : (
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#1B3A6B" }}>
                       {user.name[0]?.toUpperCase()}
