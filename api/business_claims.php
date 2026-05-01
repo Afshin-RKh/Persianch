@@ -24,6 +24,8 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS business_claims (
     status ENUM('pending','resolved') NOT NULL DEFAULT 'pending',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 )");
+// Ensure user_email column exists (migration for tables created before this column was added)
+try { $pdo->exec("ALTER TABLE business_claims ADD COLUMN user_email VARCHAR(255) AFTER user_name"); } catch (\Exception $e) {}
 
 if ($method === 'GET') {
     $user = auth_user();
