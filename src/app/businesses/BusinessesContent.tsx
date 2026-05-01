@@ -140,12 +140,18 @@ export default function BusinessesContent() {
             ))}
           </div>
 
-          {/* Fetching indicator */}
-          {fetching && (
-            <div className="flex-shrink-0 bg-white rounded-full shadow-sm border border-gray-200 p-1.5">
-              <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-            </div>
-          )}
+          {/* Count / fetching indicator */}
+          <div className="flex-shrink-0">
+            {fetching ? (
+              <div className="bg-white rounded-full shadow-sm border border-gray-200 p-1.5">
+                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+              </div>
+            ) : hasFetched && businesses.length > 0 ? (
+              <div className="bg-white rounded-full shadow-sm border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600">
+                {businesses.length} found
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 

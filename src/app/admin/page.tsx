@@ -87,8 +87,13 @@ const roleBadge = (role: string) => {
   return <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${map[role] ?? map.user}`}>{labels[role] ?? role}</span>;
 };
 const statusBadge = (status: string) => {
-  const map: Record<string, string> = { pending: "bg-yellow-100 text-yellow-700", approved: "bg-green-100 text-green-700", rejected: "bg-red-100 text-red-600" };
-  return <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${map[status] ?? "bg-gray-100 text-gray-500"}`}>{status}</span>;
+  const map: Record<string, { cls: string; icon: string }> = {
+    pending:  { cls: "bg-yellow-100 text-yellow-700", icon: "⏳" },
+    approved: { cls: "bg-green-100 text-green-700",   icon: "✓" },
+    rejected: { cls: "bg-red-100 text-red-600",       icon: "✗" },
+  };
+  const m = map[status] ?? { cls: "bg-gray-100 text-gray-500", icon: "" };
+  return <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${m.cls}`}>{m.icon} {status}</span>;
 };
 const actionBadge = (action: string) => {
   const map: Record<string, string> = { create: "bg-green-100 text-green-700", update: "bg-blue-100 text-blue-700", delete: "bg-red-100 text-red-600", approve: "bg-emerald-100 text-emerald-700", reject: "bg-orange-100 text-orange-700" };
@@ -936,20 +941,23 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-5 bg-white rounded-2xl border border-gray-100 p-1 shadow-sm w-fit">
-          {TABS.filter((t) => !t.superOnly || isSuperAdmin).map((t) => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
-                tab === t.key ? "text-white shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
-              }`}
-              style={tab === t.key ? { backgroundColor: "#1B3A6B" } : {}}>
-              {t.icon}{t.label}
-              {t.key === "claims" && claims.length > 0 && (
-                <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">{claims.length}</span>
-              )}
-            </button>
-          ))}
+        {/* Tabs — horizontal scroll on mobile with fade indicator */}
+        <div className="relative mb-5">
+          <div className="flex gap-1 bg-white rounded-2xl border border-gray-100 p-1 shadow-sm overflow-x-auto"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitMaskImage: "linear-gradient(to left, transparent 0px, black 48px)", maskImage: "linear-gradient(to left, transparent 0px, black 48px)" }}>
+            {TABS.filter((t) => !t.superOnly || isSuperAdmin).map((t) => (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-all flex-shrink-0 ${
+                  tab === t.key ? "text-white shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                }`}
+                style={tab === t.key ? { backgroundColor: "#1B3A6B" } : {}}>
+                {t.icon}{t.label}
+                {t.key === "claims" && claims.length > 0 && (
+                  <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">{claims.length}</span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {dataLoading && <SkeletonRows count={8} />}
@@ -957,11 +965,30 @@ export default function AdminPage() {
         {/* ── BLOG POSTS TAB ─────────────────────────────────────────────────── */}
         {tab === "posts" && !dataLoading && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-wrap gap-3">
               <h2 className="font-bold text-gray-900">Blog Posts <span className="text-gray-400 font-normal text-sm">({filteredPosts.length}/{posts.length})</span></h2>
-              <Link href="/blog/write" className="flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-opacity hover:opacity-90" style={{ backgroundColor: "#8B1A1A" }}>
-                + New Post
-              </Link>
+              <div className="flex items-center gap-2 flex-wrap">
+                {filteredPosts.filter((p) => p.status === "pending").length > 0 && (
+                  <button
+                    onClick={() => showConfirm(
+                      "Approve all pending posts?",
+                      `This will approve ${filteredPosts.filter(p => p.status === "pending").length} pending posts at once.`,
+                      async () => {
+                        const pending = filteredPosts.filter(p => p.status === "pending");
+                        await Promise.all(pending.map(p => fetch(`${API}/blog.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: p.id, status: "approved" }) })));
+                        toastSuccess(`${pending.length} posts approved.`);
+                        loadData();
+                        setConfirmModal(null);
+                      }
+                    )}
+                    className="flex items-center gap-1.5 text-green-700 text-xs font-semibold px-3 py-2 rounded-xl bg-green-50 border border-green-200 hover:bg-green-100 transition-colors">
+                    <CheckCircle size={13} /> Approve all pending ({filteredPosts.filter(p => p.status === "pending").length})
+                  </button>
+                )}
+                <Link href="/blog/write" className="flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-opacity hover:opacity-90" style={{ backgroundColor: "#8B1A1A" }}>
+                  + New Post
+                </Link>
+              </div>
             </div>
             <div className="px-6 py-3 border-b border-gray-50 flex flex-wrap gap-2">
               <input type="text" placeholder="Search title or author…" value={postSearch} onChange={(e) => setPostSearch(e.target.value)}

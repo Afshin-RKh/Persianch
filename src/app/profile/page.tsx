@@ -159,13 +159,26 @@ export default function ProfilePage() {
       <div style={{ background: "linear-gradient(135deg, #0D1B2E 0%, #1B3A6B 100%)" }} className="pt-10 pb-16 px-4">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-start gap-5">
-            {/* Avatar */}
-            <div className="w-18 h-18 w-[72px] h-[72px] rounded-2xl flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 border-2 border-white/20 overflow-hidden"
-              style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
-              {profile.avatar
-                ? <Image src={profile.avatar} alt={profile.name} width={72} height={72} className="w-full h-full object-cover" />
-                : <span className="text-2xl font-bold">{profile.name[0]?.toUpperCase()}</span>}
-            </div>
+            {/* Avatar with upload */}
+            <label className="relative cursor-pointer flex-shrink-0 group" title="Change profile picture">
+              <div className="w-[72px] h-[72px] rounded-2xl flex items-center justify-center text-white text-2xl font-bold border-2 border-white/20 overflow-hidden"
+                style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
+                {profile.avatar
+                  ? <Image src={profile.avatar} alt={profile.name} width={72} height={72} className="w-full h-full object-cover" />
+                  : <span className="text-2xl font-bold">{profile.name[0]?.toUpperCase()}</span>}
+              </div>
+              <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-white text-xs font-semibold">Edit</span>
+              </div>
+              <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file || !token) return;
+                const formData = new FormData();
+                formData.append("avatar", file);
+                const res = await fetch(`${API}/profile.php`, { method: "PATCH", headers: { Authorization: `Bearer ${token}` }, body: formData });
+                if (res.ok) loadProfile();
+              }} />
+            </label>
             {/* Info */}
             <div className="flex-1 min-w-0 pt-1">
               <div className="flex items-center gap-2.5 flex-wrap">
