@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import DOMPurify from "isomorphic-dompurify";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
@@ -77,7 +78,22 @@ export default function AboutPage() {
     );
   }
 
+  const faqJsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "What is BiruniMap?", "acceptedAnswer": { "@type": "Answer", "text": "BiruniMap is a community platform for the Iranian diaspora — a map of Iranian-owned businesses worldwide, a calendar of Iranian community events, and a blog sharing stories and information from across the community." } },
+      { "@type": "Question", "name": "Which countries are covered?", "acceptedAnswer": { "@type": "Answer", "text": "BiruniMap covers businesses across Europe, North America, Australia and beyond. We are continuously expanding our coverage as our community grows." } },
+      { "@type": "Question", "name": "How do I add my business?", "acceptedAnswer": { "@type": "Answer", "text": "Fill in the submission form on our Get Listed page. Our team reviews every submission and publishes approved listings within a few days." } },
+      { "@type": "Question", "name": "Is BiruniMap free to use?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Discovering and listing businesses on BiruniMap is completely free for the Iranian community." } },
+      { "@type": "Question", "name": "Who runs BiruniMap?", "acceptedAnswer": { "@type": "Answer", "text": "BiruniMap is run by a small team of Iranians abroad, supported by a network of +10 volunteer admins across different countries. It was founded by Afshin Khosroshahi." } },
+      { "@type": "Question", "name": "Can I manage my own business listing?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. When you submit your business, check the owner option and create a BiruniMap account. Once approved, you can update your listing directly from your profile." } },
+    ],
+  });
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: faqJsonLd }} />
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 fade-up">
 
       {/* Header */}
@@ -162,7 +178,8 @@ export default function AboutPage() {
 
           <a href="https://afshin.ch" target="_blank" rel="noopener noreferrer"
             className="flex flex-col items-center text-center p-4 rounded-2xl border border-gray-100 hover:border-[#1B3A6B] hover:shadow-sm transition-all group">
-            <img src="/team/afshin.jpg" alt="Afshin Khosroshahi"
+            <Image src="/team/afshin.jpg" alt="Afshin Khosroshahi"
+              width={56} height={56}
               className="w-14 h-14 rounded-full object-cover mb-3"
               style={{ filter: "grayscale(100%)" }} />
             <p className="text-sm font-semibold text-gray-900 group-hover:text-[#1B3A6B]">Afshin Khosroshahi</p>
@@ -170,7 +187,8 @@ export default function AboutPage() {
           </a>
 
           <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-gray-100">
-            <img src="/team/atefeh.png" alt="Atefeh Mohammadi"
+            <Image src="/team/atefeh.png" alt="Atefeh Mohammadi"
+              width={56} height={56}
               className="w-14 h-14 rounded-full object-cover mb-3"
               style={{ filter: "grayscale(100%)" }} />
             <p className="text-sm font-semibold text-gray-900">Atefeh Mohammadi</p>
@@ -199,6 +217,26 @@ export default function AboutPage() {
             </div>
           </div>
 
+        </div>
+      </Section>
+
+      {/* FAQ */}
+      <Section>
+        <h2 className="text-lg font-bold mb-6" style={{ color: navy }}>Frequently Asked Questions</h2>
+        <div className="space-y-5">
+          {[
+            { q: "What is BiruniMap?", a: "BiruniMap is a community platform for the Iranian diaspora — a map of Iranian-owned businesses worldwide, a calendar of Iranian community events, and a blog sharing stories and information from across the community." },
+            { q: "Which countries are covered?", a: "BiruniMap covers businesses across Europe, North America, Australia and beyond. We are continuously expanding our coverage as our community grows." },
+            { q: "How do I add my business?", a: "Fill in the submission form on our Get Listed page. Our team reviews every submission and publishes approved listings within a few days." },
+            { q: "Is BiruniMap free to use?", a: "Yes. Discovering and listing businesses on BiruniMap is completely free for the Iranian community." },
+            { q: "Who runs BiruniMap?", a: "BiruniMap is run by a small team of Iranians abroad, supported by a network of +10 volunteer admins across different countries. It was founded by Afshin Khosroshahi." },
+            { q: "Can I manage my own business listing?", a: "Yes. When you submit your business, check the owner option and create a BiruniMap account. Once approved, you can update your listing directly from your profile." },
+          ].map(({ q, a }) => (
+            <div key={q} className="border-b border-gray-100 pb-5">
+              <h3 className="text-sm font-semibold text-gray-900 mb-1.5">{q}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">{a}</p>
+            </div>
+          ))}
         </div>
       </Section>
 
@@ -248,5 +286,6 @@ export default function AboutPage() {
       </section>
 
     </main>
+    </>
   );
 }

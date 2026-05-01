@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getBlogPost, getBlogPosts, BlogPost } from "@/lib/api";
 import { useAuth, authHeaders } from "@/lib/auth";
 import DOMPurify from "isomorphic-dompurify";
@@ -23,7 +24,7 @@ function RelatedCard({ post }: { post: BlogPost }) {
     <Link href={`/blog/post?slug=${post.slug}`}>
       <article className="group flex gap-3 p-3 rounded-xl hover:bg-white hover:shadow-sm transition-all duration-200 border border-transparent hover:border-gray-100">
         {post.cover_image ? (
-          <img src={post.cover_image} alt={post.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+          <Image src={post.cover_image} alt={post.title} width={64} height={64} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
         ) : (
           <div className="w-16 h-16 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl" style={{ backgroundColor: "#EEF2FF" }}>
             📄
@@ -128,7 +129,7 @@ function Comments({ postId }: { postId: number }) {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 {c.avatar ? (
-                  <img src={c.avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
+                  <Image src={c.avatar} alt={c.user_name} width={28} height={28} className="w-7 h-7 rounded-full object-cover" />
                 ) : (
                   <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#1B3A6B" }}>
                     {c.user_name[0]?.toUpperCase()}
@@ -279,8 +280,8 @@ function BlogPostContent() {
           )}
 
           {post.cover_image && (
-            <div className="rounded-2xl overflow-hidden mb-8 h-64 sm:h-80">
-              <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
+            <div className="rounded-2xl overflow-hidden mb-8 h-64 sm:h-80 relative">
+              <Image src={post.cover_image} alt={post.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, 800px" priority />
             </div>
           )}
 

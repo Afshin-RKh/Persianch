@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { useAuth, authHeaders } from "@/lib/auth";
 import LocationSelector, { type Location } from "@/components/LocationSelector";
@@ -162,7 +163,7 @@ export default function ProfilePage() {
             <div className="w-18 h-18 w-[72px] h-[72px] rounded-2xl flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 border-2 border-white/20 overflow-hidden"
               style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
               {profile.avatar
-                ? <img src={profile.avatar} alt="" className="w-full h-full object-cover" />
+                ? <Image src={profile.avatar} alt={profile.name} width={72} height={72} className="w-full h-full object-cover" />
                 : <span className="text-2xl font-bold">{profile.name[0]?.toUpperCase()}</span>}
             </div>
             {/* Info */}

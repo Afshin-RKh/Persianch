@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { getBlogPosts, BlogPost, BlogFilters } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
@@ -159,8 +160,8 @@ export default function BlogPage() {
             <Link key={post.id} href={`/blog/post?slug=${post.slug}`}>
               <article className={`bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex ${post.language === "fa" ? "flex-row-reverse" : ""}`}>
                 {post.cover_image && (
-                  <div className="w-40 sm:w-52 flex-shrink-0">
-                    <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
+                  <div className="w-40 sm:w-52 flex-shrink-0 relative">
+                    <Image src={post.cover_image} alt={post.title} fill className="object-cover" sizes="(max-width: 640px) 160px, 208px" />
                   </div>
                 )}
                 <div className="p-5 flex-1 flex flex-col min-w-0" dir={post.language === "fa" ? "rtl" : "ltr"}>

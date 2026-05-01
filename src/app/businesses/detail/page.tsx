@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { getBusinessById } from "@/lib/api";
 import { Business, CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
 import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2, Pencil, X, AlertTriangle } from "lucide-react";
@@ -66,7 +67,7 @@ function BusinessComments({ businessId }: { businessId: number }) {
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-2">
                 {c.avatar ? (
-                  <img src={c.avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
+                  <Image src={c.avatar} alt={c.user_name} width={24} height={24} className="w-6 h-6 rounded-full object-cover" />
                 ) : (
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#1B3A6B" }}>
                     {c.user_name[0]?.toUpperCase()}
@@ -474,7 +475,7 @@ function BusinessDetailContent() {
       {/* Hero banner */}
       <div className={`relative h-64 sm:h-80 bg-gradient-to-br ${gradient} rounded-3xl overflow-hidden mb-6 flex items-center justify-center`}>
         {business.image_url ? (
-          <img src={business.image_url} alt={business.name} className="w-full h-full object-cover" />
+          <Image src={business.image_url} alt={business.name} fill className="object-cover" sizes="(max-width: 640px) 100vw, 800px" priority />
         ) : (
           <span className="text-9xl opacity-60">{category?.icon ?? "🏪"}</span>
         )}
@@ -505,7 +506,7 @@ function BusinessDetailContent() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
             <div className="flex items-start gap-4">
               {business.logo_url && (
-                <img src={business.logo_url} alt={`${business.name} logo`} className="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm flex-shrink-0" />
+                <Image src={business.logo_url} alt={`${business.name} logo`} width={64} height={64} className="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{business.name}</h1>
