@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import BusinessesContent from "./businesses/BusinessesContent";
 
 export const metadata: Metadata = {
-  title: "BiruniMap — Iranian Businesses & Events Worldwide",
-  description: "Discover Iranian-owned businesses, community events and resources worldwide — restaurants, doctors, lawyers, concerts and more.",
+  title: "BiruniMap — Iranian Businesses, Events & Community Worldwide",
+  description: "Discover Iranian-owned businesses, community events and resources worldwide — restaurants, doctors, lawyers, concerts and more. The global map of the Iranian diaspora.",
   alternates: { canonical: "https://birunimap.com" },
   openGraph: {
     title: "BiruniMap — Businesses, Events & Community for the Iranian Diaspora",
