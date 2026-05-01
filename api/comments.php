@@ -24,7 +24,7 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
-    $authUser = auth_required('user');
+    $authUser = auth_required_db($pdo, 'user');
     $data     = json_decode(file_get_contents('php://input'), true);
     $type     = $data['entity_type'] ?? '';
     $eid      = (int)($data['entity_id'] ?? 0);
@@ -54,7 +54,7 @@ if ($method === 'POST') {
 }
 
 if ($method === 'DELETE') {
-    $authUser = auth_required('user');
+    $authUser = auth_required_db($pdo, 'user');
     $id       = (int)($_GET['id'] ?? 0);
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
 

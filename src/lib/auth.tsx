@@ -56,20 +56,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [logout]);
 
-  // On mount: check localStorage and URL (Google callback)
+  // On mount: check localStorage or exchange OAuth cookie (Google callback)
   useEffect(() => {
     (async () => {
-      // Google OAuth callback — token in URL
-      const params = new URLSearchParams(window.location.search);
-      const urlToken = params.get("token");
-      if (urlToken) {
-        applyToken(urlToken);
-        await fetchMe(urlToken);
-        // Clean URL
-        const clean = window.location.pathname;
-        window.history.replaceState({}, "", clean);
-        setLoading(false);
-        return;
+      // Google OAuth callback — exchange HttpOnly cookie for token via API
+      if (window.location.pathname === "/auth/callback") {
+        try {
+          const res = await fetch(`${API}/auth_google_token.php`, { credentials: "include" });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.token && data.user) {
+              applyToken(data.token);
+              setUser(data.user);
+              window.history.replaceState({}, "", "/");
+              setLoading(false);
+              return;
+            }
+          }
+        } catch { /* fall through to stored token */ }
       }
 
       const stored = localStorage.getItem("biruni_token");

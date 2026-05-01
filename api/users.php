@@ -5,7 +5,7 @@ require_once 'jwt.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    $authUser    = auth_required('admin');
+    $authUser    = auth_required_db($pdo, 'admin');
     $isSuperAdmin = $authUser['role'] === 'superadmin';
 
     // Superadmin fetching a single user's full profile

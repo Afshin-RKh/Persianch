@@ -99,17 +99,15 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
-    $authUser = auth_required('user');
+    $authUser = auth_required_db($pdo, 'user');
     $data     = json_decode(file_get_contents('php://input'), true);
     sanitize_urls_in_array($data, ['cover_image']);
 
     $title = trim($data['title'] ?? '');
     if (!$title) { http_response_code(400); echo json_encode(['error' => 'Title required']); exit(); }
 
-    // Strip any tags not produced by the TipTap editor to prevent stored XSS
-    $allowedTags = '<p><br><b><strong><i><em><u><s><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><pre><code><a><img><figure><figcaption><mark><span><div><hr><table><thead><tbody><tr><th><td>';
-    $data['content']    = $data['content']    ? strip_tags($data['content'],    $allowedTags) : '';
-    $data['content_fa'] = $data['content_fa'] ? strip_tags($data['content_fa'], $allowedTags) : null;
+    $data['content']    = $data['content']    ? sanitize_html($data['content'])    : '';
+    $data['content_fa'] = $data['content_fa'] ? sanitize_html($data['content_fa']) : null;
 
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
     $existing = $pdo->prepare("SELECT id FROM blog_posts WHERE slug = :slug");
@@ -161,7 +159,7 @@ if ($method === 'POST') {
 }
 
 if ($method === 'PATCH') {
-    $authUser  = auth_required('admin');
+    $authUser  = auth_required_db($pdo, 'admin');
     $data      = json_decode(file_get_contents('php://input'), true);
     sanitize_urls_in_array($data, ['cover_image']);
     $id        = (int)($data['id'] ?? 0);
@@ -196,9 +194,8 @@ if ($method === 'PATCH') {
         }
     }
 
-    $allowedTags = '<p><br><b><strong><i><em><u><s><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><pre><code><a><img><figure><figcaption><mark><span><div><hr><table><thead><tbody><tr><th><td>';
-    if (isset($data['content']))    $data['content']    = strip_tags($data['content'],    $allowedTags);
-    if (isset($data['content_fa'])) $data['content_fa'] = strip_tags($data['content_fa'], $allowedTags);
+    if (isset($data['content']))    $data['content']    = sanitize_html($data['content']);
+    if (isset($data['content_fa'])) $data['content_fa'] = sanitize_html($data['content_fa']);
 
     $allowed = ['title', 'title_fa', 'content', 'content_fa', 'cover_image', 'status', 'country', 'city', 'language'];
     $sets    = [];
@@ -250,7 +247,7 @@ if ($method === 'PATCH') {
 }
 
 if ($method === 'DELETE') {
-    $authUser  = auth_required('admin');
+    $authUser  = auth_required_db($pdo, 'admin');
     $id        = (int)($_GET['id'] ?? 0);
     $adminRole = $authUser['role'] ?? '';
     $adminId   = (int)$authUser['sub'];

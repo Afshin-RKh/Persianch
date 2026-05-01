@@ -78,5 +78,13 @@ if ($user) {
 
 $token = jwt_sign(['sub' => (int)$userId, 'role' => $role, 'name' => $uname, 'exp' => time() + JWT_TTL]);
 
-header('Location: ' . $frontendUrl . '/auth/callback?token=' . urlencode($token));
+// Pass token via short-lived HttpOnly cookie (not URL) to keep it out of browser history/logs
+setcookie('oauth_token', $token, [
+    'expires'  => time() + 120,   // 2-minute window to consume
+    'path'     => '/',
+    'secure'   => true,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+header('Location: ' . $frontendUrl . '/auth/callback');
 exit();
