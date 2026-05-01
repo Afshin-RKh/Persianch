@@ -199,6 +199,10 @@ function BlogPostContent() {
     }
   }, [slug, id, isAdmin, token]);
 
+  useEffect(() => {
+    if (post) document.title = `${post.title} — BiruniMap`;
+  }, [post]);
+
   if (loading) {
     return (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-gray-400">
@@ -222,7 +226,33 @@ function BlogPostContent() {
 
   const isFarsi = (post as any).language === "fa";
 
+  const breadcrumbLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://birunimap.com" },
+      { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://birunimap.com/blog" },
+      { "@type": "ListItem", "position": 3, "name": post.title, "item": `https://birunimap.com/blog/post?slug=${post.slug}` },
+    ],
+  });
+
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.title,
+    "url": `https://birunimap.com/blog/post?slug=${post.slug}`,
+    ...(post.cover_image ? { "image": post.cover_image } : {}),
+    "datePublished": post.created_at,
+    ...(post.updated_at ? { "dateModified": post.updated_at } : {}),
+    ...(post.author_name ? { "author": { "@type": "Person", "name": post.author_name } } : {}),
+    "publisher": { "@type": "Organization", "name": "BiruniMap", "url": "https://birunimap.com" },
+    ...(post.tags ? { "keywords": post.tags } : {}),
+  });
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbLd }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Top bar */}
       <div className="flex items-center justify-between mb-8">
@@ -302,6 +332,7 @@ function BlogPostContent() {
 
       </div>
     </main>
+    </>
   );
 }
 

@@ -88,7 +88,22 @@ export default function GetListedPage() {
     );
   }
 
+  const howToLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Add Your Iranian Business to BiruniMap",
+    "description": "List your Iranian or Persian business on BiruniMap in a few simple steps. Free to add — visible to the global diaspora.",
+    "step": [
+      { "@type": "HowToStep", "position": 1, "name": "Sign in or create an account", "text": "Create a free BiruniMap account or sign in to track your listing." },
+      { "@type": "HowToStep", "position": 2, "name": "Fill in your business details", "text": "Enter your business name, category, location, contact details, and a description." },
+      { "@type": "HowToStep", "position": 3, "name": "Submit for review", "text": "Submit the form. Our team reviews all submissions to ensure quality." },
+      { "@type": "HowToStep", "position": 4, "name": "Get listed on the map", "text": "Once approved (within a few days), your business appears on the BiruniMap global directory." },
+    ],
+  });
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: howToLd }} />
     <main className="max-w-2xl mx-auto px-4 sm:px-6 py-16 fade-up">
 
       <div className="mb-12">
@@ -233,5 +248,6 @@ export default function GetListedPage() {
 
       </form>
     </main>
+    </>
   );
 }

@@ -199,7 +199,48 @@ function EventDetailContent() {
 
   const meta = EVENT_TYPE_META[event.event_type] ?? EVENT_TYPE_META.other;
 
+  // Set page title dynamically
+  useEffect(() => {
+    document.title = `${event.title} — BiruniMap Events`;
+  }, [event.title]);
+
+  const breadcrumbLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://birunimap.com" },
+      { "@type": "ListItem", "position": 2, "name": "Events", "item": "https://birunimap.com/events" },
+      { "@type": "ListItem", "position": 3, "name": event.title, "item": `https://birunimap.com/events/detail?id=${event.id}` },
+    ],
+  });
+
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": event.title,
+    "startDate": event.start_date,
+    ...(event.end_date ? { "endDate": event.end_date } : {}),
+    ...(event.description ? { "description": event.description } : {}),
+    "url": `https://birunimap.com/events/detail?id=${event.id}`,
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+    "location": {
+      "@type": "Place",
+      "name": event.venue || event.city || "TBD",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": event.city ?? "",
+        "addressCountry": event.country ?? "",
+        ...(event.address ? { "streetAddress": event.address } : {}),
+      },
+    },
+    "organizer": { "@type": "Organization", "name": "BiruniMap", "url": "https://birunimap.com" },
+  });
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbLd }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       {/* Back + admin actions */}
       <div className="flex items-center justify-between mb-6">
@@ -277,6 +318,7 @@ function EventDetailContent() {
         </div>
       )}
     </main>
+    </>
   );
 }
 

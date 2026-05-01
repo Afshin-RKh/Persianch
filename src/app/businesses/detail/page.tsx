@@ -266,12 +266,12 @@ function AdminEditPanel({ business, token, onSaved }: { business: Business; toke
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Cover Image URL</label>
             <input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className={inp} placeholder="https://..." />
-            {form.image_url && <img src={form.image_url} alt="" className="mt-2 h-16 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display="none")} />}
+            {form.image_url && <img src={form.image_url} alt="Cover image preview" className="mt-2 h-16 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display="none")} />}
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Logo URL</label>
             <input value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} className={inp} placeholder="https://..." />
-            {form.logo_url && <img src={form.logo_url} alt="" className="mt-2 h-16 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display="none")} />}
+            {form.logo_url && <img src={form.logo_url} alt="Logo preview" className="mt-2 h-16 w-full object-cover rounded-lg" onError={(e) => (e.currentTarget.style.display="none")} />}
           </div>
         </div>
         <div>
@@ -357,6 +357,38 @@ function BusinessDetailContent() {
 
   const category = business ? CATEGORIES.find((c) => c.slug === business.category) : null;
 
+  // Set page title
+  useEffect(() => {
+    if (business) document.title = `${business.name} — BiruniMap`;
+  }, [business?.name]);
+
+  // Build BreadcrumbList JSON-LD
+  const breadcrumbLd = business ? JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://birunimap.com" },
+      { "@type": "ListItem", "position": 2, "name": "Businesses", "item": "https://birunimap.com/businesses" },
+      { "@type": "ListItem", "position": 3, "name": business.name, "item": `https://birunimap.com/businesses/detail?id=${business.id}` },
+    ],
+  }) : null;
+
+  // Build LocalBusiness JSON-LD
+  const jsonLd = business ? JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": business.name,
+    ...(business.name_fa ? { "alternateName": business.name_fa } : {}),
+    ...(business.description ? { "description": business.description } : {}),
+    ...(business.address ? { "address": { "@type": "PostalAddress", "streetAddress": business.address, "addressLocality": business.canton ?? "", "addressCountry": (business as any).country ?? "" } } : {}),
+    ...(business.phone ? { "telephone": business.phone } : {}),
+    ...(business.email ? { "email": business.email } : {}),
+    ...(business.website ? { "url": business.website } : {}),
+    ...(business.lat && business.lng ? { "geo": { "@type": "GeoCoordinates", "latitude": business.lat, "longitude": business.lng } } : {}),
+    ...(business.image_url ? { "image": business.image_url } : {}),
+    "url": `https://birunimap.com/businesses/detail?id=${business.id}`,
+  }) : null;
+
   if (loading) {
     return (
       <main className="max-w-4xl mx-auto px-4 py-10">
@@ -383,6 +415,13 @@ function BusinessDetailContent() {
   const gradient = CATEGORY_GRADIENTS[business.category] ?? "from-gray-200 to-slate-200";
 
   return (
+    <>
+    {breadcrumbLd && (
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbLd }} />
+    )}
+    {jsonLd && (
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+    )}
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-up">
       <div className="flex items-center justify-between mb-6">
         <Link href="/businesses" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1B3A6B] transition-colors font-medium">
@@ -466,7 +505,7 @@ function BusinessDetailContent() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
             <div className="flex items-start gap-4">
               {business.logo_url && (
-                <img src={business.logo_url} alt="logo" className="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm flex-shrink-0" />
+                <img src={business.logo_url} alt={`${business.name} logo`} className="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{business.name}</h1>
@@ -573,6 +612,7 @@ function BusinessDetailContent() {
       </>
       )}
     </main>
+    </>
   );
 }
 
