@@ -70,7 +70,7 @@ export default function BusinessCard({ business }: Props) {
             {business.name}
           </h3>
           {business.name_fa && (
-            <p className="text-xs text-gray-400 mt-0.5" dir="rtl">{business.name_fa}</p>
+            <p className="text-xs text-gray-400 mt-0.5" dir="rtl" style={{ fontFamily: "'Vazirmatn', sans-serif" }}>{business.name_fa}</p>
           )}
 
           {business.description && (
