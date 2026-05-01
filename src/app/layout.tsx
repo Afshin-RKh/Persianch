@@ -9,16 +9,25 @@ import { AuthProvider } from "@/lib/auth";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "BiruniMap — The Global Map of the Iranian Diaspora",
+  title: "BiruniMap — Businesses, Events & Community for the Iranian Diaspora",
   description:
-    "Discover 3,000+ Iranian-owned businesses worldwide — restaurants, doctors, lawyers, hairdressers and more. Inspired by Al-Biruni, the Persian scholar who mapped the world.",
-  keywords: ["Iranian businesses worldwide", "Persian diaspora map", "Iranian community", "Farsi speaking businesses", "BiruniMap", "Al-Biruni"],
+    "Discover Iranian-owned businesses, community events and resources worldwide — restaurants, doctors, lawyers, concerts and more. The global map of the Iranian diaspora, inspired by Al-Biruni.",
+  keywords: ["Iranian businesses worldwide", "Persian diaspora map", "Iranian community events", "Farsi speaking businesses", "BiruniMap", "Al-Biruni", "Iranian events Europe", "Persian community"],
+  metadataBase: new URL("https://birunimap.com"),
+  alternates: { canonical: "https://birunimap.com" },
   openGraph: {
-    title: "BiruniMap — The Global Map of the Iranian Diaspora",
-    description: "3,000+ Iranian-owned businesses across 50+ countries, mapped for the global Iranian community.",
+    title: "BiruniMap — Businesses, Events & Community for the Iranian Diaspora",
+    description: "Businesses, community events and resources for Iranians worldwide — mapped and growing across 50+ countries.",
     siteName: "BiruniMap",
     locale: "en_GB",
     type: "website",
+    images: [{ url: "https://birunimap.com/og-image.svg", width: 1200, height: 630, alt: "BiruniMap — Iranian diaspora businesses on the map" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BiruniMap — The Global Map of the Iranian Diaspora",
+    description: "3,000+ Iranian-owned businesses across 50+ countries.",
+    images: ["https://birunimap.com/og-image.svg"],
   },
 };
 
@@ -36,6 +45,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', 'G-R71GKWRRVM');
+        `}</Script>
+        <Script id="org-jsonld" type="application/ld+json" strategy="afterInteractive">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "BiruniMap",
+            "url": "https://birunimap.com",
+            "logo": "https://birunimap.com/og-image.svg",
+            "description": "The global map of the Iranian diaspora — discover Iranian-owned businesses, community events, and resources worldwide.",
+            "sameAs": ["https://instagram.com/birunimap", "https://www.linkedin.com/company/birunimap"]
+          }
+        `}</Script>
+        <Script id="website-jsonld" type="application/ld+json" strategy="afterInteractive">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "BiruniMap",
+            "url": "https://birunimap.com",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://birunimap.com/businesses?search={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          }
         `}</Script>
       </head>
       <body className="min-h-full flex flex-col bg-gray-50">
