@@ -5,7 +5,7 @@ import Image from "next/image";
 import { getBusinessById } from "@/lib/api";
 import { idFromSlug } from "@/lib/businessSlug";
 import { Business, CATEGORIES, COUNTRIES, REGIONS_BY_COUNTRY } from "@/types";
-import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2, Pencil, X, AlertTriangle, Instagram, ExternalLink } from "lucide-react";
+import { MapPin, Phone, Globe, Mail, CheckCircle, ArrowLeft, Trash2, Pencil, X, AlertTriangle, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAuth, authHeaders } from "@/lib/auth";
@@ -645,7 +645,7 @@ function BusinessDetailContent() {
                     target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-200 hover:border-pink-300 hover:bg-pink-50 transition-all group">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-pink-50">
-                      <Instagram size={16} className="text-pink-500" />
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink-500"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-gray-400 font-medium">Instagram</p>
