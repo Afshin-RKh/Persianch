@@ -233,33 +233,64 @@ export default function ProfilePage() {
 
         {/* PROFILE TAB */}
         {tab === "profile" && (
-          <form onSubmit={saveProfile} className="bg-white rounded-2xl border border-gray-100 p-6 mb-8 shadow-sm">
-            <h2 className="font-bold text-gray-800 text-base mb-5">Edit Profile</h2>
-            <div className="space-y-4">
-              <div>
-                <label className={labelCls}>Full Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inp} />
+          <div className="space-y-4 mb-8">
+            {/* Name card */}
+            <form onSubmit={saveProfile} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <h2 className="font-bold text-gray-800 text-base mb-5">Personal Info</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelCls}>Full Name</label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inp} />
+                </div>
+                <div>
+                  <label className={labelCls}>Email Address</label>
+                  <input type="email" value={profile.email} disabled className={`${inp} bg-gray-50 text-gray-400 cursor-not-allowed`} />
+                  <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
+                </div>
+                <div className="flex items-center gap-3 pt-1">
+                  <button type="submit" disabled={saving}
+                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-xl disabled:opacity-50 transition-opacity"
+                    style={{ backgroundColor: "#8B1A1A" }}>
+                    <Save size={14} /> {saving ? "Saving…" : "Save Name"}
+                  </button>
+                  {saved && <span className="text-emerald-600 text-sm font-semibold">✓ Saved!</span>}
+                </div>
               </div>
-              <div>
-                <label className={labelCls}>Email Address</label>
-                <input type="email" value={profile.email} disabled className={`${inp} bg-gray-50 text-gray-400 cursor-not-allowed`} />
-                <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
+            </form>
+
+            {/* Password card — separate */}
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!token || !password) return;
+              setSaving(true);
+              await fetch(`${API}/profile.php`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", ...authHeaders(token) },
+                body: JSON.stringify({ password }),
+              });
+              setPassword("");
+              setSaved(true);
+              setTimeout(() => setSaved(false), 2500);
+              setSaving(false);
+            }} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <h2 className="font-bold text-gray-800 text-base mb-1">Change Password</h2>
+              <p className="text-sm text-gray-400 mb-5">Leave blank if you don&apos;t want to change it.</p>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelCls}>New Password <span className="font-normal normal-case text-gray-400">(min. 8 characters)</span></label>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter new password" className={inp} autoComplete="new-password" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <button type="submit" disabled={saving || !password || password.length < 8}
+                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-xl disabled:opacity-50 transition-opacity"
+                    style={{ backgroundColor: "#1B3A6B" }}>
+                    <Save size={14} /> {saving ? "Saving…" : "Update Password"}
+                  </button>
+                </div>
               </div>
-              <div className="border-t border-gray-100 pt-4">
-                <label className={labelCls}>Change Password</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Leave blank to keep current password" className={inp} />
-              </div>
-              <div className="flex items-center gap-3 pt-2">
-                <button type="submit" disabled={saving}
-                  className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-xl disabled:opacity-50 transition-opacity"
-                  style={{ backgroundColor: "#8B1A1A" }}>
-                  <Save size={14} /> {saving ? "Saving…" : "Save Changes"}
-                </button>
-                {saved && <span className="text-emerald-600 text-sm font-semibold">✓ Saved!</span>}
-              </div>
-            </div>
-          </form>
+            </form>
+          </div>
         )}
 
         {/* LOCATIONS TAB */}

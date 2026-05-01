@@ -99,22 +99,59 @@ export default function GetListedPage() {
 
   if (sent) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-24 text-center fade-up">
-        <div className="w-14 h-14 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ backgroundColor: "#EEF2FF" }}>
-          <svg className="w-7 h-7" fill="none" stroke={navy} strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h2 className="text-2xl font-bold mb-3" style={{ color: navy }}>Submission received!</h2>
-        {geoWarning && (
-          <div className="mx-auto max-w-sm mb-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-            ⚠ We couldn&apos;t auto-pin your location on the map — an admin will verify and add the pin manually.
+      <main className="max-w-xl mx-auto px-4 py-20 fade-up">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
+          <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ backgroundColor: "#EEF2FF" }}>
+            <svg className="w-8 h-8" fill="none" stroke={navy} strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-        )}
-        <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
-          Thank you. Our team will review your business and add it to the map within a few days.
-          {user && isOwner && " You can manage your listing from your profile once it's approved."}
-        </p>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: navy }}>You&apos;re on the map!</h2>
+          <p className="text-gray-500 text-sm leading-relaxed mb-6">
+            We&apos;ve received your submission. Our team will review and approve it within a few days.
+          </p>
+
+          {geoWarning && (
+            <div className="mb-6 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-left">
+              ⚠ We couldn&apos;t auto-pin your location — an admin will verify and place the pin manually.
+            </div>
+          )}
+
+          {/* What happens next */}
+          <div className="text-left space-y-3 mb-8">
+            {[
+              { step: "1", label: "Review", desc: "Our team checks your submission for quality and accuracy." },
+              { step: "2", label: "Approval", desc: "Once approved, your business appears on the BiruniMap directory." },
+              { step: "3", label: "Manage", desc: user && isOwner ? "You can update your listing anytime from your profile." : "Sign up to claim and manage your listing in future." },
+            ].map(({ step, label, desc }) => (
+              <div key={step} className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5"
+                  style={{ backgroundColor: navy }}>{step}</div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{label}</p>
+                  <p className="text-xs text-gray-400">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/businesses" className="inline-flex items-center justify-center gap-2 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-all hover:opacity-90"
+              style={{ backgroundColor: navy }}>
+              Browse businesses
+            </Link>
+            {user && isOwner && (
+              <Link href="/profile" className="inline-flex items-center justify-center gap-2 font-semibold px-6 py-3 rounded-xl text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+                Go to my profile
+              </Link>
+            )}
+            {!user && (
+              <Link href="/auth/signup" className="inline-flex items-center justify-center gap-2 font-semibold px-6 py-3 rounded-xl text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+                Create account
+              </Link>
+            )}
+          </div>
+        </div>
       </main>
     );
   }
@@ -136,20 +173,30 @@ export default function GetListedPage() {
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: howToLd }} />
     <main className="max-w-2xl mx-auto px-4 sm:px-6 py-16 fade-up">
 
-      <div className="mb-12">
+      <div className="mb-10">
         <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: gold }}>Add to Map</p>
         <h1 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: navy }}>Add a business.</h1>
         <p className="text-gray-500 text-base leading-relaxed">
-          Iranian-run businesses are the backbone of our community abroad. Fill in the form — we&apos;ll review the submission and put it on the map within a few days.
+          Iranian-run businesses are the backbone of our community abroad. Fill in the form — we&apos;ll review and put it on the map within a few days.
         </p>
-        <div className="flex flex-wrap gap-4 sm:gap-6 mt-6">
-          {["Open to all Iranian businesses", "Listed within a few days", "Visible across Europe & beyond"].map((t) => (
-            <div key={t} className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: gold }} />
-              {t}
+      </div>
+
+      {/* Progress steps */}
+      <div className="flex items-center gap-2 mb-8">
+        {[
+          { n: "1", label: "Business info" },
+          { n: "2", label: "Location" },
+          { n: "3", label: "Contact" },
+        ].map(({ n, label }, i) => (
+          <div key={n} className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                style={{ backgroundColor: navy }}>{n}</div>
+              <span className="text-xs font-semibold text-gray-600 hidden sm:block">{label}</span>
             </div>
-          ))}
-        </div>
+            {i < 2 && <div className="flex-1 h-px bg-gray-200 mx-1" />}
+          </div>
+        ))}
       </div>
 
       {/* Ownership question */}
