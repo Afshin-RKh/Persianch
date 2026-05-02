@@ -32,6 +32,7 @@ export default function Navbar() {
     return (
       <Link
         href={href}
+        prefetch={false}
         className={`text-sm font-medium transition-colors pb-0.5 ${
           active ? "border-b-2 border-[#C9A84C]" : "text-gray-600 hover:text-[#1B3A6B]"
         }`}
@@ -69,6 +70,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/contact"
+              prefetch={false}
               className="text-sm font-bold px-4 py-2 rounded-xl text-white transition-all hover:opacity-90 shadow-sm"
               style={{ backgroundColor: "#8B1A1A" }}
             >
@@ -146,6 +148,7 @@ export default function Navbar() {
             const active = pathname === href;
             return (
               <Link key={href} href={href}
+                prefetch={false}
                 className={`flex items-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors ${
                   active ? "text-white" : "text-gray-700 hover:bg-gray-50"
                 }`}
