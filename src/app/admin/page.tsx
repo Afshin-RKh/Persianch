@@ -23,7 +23,7 @@ interface TrashedBusiness { id: number; name: string; category: string; country:
 interface TrashedEvent    { id: number; title: string; event_type: string; country: string; city: string; start_date: string; deleted_at: string; }
 
 interface ContactMessage {
-  id: number; name: string; email: string; message: string; created_at: string; read_at: string | null;
+  id: number; name: string; email: string; message: string; created_at: string; read_at: string | null; deleted_at?: string;
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -458,6 +458,7 @@ export default function AdminPage() {
   const [trashedPosts,      setTrashedPosts]      = useState<BlogPost[]>([]);
   const [trashedBusinesses, setTrashedBusinesses] = useState<TrashedBusiness[]>([]);
   const [trashedEvents,     setTrashedEvents]     = useState<TrashedEvent[]>([]);
+  const [trashedMessages,   setTrashedMessages]   = useState<ContactMessage[]>([]);
 
   // Events
   const [events, setEvents]           = useState<EventRow[]>([]);
@@ -543,15 +544,17 @@ export default function AdminPage() {
         setSquares(Array.isArray(data) ? data : []);
       }
       if (tab === "trash") {
-        const [rPosts, rBiz, rEvents] = await Promise.all([
+        const [rPosts, rBiz, rEvents, rMsgs] = await Promise.all([
           fetch(`${API}/blog.php?trash=1`,        { headers: authHeaders(token) }),
           fetch(`${API}/businesses.php?trash=1`,  { headers: authHeaders(token) }),
           fetch(`${API}/events.php?trash=1`,      { headers: authHeaders(token) }),
+          fetch(`${API}/contact.php?trash=1`,     { headers: authHeaders(token) }),
         ]);
-        const [posts, biz, events] = await Promise.all([rPosts.json(), rBiz.json(), rEvents.json()]);
+        const [posts, biz, events, msgs] = await Promise.all([rPosts.json(), rBiz.json(), rEvents.json(), rMsgs.json()]);
         setTrashedPosts(Array.isArray(posts)  ? posts  : []);
-        setTrashedBusinesses(Array.isArray(biz)    ? biz    : []);
-        setTrashedEvents(Array.isArray(events) ? events : []);
+        setTrashedBusinesses(Array.isArray(biz)   ? biz   : []);
+        setTrashedEvents(Array.isArray(events)    ? events : []);
+        setTrashedMessages(Array.isArray(msgs)    ? msgs   : []);
       }
       if (tab === "about" && isSuperAdmin) {
         if (!aboutContent) {
@@ -1806,7 +1809,39 @@ export default function AdminPage() {
               )}
             </div>
 
-            {trashedPosts.length === 0 && trashedBusinesses.length === 0 && trashedEvents.length === 0 && (
+            {/* Messages */}
+            <div>
+              <h3 className="text-sm font-bold text-gray-700 mb-3">✉️ Messages ({trashedMessages.length})</h3>
+              {trashedMessages.length === 0 ? <p className="text-xs text-gray-400 pl-1">No deleted messages.</p> : (
+                <div className="space-y-2">
+                  {trashedMessages.map((m) => (
+                    <div key={m.id} className="bg-white rounded-xl border border-red-100 p-4 flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-700">{m.name}</p>
+                        <a href={`mailto:${m.email}`} className="text-xs text-[#1B3A6B] hover:underline">{m.email}</a>
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{m.message}</p>
+                        <p className="text-xs text-red-400 mt-0.5">Deleted {m.deleted_at ? new Date(m.deleted_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" }) : ""}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={async () => {
+                          await fetch(`${API}/contact.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: m.id }) });
+                          setTrashedMessages(ms => ms.filter(x => x.id !== m.id));
+                          toastSuccess("Message restored.");
+                        }} className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors hover:bg-green-50" style={{ color: "#059669", borderColor: "#059669" }}>Restore</button>
+                        <button onClick={() => showConfirm("Delete forever?", "This message will be permanently removed.", async () => {
+                          await fetch(`${API}/contact.php?id=${m.id}&permanent=1`, { method: "DELETE", headers: authHeaders(token) });
+                          setTrashedMessages(ms => ms.filter(x => x.id !== m.id));
+                          toastSuccess("Message permanently deleted.");
+                          setConfirmModal(null);
+                        })} className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 text-red-500 hover:bg-red-50 transition-colors">Delete Forever</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {trashedPosts.length === 0 && trashedBusinesses.length === 0 && trashedEvents.length === 0 && trashedMessages.length === 0 && (
               <div className="text-center py-16 text-gray-400">
                 <div className="text-4xl mb-3">🗑</div>
                 <p className="text-sm font-medium">Trash is empty</p>
