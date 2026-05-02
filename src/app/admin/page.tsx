@@ -421,6 +421,7 @@ export default function AdminPage() {
   const [users, setUsers]           = useState<UserRow[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [messages, setMessages]       = useState<ContactMessage[]>([]);
+  const [msgTrash, setMsgTrash]       = useState(false);
 
   // Blog
   const [postSearch, setPostSearch]   = useState("");
@@ -1893,25 +1894,75 @@ export default function AdminPage() {
         {tab === "messages" && !dataLoading && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-gray-800">Contact Messages ({messages.length})</h2>
+              <h2 className="text-base font-bold text-gray-800">
+                Contact Messages ({messages.length})
+              </h2>
+              <button
+                onClick={() => {
+                  const trash = !msgTrash;
+                  setMsgTrash(trash);
+                  fetch(`${API}/contact.php${trash ? "?trash=1" : ""}`, { headers: authHeaders(token) })
+                    .then(r => r.json()).then(d => setMessages(Array.isArray(d) ? d : []));
+                }}
+                className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
+                <Trash2 size={13} />{msgTrash ? "Back to Inbox" : "Trash"}
+              </button>
             </div>
             {messages.length === 0 ? (
               <div className="text-center py-16 text-gray-400">
-                <div className="text-4xl mb-3">✉️</div>
-                <p className="text-sm font-medium">No messages yet</p>
+                <div className="text-4xl mb-3">{msgTrash ? "🗑" : "✉️"}</div>
+                <p className="text-sm font-medium">{msgTrash ? "Trash is empty" : "No messages yet"}</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {messages.map((m) => (
-                  <div key={m.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                  <div key={m.id} className={`bg-white rounded-xl border shadow-sm p-5 ${msgTrash ? "border-red-100" : "border-gray-100"}`}>
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <div>
                         <p className="text-sm font-bold text-gray-800">{m.name}</p>
                         <a href={`mailto:${m.email}`} className="text-xs text-[#1B3A6B] hover:underline">{m.email}</a>
                       </div>
-                      <p className="text-xs text-gray-400 flex-shrink-0">
-                        {new Date(m.created_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" })}
-                      </p>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <p className="text-xs text-gray-400">
+                          {new Date(m.created_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" })}
+                        </p>
+                        {msgTrash ? (
+                          <>
+                            <button title="Restore"
+                              onClick={async () => {
+                                await fetch(`${API}/contact.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: m.id }) });
+                                setMessages(ms => ms.filter(x => x.id !== m.id));
+                                setBadgeCounts(c => ({ ...c, messages: Math.max(0, (c.messages ?? 0) - 1) }));
+                                toastSuccess("Message restored.");
+                              }}
+                              className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors">
+                              <CheckCircle size={14} />
+                            </button>
+                            <button title="Delete permanently"
+                              onClick={() => showConfirm("Delete permanently?", "This message will be removed forever.", async () => {
+                                await fetch(`${API}/contact.php?id=${m.id}&permanent=1`, { method: "DELETE", headers: authHeaders(token) });
+                                setMessages(ms => ms.filter(x => x.id !== m.id));
+                                toastSuccess("Message deleted.");
+                                setConfirmModal(null);
+                              })}
+                              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        ) : (
+                          <button title="Move to trash"
+                            onClick={() => showConfirm("Move to trash?", "This message will be moved to trash.", async () => {
+                              await fetch(`${API}/contact.php?id=${m.id}`, { method: "DELETE", headers: authHeaders(token) });
+                              setMessages(ms => ms.filter(x => x.id !== m.id));
+                              setBadgeCounts(c => ({ ...c, messages: Math.max(0, (c.messages ?? 0) - 1) }));
+                              toastSuccess("Message moved to trash.");
+                              setConfirmModal(null);
+                            })}
+                            className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors">
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <p className="text-sm text-gray-600 whitespace-pre-wrap">{m.message}</p>
                   </div>

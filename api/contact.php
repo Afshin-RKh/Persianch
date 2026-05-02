@@ -7,8 +7,11 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS contact_messages (
     name       VARCHAR(128) NOT NULL,
     email      VARCHAR(255) NOT NULL,
     message    TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    deleted_at DATETIME DEFAULT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+// Add deleted_at if upgrading from old schema
+try { $pdo->exec("ALTER TABLE contact_messages ADD COLUMN deleted_at DATETIME DEFAULT NULL"); } catch (PDOException $e) {}
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     require_once __DIR__ . '/jwt.php';
@@ -19,8 +22,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(['error' => 'Forbidden']);
         exit();
     }
-    $rows = $pdo->query("SELECT id, name, email, message, created_at FROM contact_messages ORDER BY created_at DESC")->fetchAll();
+    $trash = isset($_GET['trash']);
+    if ($trash) {
+        $rows = $pdo->query("SELECT id, name, email, message, created_at, deleted_at FROM contact_messages WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC")->fetchAll();
+    } else {
+        $rows = $pdo->query("SELECT id, name, email, message, created_at FROM contact_messages WHERE deleted_at IS NULL ORDER BY created_at DESC")->fetchAll();
+    }
     echo json_encode($rows);
+    exit();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    require_once __DIR__ . '/jwt.php';
+    $token = bearer_token();
+    $user  = $token ? jwt_verify($token) : null;
+    if (!$user || !in_array($user['role'], ['admin', 'superadmin'])) {
+        http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit();
+    }
+    $id      = (int)($_GET['id'] ?? 0);
+    $perm    = isset($_GET['permanent']);
+    if (!$id) { http_response_code(422); echo json_encode(['error' => 'Missing id']); exit(); }
+    if ($perm) {
+        $pdo->prepare("DELETE FROM contact_messages WHERE id = ?")->execute([$id]);
+    } else {
+        $pdo->prepare("UPDATE contact_messages SET deleted_at = NOW() WHERE id = ?")->execute([$id]);
+    }
+    echo json_encode(['ok' => true]);
+    exit();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+    require_once __DIR__ . '/jwt.php';
+    $token = bearer_token();
+    $user  = $token ? jwt_verify($token) : null;
+    if (!$user || !in_array($user['role'], ['admin', 'superadmin'])) {
+        http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit();
+    }
+    $body = json_decode(file_get_contents('php://input'), true);
+    $id   = (int)($body['id'] ?? 0);
+    if (!$id) { http_response_code(422); echo json_encode(['error' => 'Missing id']); exit(); }
+    $pdo->prepare("UPDATE contact_messages SET deleted_at = NULL WHERE id = ?")->execute([$id]);
+    echo json_encode(['ok' => true]);
     exit();
 }
 
