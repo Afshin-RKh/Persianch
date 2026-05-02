@@ -19,6 +19,9 @@ const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ou
 
 type Tab = "posts" | "businesses" | "users" | "squares" | "events" | "trash" | "about" | "claims" | "messages";
 
+interface TrashedBusiness { id: number; name: string; category: string; country: string; canton: string; deleted_at: string; }
+interface TrashedEvent    { id: number; title: string; event_type: string; country: string; city: string; start_date: string; deleted_at: string; }
+
 interface ContactMessage {
   id: number; name: string; email: string; message: string; created_at: string; read_at: string | null;
 }
@@ -452,7 +455,9 @@ export default function AdminPage() {
   const [assignBizId, setAssignBizId]       = useState("");
 
   // Trash
-  const [trashedPosts, setTrashedPosts] = useState<BlogPost[]>([]);
+  const [trashedPosts,      setTrashedPosts]      = useState<BlogPost[]>([]);
+  const [trashedBusinesses, setTrashedBusinesses] = useState<TrashedBusiness[]>([]);
+  const [trashedEvents,     setTrashedEvents]     = useState<TrashedEvent[]>([]);
 
   // Events
   const [events, setEvents]           = useState<EventRow[]>([]);
@@ -538,9 +543,15 @@ export default function AdminPage() {
         setSquares(Array.isArray(data) ? data : []);
       }
       if (tab === "trash") {
-        const r = await fetch(`${API}/blog.php?trash=1`, { headers: authHeaders(token) });
-        const data = await r.json();
-        setTrashedPosts(Array.isArray(data) ? data : []);
+        const [rPosts, rBiz, rEvents] = await Promise.all([
+          fetch(`${API}/blog.php?trash=1`,        { headers: authHeaders(token) }),
+          fetch(`${API}/businesses.php?trash=1`,  { headers: authHeaders(token) }),
+          fetch(`${API}/events.php?trash=1`,      { headers: authHeaders(token) }),
+        ]);
+        const [posts, biz, events] = await Promise.all([rPosts.json(), rBiz.json(), rEvents.json()]);
+        setTrashedPosts(Array.isArray(posts)  ? posts  : []);
+        setTrashedBusinesses(Array.isArray(biz)    ? biz    : []);
+        setTrashedEvents(Array.isArray(events) ? events : []);
       }
       if (tab === "about" && isSuperAdmin) {
         if (!aboutContent) {
@@ -645,7 +656,7 @@ export default function AdminPage() {
 
   // ── Business actions ───────────────────────────────────────────────────────
   const deleteBusiness = (id: number, name: string) => {
-    showConfirm("Delete business?", `"${name}" will be permanently removed from the directory.`, async () => {
+    showConfirm("Move to trash?", `"${name}" will be moved to trash. You can restore it later.`, async () => {
       try {
         await fetch(`${API}/businesses.php`, { method: "DELETE", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id }) });
         toastSuccess("Business deleted.");
@@ -815,7 +826,7 @@ export default function AdminPage() {
     } catch { toastError("Failed to update event."); }
   };
   const deleteEvent = (id: number) => {
-    showConfirm("Delete event?", "This event will be permanently removed.", async () => {
+    showConfirm("Move to trash?", "This event will be moved to trash. You can restore it later.", async () => {
       try {
         await fetch(`${API}/events.php?id=${id}`, { method: "DELETE", headers: authHeaders(token) });
         toastSuccess("Event deleted.");
@@ -1705,51 +1716,100 @@ export default function AdminPage() {
 
         {/* Trash */}
         {tab === "trash" && !dataLoading && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-gray-800">Deleted Blog Posts ({trashedPosts.length})</h2>
-              <p className="text-xs text-gray-400">Posts here are hidden from the site. Restore or permanently delete.</p>
+          <div className="space-y-8">
+            <p className="text-xs text-gray-400">Everything deleted is kept here. Restore to bring it back, or delete forever to permanently remove it.</p>
+
+            {/* Blog Posts */}
+            <div>
+              <h3 className="text-sm font-bold text-gray-700 mb-3">📝 Blog Posts ({trashedPosts.length})</h3>
+              {trashedPosts.length === 0 ? <p className="text-xs text-gray-400 pl-1">No deleted posts.</p> : (
+                <div className="space-y-2">
+                  {trashedPosts.map((p) => (
+                    <div key={p.id} className="bg-white rounded-xl border border-red-100 p-4 flex items-start justify-between gap-4">
+                      <div className="flex gap-3 min-w-0">
+                        {p.cover_image && <img src={p.cover_image} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" loading="lazy" decoding="async" />}
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-700 line-clamp-1">{p.title}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">By {p.author_name ?? "unknown"}{p.country && ` · ${[p.city, p.country].filter(Boolean).join(", ")}`}</p>
+                          <p className="text-xs text-red-400 mt-0.5">Deleted {p.deleted_at ? new Date(p.deleted_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" }) : ""}{p.deleted_by_name && ` by ${p.deleted_by_name}`}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={() => restorePost(p.id)} className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors hover:bg-green-50" style={{ color: "#059669", borderColor: "#059669" }}>Restore</button>
+                        <button onClick={() => permanentDeletePost(p.id, p.title)} className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 text-red-500 hover:bg-red-50 transition-colors">Delete Forever</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            {trashedPosts.length === 0 ? (
+
+            {/* Businesses */}
+            <div>
+              <h3 className="text-sm font-bold text-gray-700 mb-3">🏪 Businesses ({trashedBusinesses.length})</h3>
+              {trashedBusinesses.length === 0 ? <p className="text-xs text-gray-400 pl-1">No deleted businesses.</p> : (
+                <div className="space-y-2">
+                  {trashedBusinesses.map((b) => (
+                    <div key={b.id} className="bg-white rounded-xl border border-red-100 p-4 flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-700">{b.name}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{b.category} · {b.canton}, {b.country}</p>
+                        <p className="text-xs text-red-400 mt-0.5">Deleted {b.deleted_at ? new Date(b.deleted_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" }) : ""}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={async () => {
+                          await fetch(`${API}/businesses.php`, { method: "DELETE", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: b.id, restore: true }) });
+                          setTrashedBusinesses(bs => bs.filter(x => x.id !== b.id));
+                          toastSuccess("Business restored.");
+                        }} className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors hover:bg-green-50" style={{ color: "#059669", borderColor: "#059669" }}>Restore</button>
+                        <button onClick={() => showConfirm("Delete forever?", `"${b.name}" will be permanently removed.`, async () => {
+                          await fetch(`${API}/businesses.php`, { method: "DELETE", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: b.id, permanent: true }) });
+                          setTrashedBusinesses(bs => bs.filter(x => x.id !== b.id));
+                          toastSuccess("Business permanently deleted.");
+                          setConfirmModal(null);
+                        })} className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 text-red-500 hover:bg-red-50 transition-colors">Delete Forever</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Events */}
+            <div>
+              <h3 className="text-sm font-bold text-gray-700 mb-3">📅 Events ({trashedEvents.length})</h3>
+              {trashedEvents.length === 0 ? <p className="text-xs text-gray-400 pl-1">No deleted events.</p> : (
+                <div className="space-y-2">
+                  {trashedEvents.map((ev) => (
+                    <div key={ev.id} className="bg-white rounded-xl border border-red-100 p-4 flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-700">{ev.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{ev.event_type} · {ev.city}, {ev.country} · {new Date(ev.start_date).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" })}</p>
+                        <p className="text-xs text-red-400 mt-0.5">Deleted {ev.deleted_at ? new Date(ev.deleted_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" }) : ""}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={async () => {
+                          await fetch(`${API}/events.php?id=${ev.id}&restore=1`, { method: "DELETE", headers: authHeaders(token) });
+                          setTrashedEvents(es => es.filter(x => x.id !== ev.id));
+                          toastSuccess("Event restored.");
+                        }} className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors hover:bg-green-50" style={{ color: "#059669", borderColor: "#059669" }}>Restore</button>
+                        <button onClick={() => showConfirm("Delete forever?", `"${ev.title}" will be permanently removed.`, async () => {
+                          await fetch(`${API}/events.php?id=${ev.id}&permanent=1`, { method: "DELETE", headers: authHeaders(token) });
+                          setTrashedEvents(es => es.filter(x => x.id !== ev.id));
+                          toastSuccess("Event permanently deleted.");
+                          setConfirmModal(null);
+                        })} className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 text-red-500 hover:bg-red-50 transition-colors">Delete Forever</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {trashedPosts.length === 0 && trashedBusinesses.length === 0 && trashedEvents.length === 0 && (
               <div className="text-center py-16 text-gray-400">
                 <div className="text-4xl mb-3">🗑</div>
                 <p className="text-sm font-medium">Trash is empty</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {trashedPosts.map((p) => (
-                  <div key={p.id} className="bg-white rounded-xl border border-red-100 p-4 flex items-start justify-between gap-4">
-                    <div className="flex gap-3 min-w-0">
-                      {p.cover_image && <img src={p.cover_image} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" loading="lazy" decoding="async" />}
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-700 line-clamp-1">{p.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          By {p.author_name ?? "unknown"}
-                          {p.country && ` · ${[p.city, p.country].filter(Boolean).join(", ")}`}
-                        </p>
-                        <p className="text-xs text-red-400 mt-0.5">
-                          Deleted {p.deleted_at ? new Date(p.deleted_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" }) : ""}
-                          {p.deleted_by_name && ` by ${p.deleted_by_name}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => restorePost(p.id)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors hover:bg-green-50"
-                        style={{ color: "#059669", borderColor: "#059669" }}
-                      >
-                        Restore
-                      </button>
-                      <button
-                        onClick={() => permanentDeletePost(p.id, p.title)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 text-red-500 hover:bg-red-50 transition-colors"
-                      >
-                        Delete Forever
-                      </button>
-                    </div>
-                  </div>
-                ))}
               </div>
             )}
           </div>

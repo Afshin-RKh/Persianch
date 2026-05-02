@@ -62,9 +62,17 @@ function window_dates(string $filter): array {
 }
 
 // ── GET — public listing ─────────────────────────────────────────────────────
+// Add deleted_at column if missing
+try { $pdo->exec("ALTER TABLE events ADD COLUMN deleted_at DATETIME DEFAULT NULL"); } catch (PDOException $e) {}
+
 if ($method === 'GET') {
     $viewer  = optional_auth_ev();
     $isAdmin = is_admin_ev($viewer);
+
+    if (!empty($_GET['trash']) && $isAdmin) {
+        $rows = $pdo->query("SELECT id, title, event_type, country, city, start_date, deleted_at FROM events WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC")->fetchAll();
+        echo json_encode($rows); exit();
+    }
 
     // Single event by id — public for approved, full access for admin
     if (!empty($_GET['id'])) {
@@ -84,7 +92,7 @@ if ($method === 'GET') {
 
     // Pending list for admin review
     if (!empty($_GET['pending']) && $isAdmin) {
-        $stmt = $pdo->query("SELECT * FROM events WHERE status = 'pending' ORDER BY created_at DESC");
+        $stmt = $pdo->query("SELECT * FROM events WHERE status = 'pending' AND deleted_at IS NULL ORDER BY created_at DESC");
         echo json_encode($stmt->fetchAll());
         exit();
     }
@@ -256,10 +264,17 @@ if ($method === 'DELETE') {
     $viewer = optional_auth_ev();
     if (!is_admin_ev($viewer)) { http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit(); }
 
-    $id = (int)($_GET['id'] ?? 0);
+    $id   = (int)($_GET['id'] ?? 0);
+    $body = json_decode(file_get_contents('php://input'), true) ?? [];
     if (!$id) { http_response_code(400); echo json_encode(['error' => 'id required']); exit(); }
 
-    $pdo->prepare("DELETE FROM events WHERE id = :id")->execute([':id' => $id]);
+    if (!empty($_GET['permanent'])) {
+        $pdo->prepare("DELETE FROM events WHERE id = :id")->execute([':id' => $id]);
+    } elseif (!empty($_GET['restore'])) {
+        $pdo->prepare("UPDATE events SET deleted_at = NULL WHERE id = :id")->execute([':id' => $id]);
+    } else {
+        $pdo->prepare("UPDATE events SET deleted_at = NOW() WHERE id = :id")->execute([':id' => $id]);
+    }
     echo json_encode(['success' => true]);
     exit();
 }

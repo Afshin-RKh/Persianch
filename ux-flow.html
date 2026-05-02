@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BiruniMap — UX Flow</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f4fa; padding: 32px; color: #1a1a2e; }
+    h1 { color: #1B3A6B; font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+    .subtitle { color: #888; font-size: 13px; margin-bottom: 32px; }
+
+    .flow { display: flex; flex-direction: column; gap: 24px; }
+
+    .section { background: white; border-radius: 16px; border: 1.5px solid #e5eaf2; box-shadow: 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; }
+    .section-header { padding: 14px 20px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+    .section-body { padding: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+
+    .step { background: #f8faff; border: 1.5px solid #dce6f5; border-radius: 12px; padding: 12px 16px; font-size: 13px; min-width: 160px; max-width: 220px; }
+    .step strong { display: block; font-size: 13px; color: #1B3A6B; margin-bottom: 3px; }
+    .step span { color: #666; font-size: 12px; line-height: 1.5; }
+
+    .step.decision { background: #fff8e6; border-color: #f0c040; }
+    .step.decision strong { color: #92620a; }
+
+    .step.success { background: #edfbf0; border-color: #6dcc85; }
+    .step.success strong { color: #1e6e35; }
+
+    .step.danger { background: #fff0f0; border-color: #f5a0a0; }
+    .step.danger strong { color: #8B1A1A; }
+
+    .step.admin { background: #fdf6e3; border-color: #C9A84C; }
+    .step.admin strong { color: #7a5a10; }
+
+    .arrow { font-size: 20px; color: #b0bdd0; align-self: center; flex-shrink: 0; }
+
+    .col { display: flex; flex-direction: column; gap: 10px; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+
+    .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-top: 4px; }
+    .badge.blue { background: #dbeafe; color: #1e40af; }
+    .badge.red { background: #fee2e2; color: #8B1A1A; }
+    .badge.green { background: #dcfce7; color: #166534; }
+    .badge.gold { background: #fef9c3; color: #92620a; }
+  </style>
+</head>
+<body>
+
+  <h1>BiruniMap — UX Flow</h1>
+  <p class="subtitle">Full user journey from first visit to conversion · Last updated May 2026</p>
+
+  <div class="flow">
+
+    <!-- ENTRY -->
+    <div class="section">
+      <div class="section-header" style="background:#1B3A6B; color:white;">🌐 Entry Point</div>
+      <div class="section-body">
+        <div class="step success"><strong>User arrives at birunimap.com</strong><span>Homepage = Business Map Page<br>Sees map, navbar, CTA buttons</span></div>
+        <div class="arrow">→</div>
+        <div class="step decision"><strong>What does the user do?</strong><span>Chooses a path from the navbar or CTAs</span></div>
+      </div>
+    </div>
+
+    <!-- BUSINESSES -->
+    <div class="section">
+      <div class="section-header" style="background:#e8f0fb; color:#1B3A6B;">🏪 Businesses Flow</div>
+      <div class="section-body">
+        <div class="col">
+          <div class="step"><strong>Businesses Page</strong><span>Full-screen map view</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step"><strong>Apply Filters</strong><span>Country / category / search</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step"><strong>Click Map Pin or Card</strong><span>Opens business detail</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step"><strong>Business Detail Page</strong><span>Phone, hours, address, map</span></div>
+          <div class="step"><strong>Write a Comment</strong><span>Must be logged in</span></div>
+          <div class="step danger"><strong>Click External Link</strong><span>Leaves the site</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOG -->
+    <div class="section">
+      <div class="section-header" style="background:#f0f8ff; color:#1B3A6B;">📝 Blog Flow</div>
+      <div class="section-body">
+        <div class="col">
+          <div class="step"><strong>Blog Page</strong><span>Filter by tag / country</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step"><strong>Click a Post Card</strong><span>Opens full article</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step decision"><strong>Logged in?</strong><span>Guest sees sign-up nudge</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step"><strong>Write a Post</strong><span>TipTap rich text editor<br>Tags + location</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step"><strong>Submit — Status: Pending</strong><span>Goes to admin review queue</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step success"><strong>Admin Approves</strong><span>Post goes live on Blog ✓</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACT -->
+    <div class="section">
+      <div class="section-header" style="background:#fff8f0; color:#8B1A1A;">✉️ Contact / Get Involved Flow</div>
+      <div class="section-body">
+        <div class="col">
+          <div class="step"><strong>Contact Page</strong><span>Name / Email / Message</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step success"><strong>Stored in DB ✓</strong><span>Saved to contact_messages table</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step success"><strong>Confirmation Email Sent</strong><span>From noreply@birunimap.com<br>Nudges user to set interest locations</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step"><strong>User Signs Up</strong><span>Sets interest locations on profile<br>Gets notified of nearby activity</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTH -->
+    <div class="section">
+      <div class="section-header" style="background:#f0fbf4; color:#1e6e35;">🔐 Auth Flow</div>
+      <div class="section-body">
+        <div class="col">
+          <div class="step decision"><strong>New or Returning?</strong></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step"><strong>Sign Up</strong><span>Name, email, password</span></div>
+          <div class="step"><strong>Sign In</strong><span>Email + password</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step success"><strong>Authenticated ✓</strong><span>JWT stored in localStorage<br>Avatar appears in navbar</span></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col">
+          <div class="step"><strong>My Profile</strong><span>Edit name / password</span></div>
+          <div class="step"><strong>My Locations</strong><span>Set interest areas<br>Get notified of nearby adds</span></div>
+          <div class="step"><strong>Activity</strong><span>Posts & comment history</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUSINESS OWNER -->
+    <div class="section">
+      <div class="section-header" style="background:#f5f0ff; color:#4c1d95;">🏢 Business Owner Flow</div>
+      <div class="section-body">
+        <div class="step"><strong>Admin assigns ownership</strong><span>👤 icon in Businesses tab</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><strong>User promoted to business_owner</strong><span>New tab appears on Profile</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><strong>My Business Tab</strong><span>Edit own listing<br>Limited fields only</span></div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="section">
+      <div class="section-header" style="background:#fdf6e3; color:#7a5a10;">⚙️ Admin Panel Flow</div>
+      <div class="section-body" style="flex-direction: column; gap: 16px;">
+
+        <div class="step admin" style="max-width:100%">
+          <strong>Admin Panel — loads with red badge counts on each tab</strong>
+          <span>All counts fetched in parallel on page load. Badge decreases as items are actioned.</span>
+        </div>
+
+        <div class="row">
+          <div class="step admin">
+            <strong>📝 Blog Posts</strong>
+            <span>Approve / reject / edit pending posts</span>
+            <span class="badge red">Pending count</span>
+          </div>
+          <div class="step admin">
+            <strong>🏪 Businesses</strong>
+            <span>Add / edit / delete / assign owner</span>
+            <span class="badge red">Unapproved count</span>
+          </div>
+          <div class="step admin">
+            <strong>👥 Users</strong>
+            <span>View roles, set admin locations</span>
+          </div>
+          <div class="step admin">
+            <strong>📅 Events</strong>
+            <span>Approve / reject events</span>
+            <span class="badge red">Pending count</span>
+          </div>
+          <div class="step admin">
+            <strong>🚩 Claims</strong>
+            <span>Pending business ownership claims</span>
+            <span class="badge red">Pending count</span>
+          </div>
+          <div class="step admin">
+            <strong>✉️ Messages</strong>
+            <span>Contact form submissions<br>Unread = blue highlight + "New" badge<br>Click "Mark as read" → badge decreases<br>Trash → restore or permanently delete</span>
+            <span class="badge blue">Unread count</span>
+          </div>
+          <div class="step admin">
+            <strong>🗑 Trash</strong>
+            <span>All deleted items:<br>📝 Blog posts · 🏪 Businesses · 📅 Events<br>Restore to bring back, or Delete Forever</span>
+          </div>
+          <div class="step admin">
+            <strong>🦁 About Page</strong>
+            <span>Edit about content — superadmin only</span>
+            <span class="badge gold">Superadmin only</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -31,8 +31,16 @@ if ($method === 'GET') {
         header("Cache-Control: public, max-age=300");
     }
 
+    // Add deleted_at column if missing
+    try { $pdo->exec("ALTER TABLE businesses ADD COLUMN deleted_at DATETIME DEFAULT NULL"); } catch (PDOException $e) {}
+
+    if (!empty($_GET['trash']) && $isAdmin) {
+        $rows = $pdo->query("SELECT id, name, category, country, canton, deleted_at FROM businesses WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC")->fetchAll();
+        echo json_encode($rows); exit();
+    }
+
     $pendingOnly = $isAdmin && !empty($_GET['pending']);
-    $where = $isAdmin ? ($pendingOnly ? ['b.is_approved = 0'] : []) : ['b.is_approved = 1'];
+    $where = $isAdmin ? ($pendingOnly ? ['b.is_approved = 0', 'b.deleted_at IS NULL'] : ['b.deleted_at IS NULL']) : ['b.is_approved = 1', 'b.deleted_at IS NULL'];
     $params = [];
 
     if (!empty($_GET['category'])) {
@@ -362,8 +370,23 @@ if ($method === 'DELETE') {
     }
 
     $adminName = $authUser['name'] ?? 'Admin';
+
+    // Permanent delete
+    if (!empty($data['permanent'])) {
+        log_activity($pdo, (int)$authUser['sub'], 'delete_permanent', 'business', $id, $existing['name'], "$adminName permanently deleted \"{$existing['name']}\"");
+        $pdo->prepare("DELETE FROM businesses WHERE id = :id")->execute([':id' => $id]);
+        echo json_encode(['success' => true, 'deleted' => $id]); exit();
+    }
+
+    // Restore from trash
+    if (!empty($data['restore'])) {
+        $pdo->prepare("UPDATE businesses SET deleted_at = NULL WHERE id = :id")->execute([':id' => $id]);
+        echo json_encode(['success' => true, 'restored' => $id]); exit();
+    }
+
+    // Soft delete
     log_activity($pdo, (int)$authUser['sub'], 'delete', 'business', $id, $existing['name'],
         "$adminName deleted business \"{$existing['name']}\" ({$existing['country']})");
-    $pdo->prepare("DELETE FROM businesses WHERE id = :id")->execute([':id' => $id]);
+    $pdo->prepare("UPDATE businesses SET deleted_at = NOW() WHERE id = :id")->execute([':id' => $id]);
     echo json_encode(['success' => true, 'deleted' => $id]);
 }
