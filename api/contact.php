@@ -10,6 +10,20 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS contact_messages (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    require_once __DIR__ . '/jwt.php';
+    $token = bearer_token();
+    $user  = $token ? jwt_verify($token) : null;
+    if (!$user || !in_array($user['role'], ['admin', 'superadmin'])) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Forbidden']);
+        exit();
+    }
+    $rows = $pdo->query("SELECT id, name, email, message, created_at FROM contact_messages ORDER BY created_at DESC")->fetchAll();
+    echo json_encode($rows);
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);

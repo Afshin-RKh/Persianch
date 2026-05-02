@@ -17,7 +17,11 @@ import {
 const API = process.env.NEXT_PUBLIC_API_URL || "https://birunimap.com/api";
 const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B] bg-white";
 
-type Tab = "posts" | "businesses" | "users" | "squares" | "events" | "trash" | "about" | "claims";
+type Tab = "posts" | "businesses" | "users" | "squares" | "events" | "trash" | "about" | "claims" | "messages";
+
+interface ContactMessage {
+  id: number; name: string; email: string; message: string; created_at: string;
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type BizForm = {
@@ -416,6 +420,7 @@ export default function AdminPage() {
   const [businesses, setBusinesses] = useState<BusinessRow[]>([]);
   const [users, setUsers]           = useState<UserRow[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
+  const [messages, setMessages]       = useState<ContactMessage[]>([]);
 
   // Blog
   const [postSearch, setPostSearch]   = useState("");
@@ -560,6 +565,11 @@ export default function AdminPage() {
         const r = await fetch(`${API}/business_claims.php?status=pending`, { headers: authHeaders(token) });
         const data = await r.json();
         setClaims(Array.isArray(data) ? data : []);
+      }
+      if (tab === "messages") {
+        const r = await fetch(`${API}/contact.php`, { headers: authHeaders(token) });
+        const data = await r.json();
+        setMessages(Array.isArray(data) ? data : []);
       }
     } finally {
       setDataLoading(false);
@@ -828,6 +838,7 @@ export default function AdminPage() {
     { key: "events",     label: "Events",       icon: <span className="text-sm">📅</span> },
     { key: "squares",    label: "City Squares", icon: <MapPin size={15} />, superOnly: true },
     { key: "claims",     label: "Claims",       icon: <span className="text-sm">🚩</span> },
+    { key: "messages",   label: "Messages",     icon: <span className="text-sm">✉️</span> },
     { key: "trash",      label: "Trash",        icon: <Trash2 size={15} /> },
     { key: "about",      label: "About Page",   icon: <Shield size={15} />, superOnly: true },
   ];
@@ -1852,6 +1863,38 @@ export default function AdminPage() {
                     {aboutSaving ? "Saving…" : "Save About Page"}
                   </button>
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── MESSAGES TAB ────────────────────────────────────────────────── */}
+        {tab === "messages" && !dataLoading && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-gray-800">Contact Messages ({messages.length})</h2>
+            </div>
+            {messages.length === 0 ? (
+              <div className="text-center py-16 text-gray-400">
+                <div className="text-4xl mb-3">✉️</div>
+                <p className="text-sm font-medium">No messages yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {messages.map((m) => (
+                  <div key={m.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">{m.name}</p>
+                        <a href={`mailto:${m.email}`} className="text-xs text-[#1B3A6B] hover:underline">{m.email}</a>
+                      </div>
+                      <p className="text-xs text-gray-400 flex-shrink-0">
+                        {new Date(m.created_at).toLocaleDateString("en-CH", { year: "numeric", month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{m.message}</p>
+                  </div>
+                ))}
               </div>
             )}
           </div>
