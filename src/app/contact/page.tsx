@@ -17,15 +17,13 @@ export default function ContactPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("https://formspree.io/f/xbdqkrrp", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/contact.php`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(contactForm),
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || "Failed to send message.");
-      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Failed to send message.");
       setContactSent(true);
     } catch (err: unknown) {
       toastError(err instanceof Error ? err.message : "Something went wrong. Please try again or email us directly.");
@@ -108,7 +106,7 @@ export default function ContactPage() {
             </svg>
           </div>
           <h3 className="text-xl font-bold mb-2" style={{ color: navy }}>Message received</h3>
-          <p className="text-gray-400 text-sm">We&apos;ll get back to you as soon as we can.</p>
+          <p className="text-gray-500 text-sm">We&apos;ll get back to you soon. Check your inbox — we sent you a confirmation email with a tip on how to get notified about new businesses near you.</p>
         </div>
       ) : (
         <form onSubmit={handleContactSubmit} className="bg-white rounded-2xl border border-[#1B3A6B]/15 shadow-sm p-8 space-y-5">
