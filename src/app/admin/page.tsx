@@ -1916,19 +1916,14 @@ export default function AdminPage() {
             ) : (
               <div className="space-y-3">
                 {messages.map((m) => (
-                  <div key={m.id}
-                    className={`rounded-xl border shadow-sm p-5 ${msgTrash ? "bg-white border-red-100" : m.read_at ? "bg-white border-gray-100" : "bg-blue-50 border-blue-200"}`}
-                    onClick={async () => {
-                      if (!m.read_at && !msgTrash) {
-                        await fetch(`${API}/contact.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: m.id, action: "read" }) });
-                        setMessages(ms => ms.map(x => x.id === m.id ? { ...x, read_at: new Date().toISOString() } : x));
-                        setBadgeCounts(c => ({ ...c, messages: Math.max(0, (c.messages ?? 0) - 1) }));
-                      }
-                    }}>
+                  <div key={m.id} className={`rounded-xl border shadow-sm p-5 ${msgTrash ? "bg-white border-red-100" : m.read_at ? "bg-white border-gray-100" : "bg-blue-50 border-blue-200"}`}>
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <div>
-                        <p className={`text-sm ${m.read_at ? "font-semibold text-gray-800" : "font-bold text-gray-900"}`}>{m.name}</p>
-                        <a href={`mailto:${m.email}`} className="text-xs text-[#1B3A6B] hover:underline" onClick={e => e.stopPropagation()}>{m.email}</a>
+                        <div className="flex items-center gap-2">
+                          <p className={`text-sm ${m.read_at ? "font-semibold text-gray-800" : "font-bold text-gray-900"}`}>{m.name}</p>
+                          {!m.read_at && !msgTrash && <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-blue-500 text-white leading-none">New</span>}
+                        </div>
+                        <a href={`mailto:${m.email}`} className="text-xs text-[#1B3A6B] hover:underline">{m.email}</a>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <p className="text-xs text-gray-400">
@@ -1937,17 +1932,16 @@ export default function AdminPage() {
                         {msgTrash ? (
                           <>
                             <button title="Restore"
-                              onClick={async (e) => { e.stopPropagation();
+                              onClick={async () => {
                                 await fetch(`${API}/contact.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: m.id }) });
                                 setMessages(ms => ms.filter(x => x.id !== m.id));
-                                setBadgeCounts(c => ({ ...c, messages: Math.max(0, (c.messages ?? 0) - 1) }));
                                 toastSuccess("Message restored.");
                               }}
                               className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors">
                               <CheckCircle size={14} />
                             </button>
                             <button title="Delete permanently"
-                              onClick={(e) => { e.stopPropagation(); showConfirm("Delete permanently?", "This message will be removed forever.", async () => {
+                              onClick={() => showConfirm("Delete permanently?", "This message will be removed forever.", async () => {
                                 await fetch(`${API}/contact.php?id=${m.id}&permanent=1`, { method: "DELETE", headers: authHeaders(token) });
                                 setMessages(ms => ms.filter(x => x.id !== m.id));
                                 toastSuccess("Message deleted.");
@@ -1959,20 +1953,31 @@ export default function AdminPage() {
                           </>
                         ) : (
                           <button title="Move to trash"
-                            onClick={(e) => { e.stopPropagation(); showConfirm("Move to trash?", "This message will be moved to trash.", async () => {
+                            onClick={() => showConfirm("Move to trash?", "This message will be moved to trash.", async () => {
                               await fetch(`${API}/contact.php?id=${m.id}`, { method: "DELETE", headers: authHeaders(token) });
                               setMessages(ms => ms.filter(x => x.id !== m.id));
                               if (!m.read_at) setBadgeCounts(c => ({ ...c, messages: Math.max(0, (c.messages ?? 0) - 1) }));
                               toastSuccess("Message moved to trash.");
                               setConfirmModal(null);
-                            })}}
+                            })}
                             className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors">
                             <Trash2 size={14} />
                           </button>
                         )}
                       </div>
                     </div>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{m.message}</p>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap mb-3">{m.message}</p>
+                    {!m.read_at && !msgTrash && (
+                      <button
+                        onClick={async () => {
+                          await fetch(`${API}/contact.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: m.id, action: "read" }) });
+                          setMessages(ms => ms.map(x => x.id === m.id ? { ...x, read_at: new Date().toISOString() } : x));
+                          setBadgeCounts(c => ({ ...c, messages: Math.max(0, (c.messages ?? 0) - 1) }));
+                        }}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 transition-colors">
+                        Mark as read
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
