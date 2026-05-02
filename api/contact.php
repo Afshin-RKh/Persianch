@@ -10,8 +10,9 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS contact_messages (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     deleted_at DATETIME DEFAULT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-// Add deleted_at if upgrading from old schema
+// Add columns if upgrading from old schema
 try { $pdo->exec("ALTER TABLE contact_messages ADD COLUMN deleted_at DATETIME DEFAULT NULL"); } catch (PDOException $e) {}
+try { $pdo->exec("ALTER TABLE contact_messages ADD COLUMN read_at DATETIME DEFAULT NULL"); } catch (PDOException $e) {}
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     require_once __DIR__ . '/jwt.php';
@@ -24,9 +25,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
     $trash = isset($_GET['trash']);
     if ($trash) {
-        $rows = $pdo->query("SELECT id, name, email, message, created_at, deleted_at FROM contact_messages WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC")->fetchAll();
+        $rows = $pdo->query("SELECT id, name, email, message, created_at, deleted_at, read_at FROM contact_messages WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC")->fetchAll();
     } else {
-        $rows = $pdo->query("SELECT id, name, email, message, created_at FROM contact_messages WHERE deleted_at IS NULL ORDER BY created_at DESC")->fetchAll();
+        $rows = $pdo->query("SELECT id, name, email, message, created_at, read_at FROM contact_messages WHERE deleted_at IS NULL ORDER BY created_at DESC")->fetchAll();
     }
     echo json_encode($rows);
     exit();
@@ -59,9 +60,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
         http_response_code(403); echo json_encode(['error' => 'Forbidden']); exit();
     }
     $body = json_decode(file_get_contents('php://input'), true);
-    $id   = (int)($body['id'] ?? 0);
+    $id     = (int)($body['id'] ?? 0);
+    $action = $body['action'] ?? 'restore';
     if (!$id) { http_response_code(422); echo json_encode(['error' => 'Missing id']); exit(); }
-    $pdo->prepare("UPDATE contact_messages SET deleted_at = NULL WHERE id = ?")->execute([$id]);
+    if ($action === 'read') {
+        $pdo->prepare("UPDATE contact_messages SET read_at = NOW() WHERE id = ? AND read_at IS NULL")->execute([$id]);
+    } else {
+        $pdo->prepare("UPDATE contact_messages SET deleted_at = NULL WHERE id = ?")->execute([$id]);
+    }
     echo json_encode(['ok' => true]);
     exit();
 }

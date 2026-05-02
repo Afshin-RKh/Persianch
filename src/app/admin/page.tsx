@@ -20,7 +20,7 @@ const inp = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ou
 type Tab = "posts" | "businesses" | "users" | "squares" | "events" | "trash" | "about" | "claims" | "messages";
 
 interface ContactMessage {
-  id: number; name: string; email: string; message: string; created_at: string;
+  id: number; name: string; email: string; message: string; created_at: string; read_at: string | null;
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -602,7 +602,7 @@ export default function AdminPage() {
         posts:    postsData.filter((p: BlogPost) => p.status === "pending").length,
         businesses: bizData.filter((b: BusinessRow) => !b.is_approved).length,
         events:   eventsData.length,
-        messages: msgsData.length,
+        messages: msgsData.filter((m: ContactMessage) => !m.read_at).length,
       });
     });
   }, [token, isAdmin]);
@@ -1916,11 +1916,19 @@ export default function AdminPage() {
             ) : (
               <div className="space-y-3">
                 {messages.map((m) => (
-                  <div key={m.id} className={`bg-white rounded-xl border shadow-sm p-5 ${msgTrash ? "border-red-100" : "border-gray-100"}`}>
+                  <div key={m.id}
+                    className={`rounded-xl border shadow-sm p-5 ${msgTrash ? "bg-white border-red-100" : m.read_at ? "bg-white border-gray-100" : "bg-blue-50 border-blue-200"}`}
+                    onClick={async () => {
+                      if (!m.read_at && !msgTrash) {
+                        await fetch(`${API}/contact.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: m.id, action: "read" }) });
+                        setMessages(ms => ms.map(x => x.id === m.id ? { ...x, read_at: new Date().toISOString() } : x));
+                        setBadgeCounts(c => ({ ...c, messages: Math.max(0, (c.messages ?? 0) - 1) }));
+                      }
+                    }}>
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <div>
-                        <p className="text-sm font-bold text-gray-800">{m.name}</p>
-                        <a href={`mailto:${m.email}`} className="text-xs text-[#1B3A6B] hover:underline">{m.email}</a>
+                        <p className={`text-sm ${m.read_at ? "font-semibold text-gray-800" : "font-bold text-gray-900"}`}>{m.name}</p>
+                        <a href={`mailto:${m.email}`} className="text-xs text-[#1B3A6B] hover:underline" onClick={e => e.stopPropagation()}>{m.email}</a>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <p className="text-xs text-gray-400">
@@ -1929,7 +1937,7 @@ export default function AdminPage() {
                         {msgTrash ? (
                           <>
                             <button title="Restore"
-                              onClick={async () => {
+                              onClick={async (e) => { e.stopPropagation();
                                 await fetch(`${API}/contact.php`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ id: m.id }) });
                                 setMessages(ms => ms.filter(x => x.id !== m.id));
                                 setBadgeCounts(c => ({ ...c, messages: Math.max(0, (c.messages ?? 0) - 1) }));
@@ -1939,7 +1947,7 @@ export default function AdminPage() {
                               <CheckCircle size={14} />
                             </button>
                             <button title="Delete permanently"
-                              onClick={() => showConfirm("Delete permanently?", "This message will be removed forever.", async () => {
+                              onClick={(e) => { e.stopPropagation(); showConfirm("Delete permanently?", "This message will be removed forever.", async () => {
                                 await fetch(`${API}/contact.php?id=${m.id}&permanent=1`, { method: "DELETE", headers: authHeaders(token) });
                                 setMessages(ms => ms.filter(x => x.id !== m.id));
                                 toastSuccess("Message deleted.");
@@ -1951,13 +1959,13 @@ export default function AdminPage() {
                           </>
                         ) : (
                           <button title="Move to trash"
-                            onClick={() => showConfirm("Move to trash?", "This message will be moved to trash.", async () => {
+                            onClick={(e) => { e.stopPropagation(); showConfirm("Move to trash?", "This message will be moved to trash.", async () => {
                               await fetch(`${API}/contact.php?id=${m.id}`, { method: "DELETE", headers: authHeaders(token) });
                               setMessages(ms => ms.filter(x => x.id !== m.id));
-                              setBadgeCounts(c => ({ ...c, messages: Math.max(0, (c.messages ?? 0) - 1) }));
+                              if (!m.read_at) setBadgeCounts(c => ({ ...c, messages: Math.max(0, (c.messages ?? 0) - 1) }));
                               toastSuccess("Message moved to trash.");
                               setConfirmModal(null);
-                            })}
+                            })}}
                             className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors">
                             <Trash2 size={14} />
                           </button>
