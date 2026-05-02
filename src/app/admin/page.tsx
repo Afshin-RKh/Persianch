@@ -578,13 +578,32 @@ export default function AdminPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Load claims count on mount for badge
+  // Badge counts — loaded once on mount, independent of active tab
+  const [badgeCounts, setBadgeCounts] = useState<Record<string, number>>({});
   useEffect(() => {
     if (!token || !isAdmin) return;
-    fetch(`${API}/business_claims.php?status=pending`, { headers: authHeaders(token) })
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setClaims(data); })
-      .catch(() => {});
+    const h = authHeaders(token);
+    Promise.allSettled([
+      fetch(`${API}/business_claims.php?status=pending`, { headers: h }).then(r => r.json()),
+      fetch(`${API}/blog.php?pending=1`, { headers: h }).then(r => r.json()),
+      fetch(`${API}/businesses.php?list=1`, { headers: h }).then(r => r.json()),
+      fetch(`${API}/events.php?pending=1`, { headers: h }).then(r => r.json()),
+      fetch(`${API}/contact.php`, { headers: h }).then(r => r.json()),
+    ]).then(([claimsR, postsR, bizR, eventsR, msgsR]) => {
+      const claimsData  = claimsR.status  === "fulfilled" && Array.isArray(claimsR.value)  ? claimsR.value  : [];
+      const postsData   = postsR.status   === "fulfilled" && Array.isArray(postsR.value)   ? postsR.value   : [];
+      const bizData     = bizR.status     === "fulfilled" && Array.isArray(bizR.value)     ? bizR.value     : [];
+      const eventsData  = eventsR.status  === "fulfilled" && Array.isArray(eventsR.value)  ? eventsR.value  : [];
+      const msgsData    = msgsR.status    === "fulfilled" && Array.isArray(msgsR.value)    ? msgsR.value    : [];
+      setClaims(claimsData);
+      setBadgeCounts({
+        claims:   claimsData.length,
+        posts:    postsData.filter((p: BlogPost) => p.status === "pending").length,
+        businesses: bizData.filter((b: BusinessRow) => !b.is_approved).length,
+        events:   eventsData.length,
+        messages: msgsData.length,
+      });
+    });
   }, [token, isAdmin]);
 
   // ── Blog actions ───────────────────────────────────────────────────────────
@@ -963,8 +982,10 @@ export default function AdminPage() {
                 }`}
                 style={tab === t.key ? { backgroundColor: "#1B3A6B" } : {}}>
                 {t.icon}{t.label}
-                {t.key === "claims" && claims.length > 0 && (
-                  <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">{claims.length}</span>
+                {(badgeCounts[t.key] ?? 0) > 0 && (
+                  <span className="ml-0.5 text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white leading-none">
+                    {badgeCounts[t.key]}
+                  </span>
                 )}
               </button>
             ))}
